@@ -170,6 +170,7 @@ export async function POST(
       systemPrompt,
       messages: parsed.data.messages,
       maxOutputTokens: 700,
+      temperature: agentConfig.temperature,
       workspaceId,
       tools,
       toolContext: {
