@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, tool, zodSchema, stepCountIs, APICallError } from "ai";
 import type { ModelMessage, ToolSet } from "ai";
 import { checkReply, stripThinking } from "./reply-guard";
+import { splitCitations } from "./kb-citations";
 
 // Customer-facing replies should be consistent, not creative: the same
 // question should get the same answer. An agent can override it.
@@ -167,10 +168,13 @@ function guardReply<R extends { text: string; finishReason: string }>(
   r: R,
   model: string,
   toolsRan: boolean,
-): { r: R; text: string } {
-  const check = checkReply(r.text, r.finishReason);
+): { r: R; text: string; citedIds: string[] } {
+  // The "FUENTES: F1" line is for the team (kb-citations): strip it BEFORE the
+  // check, so a reply that is only that line counts as empty and is retried.
+  const { text, ids } = splitCitations(r.text);
+  const check = checkReply(text, r.finishReason);
   if (check.ok || (toolsRan && check.reason === "empty")) {
-    return { r, text: check.text };
+    return { r, text: check.text, citedIds: ids };
   }
   throw new UnusableReplyError(model, check.reason);
 }
@@ -347,6 +351,8 @@ export interface GenerateWithToolsResult {
   toolCallsExecuted: number;
   /** The model that actually answered (may differ from the requested one after a fallback). */
   modelUsed?: string;
+  /** Knowledge-base fragment ids the reply cited ("F1"…), see kb-citations. */
+  citedIds: string[];
 }
 
 /**
@@ -455,5 +461,6 @@ export async function generateWithTools(
     outputTokens: result.r.usage?.outputTokens ?? 0,
     toolCallsExecuted: result.r.steps,
     modelUsed,
+    citedIds: result.citedIds,
   };
 }

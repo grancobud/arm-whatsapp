@@ -30,6 +30,8 @@ export interface DispatchTextParams {
   senderUserId?: string;
   /** Admin bypass for expired window — triggers a WINDOW_OVERRIDE DB log */
   overrideAdmin?: boolean;
+  /** Extra data stored with the message (e.g. kb_sources cited by the AI). */
+  meta?: Record<string, unknown>;
 }
 
 export interface DispatchTemplateParams {
@@ -244,6 +246,7 @@ export async function dispatchText(
     status: realSend ? "sent" : "queued",
     sender_user_id: senderUserId ?? null,
     meta: {
+      ...params.meta,
       dev_mode: realSend ? undefined : true,
       ycloud_id: ycloudId,
       override_admin: overrideAdmin || undefined,

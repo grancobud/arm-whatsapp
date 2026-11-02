@@ -1,4 +1,4 @@
-import { PenLine, Bot } from "lucide-react";
+import { PenLine, Bot, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MessageRow } from "@/features/inbox/types";
 import { StatusIcon } from "./status-icon";
@@ -28,6 +28,28 @@ function OutboundAuthor({ message }: { message: MessageRow }) {
       </span>
       {name}
     </span>
+  );
+}
+
+/** KB fragments the AI said it used (kb-citations): a trail back to the source. */
+function KbSources({ message }: { message: MessageRow }) {
+  const raw = (message.meta as Record<string, unknown> | null)?.kb_sources;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const sources = raw as { id: string; title: string; excerpt: string }[];
+  return (
+    <div className="flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
+      <BookOpen className="h-3 w-3 shrink-0" aria-hidden="true" />
+      <span>Fuentes:</span>
+      {sources.map((s) => (
+        <span
+          key={s.id}
+          title={s.excerpt}
+          className="rounded bg-foreground/10 px-1 py-px text-foreground/80"
+        >
+          {s.title}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -100,6 +122,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
             </p>
           )
         )}
+
+        {isOutbound && <KbSources message={message} />}
 
         <div
           className={cn(

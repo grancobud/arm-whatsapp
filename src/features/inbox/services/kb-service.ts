@@ -4,6 +4,7 @@ import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createOpenAI } from "@ai-sdk/openai";
 import { embed, embedMany } from "ai";
 import { chunkDocument } from "./kb-chunking";
+import { fragmentId } from "./kb-citations";
 
 function svc() {
   return createSbClient(
@@ -218,8 +219,8 @@ export function formatKbContext(results: KbSearchResult[]): string {
   // Fenced and labeled as data: KB documents can come from scraped web pages,
   // so text inside them must never be followed as instructions.
   const blocks = results.map(
-    (r) =>
-      `<fragmento fuente="${r.document_title.replace(/"/g, "'")}">\n${r.chunk}\n</fragmento>`,
+    (r, i) =>
+      `<fragmento id="${fragmentId(i)}" fuente="${r.document_title.replace(/"/g, "'")}">\n${r.chunk}\n</fragmento>`,
   );
 
   return [
