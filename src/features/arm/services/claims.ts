@@ -111,7 +111,8 @@ export function formatClaimsContext(claims: ClaimRow[]): string {
   const lines = claims.map((c) => {
     const tag = c.source_message_id ? "con fuente" : "corazonada";
     const text = c.text.replace(/\s+/g, " ").slice(0, 200);
-    return `- [${c.kind}, ${tag}] ${text}`;
+    // Quoted so an imperative claim reads as something noted, not an order.
+    return `- [${c.kind}, ${tag}] «${text}»`;
   });
   return [
     "## Lo que sabemos del cliente",
