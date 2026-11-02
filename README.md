@@ -111,6 +111,40 @@ flowchart LR
 
 ### 🧩 Las piezas de IA
 
+Así recorre un mensaje del cliente todas las piezas, desde que llega hasta que
+sale la respuesta:
+
+```mermaid
+flowchart TD
+    C([📱 Mensaje del cliente]) --> T{¿Audio o imagen?}
+    T -->|sí| V[🎙️ Transcribe o describe]
+    T -->|no| B
+    V --> B[⏳ Buffer de turnos<br/>junta los mensajes seguidos]
+    B --> J[⚖️ Juez Jev<br/>¿corresponde responder?]
+    J -->|no| H[🙋 Pasa a una persona]
+    J -->|sí| A{{🤖 Agente}}
+    M[(🧾 Memoria<br/>con fuentes)] --> A
+    K[(📚 Knowledge Base<br/>RAG)] --> A
+    N[(🏪 Datos del<br/>negocio)] --> A
+    A <-->|hasta 5 pasos| HR[🔧 Herramientas<br/>turnos · CRM · webhooks]
+    A --> G[🚫 Guardia de respuestas]
+    G -->|texto roto| A
+    G -->|ok| R([💬 Respuesta por WhatsApp])
+    R --> E[🏷️ Etiquetas y resumen]
+    A -.->|dato nuevo| M
+    A -.->|lead calificado| S[🎯 Setter → CRM]
+
+    style A fill:#8A2BE2,color:#fff
+    style G fill:#E5484D,color:#fff
+    style B fill:#0EA5E9,color:#fff
+    style J fill:#F38020,color:#fff
+    style M fill:#3ECF8E,color:#000
+    style K fill:#3ECF8E,color:#000
+    style N fill:#3ECF8E,color:#000
+    style R fill:#25D366,color:#000
+    style C fill:#25D366,color:#000
+```
+
 | | Pieza | Qué hace |
 | :---: | --- | --- |
 | 💬 | **Respuesta con herramientas** | Lee memoria, negocio y Knowledge Base y responde. Hasta 5 pasos de herramientas por turno: disponibilidad, agendar en HighLevel, guardar datos del cliente, webhooks. |
@@ -124,6 +158,24 @@ flowchart LR
 | 🧪 | **Playground** | Probás cada agente y su prompt antes de publicarlo. |
 
 ### 🛡️ Que la conversación nunca se corte ni se rompa
+
+```mermaid
+flowchart LR
+    P[📝 Pedido] --> M1[🥇 Modelo 1]
+    M1 -->|responde| G{🚫 Guardia}
+    M1 -->|falla o se satura| M2[🥈 Modelo 2]
+    M2 -->|responde| G
+    M2 -->|falla| M3[🥉 Modelo 3…]
+    M3 --> G
+    G -->|cortado, vacío o<br/>razonamiento filtrado| M1
+    G -->|ok| OK([✅ Al cliente])
+
+    style G fill:#E5484D,color:#fff
+    style OK fill:#25D366,color:#000
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#A855F7,color:#fff
+    style M3 fill:#C084FC,color:#000
+```
 
 - 🔁 **Cadena de respaldo:** si un modelo falla o se satura, la misma charla sigue con el siguiente, con los mismos mensajes.
 - 🚫 **Guardia de respuestas:** nunca le llega al cliente un texto cortado, vacío o con el razonamiento interno del modelo. Se reintenta o se pasa a otro modelo.
