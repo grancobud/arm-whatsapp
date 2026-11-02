@@ -10,6 +10,7 @@ import type {
   GetWorkspacesResult,
   WorkspaceWithStats,
 } from "../types";
+import { starterPrompt, STARTER_AGENT_NAMES } from "@/features/agents/lib/starter-prompts";
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -143,20 +144,13 @@ export async function createWorkspaceForClient(
   }
 
   // Seed starter prompt
-  const STARTER_PROMPTS: Record<string, string> = {
-    setter:
-      "Eres un agente de ventas amable y profesional para {{business_name}}. Tu objetivo es calificar leads y agendar citas.",
-    soporte:
-      "Eres un agente de soporte al cliente para {{business_name}}. Responde preguntas con precisión y empatía.",
-    agendamiento:
-      "Eres un asistente de agendamiento para {{business_name}}. Ayuda a los clientes a reservar citas.",
-    general:
-      "Eres un asistente virtual para {{business_name}}. Eres amable, claro y útil.",
-  };
 
-  const promptBody = (
-    STARTER_PROMPTS[useCase] ?? STARTER_PROMPTS.general
-  ).replace("{{business_name}}", name);
+  const seededType = useCase === "general" ? "setter" : useCase;
+  const promptBody = starterPrompt(
+    useCase,
+    name,
+    STARTER_AGENT_NAMES[seededType],
+  );
 
   const { data: promptRow } = await service
     .from("prompts")
@@ -203,18 +197,13 @@ export async function createWorkspaceForClient(
 
   // Seed the 3 agents (Setter / Soporte / Agendamiento). The chosen use case is
   // active (general → setter); each agent gets its own mode-scoped prompt.
-  const activeType = useCase === "general" ? "setter" : useCase;
-  const AGENT_NAMES: Record<string, string> = {
-    setter: "Martín",
-    soporte: "Sofía",
-    agendamiento: "Andrés",
-  };
+  const activeType = seededType;
+  const AGENT_NAMES = STARTER_AGENT_NAMES;
   for (const type of ["setter", "soporte", "agendamiento"] as const) {
-    const body = (
+    const body =
       type === activeType
         ? promptBody
-        : (STARTER_PROMPTS[type] ?? STARTER_PROMPTS.general)
-    ).replace("{{business_name}}", name);
+        : starterPrompt(type, name, STARTER_AGENT_NAMES[type]);
 
     const { data: agentPrompt } = await service
       .from("prompts")

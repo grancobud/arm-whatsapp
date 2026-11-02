@@ -142,7 +142,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | --- | :---: | --- |
 | 💬 Respuestas de la IA | ✅ | Guardia contra respuestas cortadas o con razonamiento filtrado, temperatura fija y system prompt por el canal correcto. |
 | 📊 Evaluación del agente | ✅ | Set de 14 conversaciones de WhatsApp con calificación automática por código y por modelo (`npm run eval:agente`). Encontró y se corrigió que una anotación en la memoria del cliente podía hacer que el agente ofreciera descuentos inexistentes. |
-| ✍️ Prompts | ⏳ | Pendiente: que el agente no siga vendiendo cuando el cliente pide la baja (detectado por la evaluación). |
+| ✍️ Prompts | ✅ | Prompts de arranque nuevos para los 4 tipos de agente: reglas claras con su porqué, etiquetas XML y ejemplos para los casos difíciles. En la evaluación pasó de 9.1 a 9.6: respeta la baja, usa la memoria del cliente y no revela sus instrucciones. |
 | 🔧 Herramientas | ⏳ | — |
 | 📚 Base de conocimiento | ⏳ | — |
 | 🖼️ Imágenes, documentos y caché | ⏳ | — |
