@@ -116,7 +116,10 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
 export const checkAvailabilityTool: Tool<Args> = {
   name: "check_availability",
   description:
-    "Consulta los horarios libres reales del calendario de HighLevel en un rango de fechas. Úsalo ANTES de agendar para ofrecer al cliente horarios que sí existen.",
+    "Consulta los horarios libres reales del calendario del negocio en un rango de fechas. " +
+    "Usala SIEMPRE antes de decirle al cliente que hay o no hay lugar, y antes de agendar: nunca supongas disponibilidad. " +
+    "Devuelve la lista de horarios libres (slots, en ISO con zona horaria). " +
+    "Si devuelve un error, decile al cliente que no pudiste ver la agenda en este momento y ofrecé avisarle: no inventes horarios ni digas que hay lugar.",
   sensitivity: "read",
   schema,
   enabledFor: () => true,

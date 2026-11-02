@@ -156,7 +156,9 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
 export const scheduleHighLevelTool: Tool<Args> = {
   name: "schedule_highlevel",
   description:
-    "Reserva una cita directamente en el calendario de HighLevel. Úsalo cuando el cliente confirme una fecha y hora específicas. Llama primero a check_availability para ofrecer horarios reales.",
+    "Reserva un turno en el calendario del negocio. " +
+    "Usala solo cuando el cliente ya confirmó un día y una hora concretos, y después de verificar con check_availability que ese horario está libre. Llamala una sola vez por turno. " +
+    "Devuelve el id de la cita y la fecha reservada; recién ahí confirmale al cliente. Si devuelve un error, avisale que no se pudo reservar.",
   sensitivity: "write",
   schema,
   enabledFor: () => true,

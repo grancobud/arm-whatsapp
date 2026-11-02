@@ -4,7 +4,7 @@ import type { Tool } from "../core/tool";
 export const echoTool: Tool<{ msg: string }> = {
   name: "echo",
   description:
-    "Echo back a message — used to validate the Tool contract end-to-end",
+    "Devuelve el mismo mensaje que recibe. Solo sirve para probar que las herramientas funcionan de punta a punta; no la uses con clientes.",
   sensitivity: "read",
   schema: z.object({ msg: z.string() }),
   enabledFor: () => true,

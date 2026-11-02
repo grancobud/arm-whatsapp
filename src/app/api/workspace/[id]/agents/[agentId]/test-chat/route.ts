@@ -145,6 +145,11 @@ export async function POST(
     .join("\n\n");
 
   const agentConfig = (agent.config ?? {}) as AgentConfig;
+  // Enable the workspace's tools in the playground so the agent can actually
+  // check availability / book (e.g. GHL). The playground has no live
+  // conversation, so the tool context carries only the workspace; tools that
+  // need a contact (booking) take an explicit contact_phone arg instead.
+  const tools = await getEnabledTools(workspaceId);
   const systemPrompt = buildSystemPrompt({
     nowContext: buildNowContext(timeZone),
     bizContext,
@@ -152,6 +157,7 @@ export async function POST(
     kbContext,
     responseStyle: agentConfig.responseStyle ?? null,
     guardrails,
+    toolNames: tools.map((t) => t.name),
     vars: {
       agentName: agent.name as string,
       businessName,
@@ -160,11 +166,6 @@ export async function POST(
   });
 
   try {
-    // Enable the workspace's tools in the playground so the agent can actually
-    // check availability / book (e.g. GHL). The playground has no live
-    // conversation, so the tool context carries only the workspace; tools that
-    // need a contact (booking) take an explicit contact_phone arg instead.
-    const tools = await getEnabledTools(workspaceId);
     const reply = await generateChatReply({
       model,
       systemPrompt,
