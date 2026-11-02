@@ -130,6 +130,29 @@ export async function getOpenRouterApiKey(
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// createChatProvider
+// OpenRouter by default. Setting LLM_BASE_URL points every chat reply at any
+// OpenAI-compatible endpoint instead (e.g. FreeLLMAPI behind a tunnel), with
+// LLM_API_KEY as its key; per-workspace OpenRouter keys are then ignored.
+// Pair it with OPENROUTER_DEFAULT_MODEL / OPENROUTER_FALLBACK_MODELS set to
+// model ids that endpoint knows (FreeLLMAPI: "auto").
+// ──────────────────────────────────────────────────────────────────────────────
+async function createChatProvider(workspaceId?: string) {
+  const customBaseUrl = process.env.LLM_BASE_URL?.trim();
+  return createOpenAI({
+    baseURL: customBaseUrl || "https://openrouter.ai/api/v1",
+    apiKey: customBaseUrl
+      ? (process.env.LLM_API_KEY ?? "")
+      : await getOpenRouterApiKey(workspaceId),
+    headers: {
+      "HTTP-Referer":
+        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+      "X-Title": "Agente WhatsApp",
+    },
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // generateReply — backward-compatible, no tools
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -167,15 +190,7 @@ export async function generateReply(
     process.env.OPENROUTER_DEFAULT_MODEL ??
     "openai/gpt-4o-mini";
 
-  const openrouter = createOpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: await getOpenRouterApiKey(params.workspaceId),
-    headers: {
-      "HTTP-Referer":
-        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      "X-Title": "Agente WhatsApp",
-    },
-  });
+  const openrouter = await createChatProvider(params.workspaceId);
 
   const { result, model: modelUsed } = await runWithModelChain(
     buildModelChain(modelId),
@@ -233,15 +248,7 @@ export async function generateChatReply(params: {
     process.env.OPENROUTER_DEFAULT_MODEL ??
     "openai/gpt-4o-mini";
 
-  const openrouter = createOpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: await getOpenRouterApiKey(params.workspaceId),
-    headers: {
-      "HTTP-Referer":
-        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      "X-Title": "Agente WhatsApp",
-    },
-  });
+  const openrouter = await createChatProvider(params.workspaceId);
 
   // Bridge Forge tools → AI SDK ToolSet (same shape as generateWithTools).
   // `toolsRan` blocks the model fallback once a tool had side effects.
@@ -334,15 +341,7 @@ export async function generateWithTools(
     process.env.OPENROUTER_DEFAULT_MODEL ??
     "openai/gpt-4o-mini";
 
-  const openrouter = createOpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: await getOpenRouterApiKey(params.workspaceId),
-    headers: {
-      "HTTP-Referer":
-        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      "X-Title": "Agente WhatsApp",
-    },
-  });
+  const openrouter = await createChatProvider(params.workspaceId);
 
   // Build AI SDK v6 ToolSet from available Forge tools.
   // Each entry uses inputSchema (zodSchema wrapper) + execute — the correct v6 shape.
