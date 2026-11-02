@@ -111,38 +111,46 @@ flowchart LR
 
 ### 🧩 Las piezas de IA
 
-Así recorre un mensaje del cliente todas las piezas, desde que llega hasta que
-sale la respuesta:
+Así recorre un mensaje del cliente todas las piezas.
+
+**1 · Llega el mensaje**
 
 ```mermaid
-flowchart TD
-    C([📱 Mensaje del cliente]) --> T{¿Audio o imagen?}
-    T -->|sí| V[🎙️ Transcribe o describe]
+flowchart LR
+    C([📱 Cliente]) --> T{¿Audio o<br/>imagen?}
+    T -->|sí| V[🎙️ Transcribe<br/>o describe]
     T -->|no| B
-    V --> B[⏳ Buffer de turnos<br/>junta los mensajes seguidos]
-    B --> J[⚖️ Juez Jev<br/>¿corresponde responder?]
-    J -->|no| H[🙋 Pasa a una persona]
+    V --> B[⏳ Buffer<br/>junta mensajes]
+    B --> J{⚖️ Juez Jev<br/>¿responder?}
+    J -->|no| H[🙋 Pasa a<br/>una persona]
     J -->|sí| A{{🤖 Agente}}
-    M[(🧾 Memoria<br/>con fuentes)] --> A
-    K[(📚 Knowledge Base<br/>RAG)] --> A
-    N[(🏪 Datos del<br/>negocio)] --> A
-    A <-->|hasta 5 pasos| HR[🔧 Herramientas<br/>turnos · CRM · webhooks]
-    A --> G[🚫 Guardia de respuestas]
+
+    style C fill:#25D366,color:#000
+    style B fill:#0EA5E9,color:#fff
+    style J fill:#F38020,color:#fff
+    style A fill:#8A2BE2,color:#fff
+```
+
+**2 · El agente responde**
+
+```mermaid
+flowchart LR
+    M[(🧾 Memoria)] --> A{{🤖 Agente}}
+    K[(📚 Knowledge<br/>Base)] --> A
+    N[(🏪 Negocio)] --> A
+    A <-->|hasta 5 pasos| HR[🔧 Herramientas]
+    A --> G{🚫 Guardia}
     G -->|texto roto| A
-    G -->|ok| R([💬 Respuesta por WhatsApp])
-    R --> E[🏷️ Etiquetas y resumen]
+    G -->|ok| R([💬 WhatsApp])
+    R --> E[🏷️ Etiquetas<br/>y resumen]
     A -.->|dato nuevo| M
-    A -.->|lead calificado| S[🎯 Setter → CRM]
 
     style A fill:#8A2BE2,color:#fff
     style G fill:#E5484D,color:#fff
-    style B fill:#0EA5E9,color:#fff
-    style J fill:#F38020,color:#fff
     style M fill:#3ECF8E,color:#000
     style K fill:#3ECF8E,color:#000
     style N fill:#3ECF8E,color:#000
     style R fill:#25D366,color:#000
-    style C fill:#25D366,color:#000
 ```
 
 | | Pieza | Qué hace |
