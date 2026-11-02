@@ -111,6 +111,48 @@ flowchart LR
 
 ### 🧩 Las piezas de IA
 
+Así recorre un mensaje del cliente todas las piezas.
+
+**1 · Llega el mensaje**
+
+```mermaid
+flowchart LR
+    C([📱 Cliente]) --> T{¿Audio o<br/>imagen?}
+    T -->|sí| V[🎙️ Transcribe<br/>o describe]
+    T -->|no| B
+    V --> B[⏳ Buffer<br/>junta mensajes]
+    B --> J{⚖️ Juez Jev<br/>¿responder?}
+    J -->|no| H[🙋 Pasa a<br/>una persona]
+    J -->|sí| A{{🤖 Agente}}
+
+    style C fill:#25D366,color:#000
+    style B fill:#0EA5E9,color:#fff
+    style J fill:#F38020,color:#fff
+    style A fill:#8A2BE2,color:#fff
+```
+
+**2 · El agente responde**
+
+```mermaid
+flowchart LR
+    M[(🧾 Memoria)] --> A{{🤖 Agente}}
+    K[(📚 Knowledge<br/>Base)] --> A
+    N[(🏪 Negocio)] --> A
+    A <-->|hasta 5 pasos| HR[🔧 Herramientas]
+    A --> G{🚫 Guardia}
+    G -->|texto roto| A
+    G -->|ok| R([💬 WhatsApp])
+    R --> E[🏷️ Etiquetas<br/>y resumen]
+    A -.->|dato nuevo| M
+
+    style A fill:#8A2BE2,color:#fff
+    style G fill:#E5484D,color:#fff
+    style M fill:#3ECF8E,color:#000
+    style K fill:#3ECF8E,color:#000
+    style N fill:#3ECF8E,color:#000
+    style R fill:#25D366,color:#000
+```
+
 | | Pieza | Qué hace |
 | :---: | --- | --- |
 | 💬 | **Respuesta con herramientas** | Lee memoria, negocio y Knowledge Base y responde. Hasta 5 pasos de herramientas por turno: disponibilidad, agendar en HighLevel, guardar datos del cliente, webhooks. |
@@ -124,6 +166,24 @@ flowchart LR
 | 🧪 | **Playground** | Probás cada agente y su prompt antes de publicarlo. |
 
 ### 🛡️ Que la conversación nunca se corte ni se rompa
+
+```mermaid
+flowchart LR
+    P[📝 Pedido] --> M1[🥇 Modelo 1]
+    M1 -->|responde| G{🚫 Guardia}
+    M1 -->|falla o se satura| M2[🥈 Modelo 2]
+    M2 -->|responde| G
+    M2 -->|falla| M3[🥉 Modelo 3…]
+    M3 --> G
+    G -->|cortado, vacío o<br/>razonamiento filtrado| M1
+    G -->|ok| OK([✅ Al cliente])
+
+    style G fill:#E5484D,color:#fff
+    style OK fill:#25D366,color:#000
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#A855F7,color:#fff
+    style M3 fill:#C084FC,color:#000
+```
 
 - 🔁 **Cadena de respaldo:** si un modelo falla o se satura, la misma charla sigue con el siguiente, con los mismos mensajes.
 - 🚫 **Guardia de respuestas:** nunca le llega al cliente un texto cortado, vacío o con el razonamiento interno del modelo. Se reintenta o se pasa a otro modelo.
@@ -142,7 +202,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | --- | :---: | --- |
 | 💬 Respuestas de la IA | ✅ | Guardia contra respuestas cortadas o con razonamiento filtrado, temperatura fija y system prompt por el canal correcto. |
 | 📊 Evaluación del agente | ✅ | Set de 14 conversaciones de WhatsApp con calificación automática por código y por modelo (`npm run eval:agente`). Encontró y se corrigió que una anotación en la memoria del cliente podía hacer que el agente ofreciera descuentos inexistentes. |
-| ✍️ Prompts | ⏳ | Pendiente: que el agente no siga vendiendo cuando el cliente pide la baja (detectado por la evaluación). |
+| ✍️ Prompts | ✅ | Prompts de arranque nuevos para los 4 tipos de agente: reglas claras con su porqué, etiquetas XML y ejemplos para los casos difíciles. En la evaluación pasó de 9.1 a 9.6: respeta la baja, usa la memoria del cliente y no revela sus instrucciones. |
 | 🔧 Herramientas | ⏳ | — |
 | 📚 Base de conocimiento | ⏳ | — |
 | 🖼️ Imágenes, documentos y caché | ⏳ | — |
