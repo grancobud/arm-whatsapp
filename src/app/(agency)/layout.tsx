@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { ACTIVE_WORKSPACE_COOKIE } from "@/features/workspace/services/active-workspace";
 import { cn } from "@/lib/utils";
 import { Building2, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +30,11 @@ export default async function AgencyLayout({
 
   if (!userRow?.is_super_admin) redirect("/inbox");
 
+  // /inbox sends a super admin without a selected client straight back here,
+  // so "App" only works after entering a client with "Gestionar".
+  const hasActiveClient = !!(await cookies()).get(ACTIVE_WORKSPACE_COOKIE)
+    ?.value;
+
   return (
     <div className="min-h-screen flex flex-col">
       <header
@@ -50,16 +57,31 @@ export default async function AgencyLayout({
         </div>
 
         <div className="flex items-center gap-1">
-          <Link href="/inbox">
+          {hasActiveClient ? (
+            <Link href="/inbox">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" aria-hidden="true" />
+                <span className="sr-only sm:not-sr-only sm:ml-2">App</span>
+              </Button>
+            </Link>
+          ) : (
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-foreground"
+              disabled
+              className="text-muted-foreground"
+              title="Entrá a un cliente con «Gestionar» para abrir la app"
             >
               <Settings className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">App</span>
+              <span className="sr-only sm:not-sr-only sm:ml-2">
+                App · elegí un cliente
+              </span>
             </Button>
-          </Link>
+          )}
 
           <form action={logout}>
             <Button
