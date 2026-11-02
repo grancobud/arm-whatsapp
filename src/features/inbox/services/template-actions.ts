@@ -1,5 +1,7 @@
 "use server";
 
+import { createClient } from "@/lib/supabase/server";
+import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
 import { listTemplates } from "./templates";
 import { dispatchTemplate } from "./dispatch";
 // NOTE: do NOT re-export types from a "use server" file — Next/Turbopack treats
@@ -15,6 +17,9 @@ import type { TemplateRow } from "./templates";
 export async function getApprovedTemplates(
   workspaceId: string,
 ): Promise<TemplateRow[]> {
+  // listTemplates uses the service-role client: check membership first.
+  const auth = await requireWorkspaceMember(workspaceId);
+  if (!auth.ok) return [];
   return listTemplates(workspaceId, "approved");
 }
 
@@ -29,6 +34,21 @@ export async function sendTemplateAction(
   language: string,
   variables: string[],
 ): Promise<{ ok: boolean; error?: string }> {
+  // dispatchTemplate runs with the service role and loads the conversation by id
+  // alone, so both checks belong here: the caller can send from this workspace,
+  // and the conversation is one of its own (not another tenant's contact).
+  const auth = await requireWorkspaceMember(workspaceId, { minRole: "agent" });
+  if (!auth.ok) return { ok: false, error: "No tenés permiso para enviar plantillas" };
+
+  const supabase = await createClient();
+  const { data: conversation } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("id", conversationId)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  if (!conversation) return { ok: false, error: "Conversación no encontrada" };
+
   const components =
     variables.length > 0
       ? [
@@ -48,6 +68,7 @@ export async function sendTemplateAction(
     templateName,
     templateLanguage: language,
     components,
+    senderUserId: auth.userId,
   });
 
   if (!result.ok) {

@@ -9,11 +9,20 @@ const HEADER =
   "# UI Feedback\n\nNotas para mejorar el Component Showcase.\n" +
   "Claude Code lee este archivo en el próximo /add-ui-kit y propone los cambios.\n\n---\n";
 
+// Dev-only showcase helper: it reads and writes a file on the server, so it must
+// never be callable in production, where anyone can reach a server action.
+function assertDev() {
+  if (process.env.NODE_ENV !== "development") {
+    throw new Error("Solo disponible en desarrollo");
+  }
+}
+
 export async function saveFeedback(
   section: string,
   feedback: string,
   agentationNotes?: string,
 ) {
+  assertDev();
   if (!existsSync(FEEDBACK_FILE)) {
     await writeFile(FEEDBACK_FILE, HEADER, "utf-8");
   }
@@ -30,10 +39,12 @@ export async function saveFeedback(
 }
 
 export async function getFeedback(): Promise<string> {
+  if (process.env.NODE_ENV !== "development") return "";
   if (!existsSync(FEEDBACK_FILE)) return "";
   return readFile(FEEDBACK_FILE, "utf-8");
 }
 
 export async function clearFeedback() {
+  assertDev();
   await writeFile(FEEDBACK_FILE, HEADER, "utf-8");
 }
