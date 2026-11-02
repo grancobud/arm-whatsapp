@@ -7,6 +7,10 @@ import { applyJevToBatch } from "@/features/jev-judge/apply";
 import type { ToolContext } from "@/features/tools/core/tool";
 import { resolveSystemPrompt } from "./prompt-resolver";
 import { buildSystemPrompt } from "./prompt-builder";
+import {
+  getActiveClaims,
+  formatClaimsContext,
+} from "@/features/arm/services/claims";
 import { getActiveAgent } from "@/features/agents/services/active-agent";
 import { maybeAutoProcess } from "@/features/agents/services/auto-tagging";
 import {
@@ -348,7 +352,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
     // The active agent (if any) selects its mode-scoped published prompt; the
     // resolver falls back to the global prompt when there is no active agent.
     const activeAgent = await getActiveAgent(batch.workspace_id);
-    const [resolvedPrompt, businessInfo, kbResults, kbLinks] =
+    const [resolvedPrompt, businessInfo, kbResults, kbLinks, claims] =
       await Promise.all([
         resolveSystemPrompt(
           batch.workspace_id,
@@ -357,6 +361,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
         getBusinessInfo(batch.workspace_id),
         searchKb(batch.workspace_id, mergedText, 3),
         listKbSourceLinks(batch.workspace_id),
+        getActiveClaims(batch.workspace_id, conversation.contact_id as string),
       ]);
 
     const kbContext = [
@@ -387,6 +392,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       bizContext,
       promptBase,
       summary,
+      memoryContext: formatClaimsContext(claims),
       kbContext,
       responseStyle: activeAgent?.config.responseStyle ?? null,
       guardrails: resolvedPrompt?.guardrails ?? null,

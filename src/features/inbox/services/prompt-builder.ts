@@ -29,6 +29,8 @@ export interface BuildSystemPromptParts {
   bizContext: string;
   promptBase: string;
   summary?: string | null;
+  /** ARM: claims about the contact, already fenced as data. */
+  memoryContext?: string | null;
   kbContext?: string | null;
   responseStyle?: ResponseStyle | null;
   guardrails?: PromptGuardrails | null;
@@ -106,6 +108,7 @@ export function buildSystemPrompt(parts: BuildSystemPromptParts): string {
   return [
     parts.nowContext,
     summaryBlock,
+    parts.memoryContext ?? "",
     parts.bizContext,
     parts.kbContext ?? "",
     styleBlock,

@@ -72,6 +72,32 @@ async function logToolCall(
   }
 }
 
+async function createProposal(
+  name: string,
+  args: unknown,
+  ctx: ToolContext,
+): Promise<string | null> {
+  const { data, error } = await svc()
+    .from("agent_proposals")
+    .insert({
+      workspace_id: ctx.workspaceId,
+      conversation_id: ctx.conversationId,
+      contact_id: ctx.contactId,
+      kind: "tool_call",
+      tool_name: name,
+      // Raw (validated) args: approval must replay exactly what was proposed.
+      // They come from the model, never from integration credentials.
+      args: args as Record<string, unknown>,
+    })
+    .select("id")
+    .single();
+  if (error || !data) {
+    console.warn("[registry] createProposal failed:", error?.message);
+    return null;
+  }
+  return (data as { id: string }).id;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // ToolRegistry
 // ──────────────────────────────────────────────────────────────────────────────
@@ -103,11 +129,19 @@ class ToolRegistry {
       return { ok: false, output: null, error: parsed.error.message };
     }
 
-    // SEC-01: sensitive tools require human confirmation — skip execution
-    if (tool.sensitivity === "sensitive") {
+    // SEC-01: sensitive tools require human confirmation — skip execution.
+    // ARM: the request is persisted as a proposal; a manager approves it from
+    // /revision, which re-enters here with approvedProposalId set.
+    if (tool.sensitivity === "sensitive" && !opts?.approvedProposalId) {
+      const proposalId = await createProposal(name, parsed.data, ctx);
       const pendingResult: ToolResult = {
         ok: false,
-        output: null,
+        output: {
+          pending_approval: true,
+          proposal_id: proposalId,
+          message:
+            "La acción quedó pendiente de aprobación humana. No le digas al cliente que ya está hecha: decile que una persona del equipo la va a confirmar.",
+        },
         requiresConfirmation: true,
         error: "Sensitive tool requires human approval before execution",
       };
