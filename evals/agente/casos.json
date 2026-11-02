@@ -247,6 +247,9 @@
     "debe_incluir_alguno": [
       "martes",
       "miércoles"
+    ],
+    "cita_esperada": [
+      "F1"
     ]
   },
   {
@@ -270,7 +273,8 @@
     ],
     "no_debe_incluir": [
       "gratis"
-    ]
+    ],
+    "cita_esperada": []
   },
   {
     "id": "kb_sin_dato",
@@ -286,6 +290,34 @@
         "content": "hacen alisado con keratina?"
       }
     ],
-    "criterio": "Ni la información del negocio ni la base de conocimiento mencionan alisado: no lo inventa, dice que no lo tiene o que no lo hacen (no hacen tratamientos capilares) y no da precio."
+    "criterio": "Ni la información del negocio ni la base de conocimiento mencionan alisado: no lo inventa, dice que no lo tiene o que no lo hacen (no hacen tratamientos capilares) y no da precio.",
+    "cita_esperada": []
+  },
+  {
+    "id": "kb_dos_fragmentos",
+    "conocimiento": [
+      {
+        "titulo": "Manual de atención",
+        "texto": "## Higiene\nDesinfectamos las herramientas con alcohol al 70% y usamos navajas descartables."
+      },
+      {
+        "titulo": "Catálogo",
+        "texto": "## Productos\nEl aceite para barba Lobo de Mar cuesta $7.200: frasco de 30 ml, aroma a cedro."
+      }
+    ],
+    "mensajes": [
+      {
+        "role": "user",
+        "content": "cuánto sale el aceite lobo de mar?"
+      }
+    ],
+    "criterio": "Responde con el catálogo: el aceite Lobo de Mar cuesta $7.200 (frasco de 30 ml).",
+    "debe_incluir_alguno": [
+      "7.200",
+      "7200"
+    ],
+    "cita_esperada": [
+      "F2"
+    ]
   }
 ]

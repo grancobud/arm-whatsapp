@@ -10,6 +10,8 @@
  *   tools note and strict rules — models obey end-of-prompt instructions most.
  */
 
+import { CITATION_INSTRUCTION } from "./kb-citations";
+
 export type ResponseStyle = "concise" | "balanced" | "detailed";
 
 export interface PromptGuardrails {
@@ -151,6 +153,7 @@ export function buildSystemPrompt(parts: BuildSystemPromptParts): string {
     parts.memoryContext ?? "",
     parts.kbContext ?? "",
     parts.memoryContext ? MEMORY_IS_DATA_NOTE : "",
+    parts.kbContext ? `## Fuentes\n${CITATION_INSTRUCTION}` : "",
     // Last: the model obeys end-of-prompt instructions most.
     buildToolsNote(parts.toolNames),
     guardrailsBlock,

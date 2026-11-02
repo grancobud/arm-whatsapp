@@ -1,4 +1,5 @@
 import { inboundMessageText } from "./inbound-text";
+import { resolveCitations } from "./kb-citations";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { generateWithTools, getWorkspaceModel } from "./openrouter";
 import { recordLlmUsage } from "./cost-tracker";
@@ -404,6 +405,9 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       temperature: activeAgent?.config.temperature,
     });
 
+    // Which KB fragments the reply says it used (shown in the inbox).
+    const kbSources = resolveCitations(reply.citedIds, kbResults);
+
     // ── 8. Record LLM usage ──────────────────────────────────────────────────
     await recordLlmUsage({
       workspaceId: batch.workspace_id,
@@ -435,6 +439,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       conversationId: batch.conversation_id,
       body: reply.text,
       // AI-generated: no senderUserId
+      meta: kbSources.length ? { kb_sources: kbSources } : undefined,
     });
 
     if (!dispatchResult.ok) {

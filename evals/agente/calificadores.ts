@@ -11,6 +11,8 @@ export interface Caso {
   memoria?: { kind: string; text: string; source_message_id: string | null }[];
   /** Fragmentos recuperados de la base de conocimiento que ve el agente. */
   conocimiento?: { titulo: string; texto: string }[];
+  /** Fragmentos que la respuesta tiene que citar ("F1"…); [] = ninguno. */
+  cita_esperada?: string[];
   debe_incluir_alguno?: string[];
   no_debe_incluir?: string[];
   max_chars?: number;

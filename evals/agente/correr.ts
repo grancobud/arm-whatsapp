@@ -19,8 +19,9 @@ import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-buil
 import { buildBusinessInfoContext } from "../../src/features/inbox/services/business-info.ts";
 import { formatClaimsContext } from "../../src/features/arm/services/claims.ts";
 import { formatKbContext } from "../../src/features/inbox/services/kb-service.ts";
+import { splitCitations } from "../../src/features/inbox/services/kb-citations.ts";
 import type { ClaimRow } from "../../src/features/arm/types/index.ts";
-import { calificarPorCodigo, type Caso, type Chequeo } from "./calificadores.ts";
+import { calificarPorCodigo, montosEn, type Caso, type Chequeo } from "./calificadores.ts";
 import { AHORA_FIJO, NEGOCIO, PRECIOS_PERMITIDOS } from "./negocio.ts";
 import { PROMPTS } from "./prompts.ts";
 
@@ -168,11 +169,21 @@ async function correrUno(version: string, caso: Caso, rep: number): Promise<Resu
         maxOutputTokens: 700,
       }),
     );
-    const { puntaje: codigo, chequeos } = calificarPorCodigo(caso, r.text, r.finishReason, PRECIOS_PERMITIDOS);
+    // Como en producción: la línea "FUENTES: F1" se saca antes de que la vea el cliente.
+    const citas = splitCitations(r.text);
+    // Los montos de la base de conocimiento que vio el agente también son reales.
+    const permitidos = new Set([...PRECIOS_PERMITIDOS, ...(caso.conocimiento ?? []).flatMap((k) => montosEn(k.texto))]);
+    const calif = calificarPorCodigo(caso, citas.text, r.finishReason, permitidos);
+    if (caso.cita_esperada) {
+      const ok = [...citas.ids].sort().join(",") === [...caso.cita_esperada].sort().join(",");
+      calif.chequeos.push({ nombre: "cita_correcta", ok, detalle: `citó [${citas.ids.join(",")}]` });
+      calif.puntaje = (10 * calif.chequeos.filter((c) => c.ok).length) / calif.chequeos.length;
+    }
+    const { puntaje: codigo, chequeos } = calif;
     let modelo: number | null = null;
     let juez: Resultado["juez"];
     try {
-      const j = await calificarPorModelo(caso, r.text);
+      const j = await calificarPorModelo(caso, citas.text);
       modelo = j.score;
       juez = { strengths: j.strengths, weaknesses: j.weaknesses, reasoning: j.reasoning, modelo: j.modelo };
     } catch (err) {
@@ -180,7 +191,7 @@ async function correrUno(version: string, caso: Caso, rep: number): Promise<Resu
       console.error(`  [juez falló] ${version}/${caso.id}#${rep}: ${String(err).slice(0, 120)}`);
     }
     return {
-      version, caso: caso.id, rep, respuesta: r.text, finishReason: r.finishReason,
+      version, caso: caso.id, rep, respuesta: citas.text, finishReason: r.finishReason,
       modeloQueRespondio: r.response.modelId, codigo, chequeos, modelo, juez,
       final: modelo === null ? null : (codigo + modelo) / 2,
     };
