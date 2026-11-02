@@ -50,6 +50,10 @@ export interface MediaMeta {
   size_bytes?: number;
   /** Verbatim transcript filled by media-understanding for audio/voice notes */
   transcript?: string;
+  /** Text extracted from a PDF by media-understanding (capped) */
+  document_text?: string;
+  document_pages?: number;
+  document_truncated?: boolean;
   /** Short AI description filled by media-understanding for images */
   description?: string;
 }

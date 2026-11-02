@@ -17,6 +17,7 @@ import {
 import {
   transcribeAudio,
   describeImage,
+  readDocument,
 } from "@/features/inbox/services/media-understanding";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 
@@ -246,6 +247,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 workspaceId,
               });
               if (description) mediaMeta.description = description;
+            } else if (normalized.type === "document") {
+              const doc = await readDocument({
+                storagePath: mediaMeta.storage_path,
+                mimeType: mediaMeta.mime_type,
+              });
+              if (doc) {
+                mediaMeta.document_text = doc.text;
+                mediaMeta.document_pages = doc.pages;
+                mediaMeta.document_truncated = doc.truncated;
+              }
             }
 
             await patchMessageMedia(workspaceId, messageId, mediaMeta);

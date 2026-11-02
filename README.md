@@ -102,8 +102,9 @@ flowchart LR
 > y listo. Las variables `OPENROUTER_*` conservan ese nombre por compatibilidad,
 > pero apuntan al endpoint que configures. Los embeddings de la Knowledge Base
 > también salen de ahí (`gemini-embedding-001`, fijo; `KB_EMBEDDING_MODEL` lo
-> cambia, pero hay que volver a cargar los documentos). La transcripción de
-> audios todavía usa su propia clave de proveedor.
+> cambia, pero hay que volver a cargar los documentos). Las imágenes también (`MEDIA_IMAGE_MODEL`,
+> por defecto `mistral-medium-3.5`). La transcripción de audios todavía usa su
+> propia clave de proveedor.
 
 > [!WARNING]
 > **Antes de usarlo con clientes reales:** el agente responde solo mientras tu PC
@@ -207,7 +208,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | ✍️ Prompts | ✅ | Prompts de arranque nuevos para los 4 tipos de agente: reglas claras con su porqué, etiquetas XML y ejemplos para los casos difíciles. En la evaluación pasó de 9.1 a 9.6: respeta la baja, usa la memoria del cliente y no revela sus instrucciones. |
 | 🔧 Herramientas | ✅ | Prueba con la función real y herramientas simuladas (`npm run eval:herramientas`): de 14/20 a 40/42 chequeos. Ahora consulta la agenda antes de ofrecer turnos, no tapa un error del calendario, guarda la memoria del cliente desde la primera charla, siempre responde con texto después de usar una herramienta, no reintenta acciones que podrían reservar dos veces y cuenta bien los tokens de los turnos con herramientas. |
 | 📚 Base de conocimiento | ✅ | Embeddings gratis por FreeLLMAPI con un modelo fijo, corte de documentos por secciones (sin partir palabras ni precios) y fragmentos marcados como datos para que una página importada no pueda dar órdenes. Medido con `npm run eval:conocimiento`: el fragmento correcto queda primero en 15 de 17 preguntas (antes 11). Se quitó una búsqueda de respaldo que armaba SQL pegando texto. |
-| 🖼️ Imágenes, documentos y caché | ⏳ | — |
+| 🖼️ Imágenes, documentos y caché | ✅ | Imágenes por FreeLLMAPI con modelo fijo, que copian exactos importes y números de operación de un comprobante. PDFs leídos del lado del servidor: antes el agente decía «no puedo leer su contenido», ahora responde el total y la seña exactos. Imágenes y documentos entran marcados como datos (un cartel con una orden no la hace cumplir). El prompt pone primero lo fijo de cada cliente: el comienzo reutilizable entre mensajes pasó del 1% al 72% y un proveedor con caché ya lee el 83% desde caché (`npm run eval:multimedia`, `npm run eval:cache`). |
 
 ---
 
