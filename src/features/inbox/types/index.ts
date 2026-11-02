@@ -30,6 +30,8 @@ export interface ContactRow {
   stage: string | null;
   tags: string[] | null;
   opt_in: boolean;
+  /** ARM: how consent was obtained (Ley 25.326). */
+  opt_in_source?: string | null;
   created_at: string;
   updated_at: string;
 }

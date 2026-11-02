@@ -19,6 +19,8 @@ export interface ToolResult {
 export interface ToolRunOptions {
   timeoutMs?: number; // default 10_000
   retries?: number; // default 1
+  /** ARM: set only by the approval flow — lets a sensitive tool actually run. */
+  approvedProposalId?: string;
 }
 
 export interface Tool<TArgs = unknown> {

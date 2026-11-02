@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { processNextBatch } from "@/features/inbox/services/buffer";
+import { drainCampaignQueue } from "@/features/arm/services/campaigns";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Vercel Cron: process buffer batches every minute
@@ -36,5 +37,18 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const processedCount = results.filter((r) => r.processed).length;
 
-  return NextResponse.json({ ok: true, processed: processedCount });
+  // ARM: send the next small batch of approved campaign recipients. A failure
+  // here must never break the reply loop above, which already ran.
+  let campaignSends = 0;
+  try {
+    campaignSends = await drainCampaignQueue();
+  } catch (err) {
+    console.error("[cron] drainCampaignQueue failed:", err);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    processed: processedCount,
+    campaign_sends: campaignSends,
+  });
 }

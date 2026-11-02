@@ -19,6 +19,7 @@ const UpdateContactSchema = z.object({
   stage: z.enum(["new", "engaged", "qualified", "customer", "lost"]).optional(),
   tags: z.array(z.string()).optional(),
   opt_in: z.boolean().optional(),
+  opt_in_source: z.string().max(200).optional(),
 });
 
 export type UpdateContactInput = z.infer<typeof UpdateContactSchema>;

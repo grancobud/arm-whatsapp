@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { updateContact, syncContactHL } from "../services/contact-actions";
 import type { ContactRow } from "@/features/inbox/types";
+import { ClaimsSection } from "@/features/arm/components/claims-section";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -84,6 +85,7 @@ export function CrmPanel({
   const [tags, setTags] = useState<string[]>(contact.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [optIn, setOptIn] = useState(contact.opt_in);
+  const [optInSource, setOptInSource] = useState(contact.opt_in_source ?? "");
 
   // Section collapse
   const [contactOpen, setContactOpen] = useState(true);
@@ -120,6 +122,7 @@ export function CrmPanel({
         stage,
         tags,
         opt_in: optIn,
+        opt_in_source: optInSource.trim() || undefined,
       });
 
       if (result.ok) {
@@ -215,6 +218,21 @@ export function CrmPanel({
                 aria-label="WhatsApp Opt-in"
               />
             </div>
+
+            {/* Consent evidence — required to send campaigns lawfully */}
+            {optIn && (
+              <div className="space-y-1">
+                <Label className="text-[10px] text-[hsl(var(--electric-lime))] uppercase tracking-wider">
+                  Cómo dio el consentimiento
+                </Label>
+                <Input
+                  value={optInSource}
+                  onChange={(e) => setOptInSource(e.target.value)}
+                  placeholder="Ej: formulario web, en el local…"
+                  className="h-7 text-xs"
+                />
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -295,6 +313,9 @@ export function CrmPanel({
           </div>
         )}
       </section>
+
+      {/* ── Section: ARM memory ── */}
+      <ClaimsSection contactId={contact.id} />
 
       {/* ── Actions ── */}
       <div className="px-4 py-3 border-t border-border/40 flex flex-col gap-2 mt-auto">
