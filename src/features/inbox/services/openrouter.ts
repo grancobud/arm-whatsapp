@@ -1,6 +1,11 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, tool, zodSchema, stepCountIs, APICallError } from "ai";
 import type { ToolSet } from "ai";
+import { checkReply } from "./reply-guard";
+
+// Customer-facing replies should be consistent, not creative: the same
+// question should get the same answer. An agent can override it.
+export const DEFAULT_TEMPERATURE = 0.3;
 
 // OpenRouter occasionally returns transient upstream errors (502/503/504) when a
 // provider hiccups. Retry idempotent, side-effect-free completions a couple of
@@ -44,7 +49,7 @@ import { decryptCredentials } from "@/shared/lib/integration-secrets";
 import {
   buildModelChain,
   runWithModelChain,
-  EmptyReplyError,
+  UnusableReplyError,
   DEFAULT_FALLBACK_CHAIN,
 } from "./model-chain";
 
@@ -152,6 +157,24 @@ async function createChatProvider(workspaceId?: string) {
   });
 }
 
+/**
+ * Never send a truncated, empty or leaked-reasoning reply: throw so the chain
+ * tries the next model. After a tool ran an empty text is fine (the tool was
+ * the answer), but other failures still throw — the chain then stops instead
+ * of repeating the side effect, and nothing broken reaches the customer.
+ */
+function guardReply<R extends { text: string; finishReason: string }>(
+  r: R,
+  model: string,
+  toolsRan: boolean,
+): { r: R; text: string } {
+  const check = checkReply(r.text, r.finishReason);
+  if (check.ok || (toolsRan && check.reason === "empty")) {
+    return { r, text: check.text };
+  }
+  throw new UnusableReplyError(model, check.reason);
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // generateReply — backward-compatible, no tools
 // ──────────────────────────────────────────────────────────────────────────────
@@ -197,23 +220,23 @@ export async function generateReply(
     async (m) => {
       const r = await generateText({
         model: openrouter.chat(m),
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }],
+        temperature: DEFAULT_TEMPERATURE,
         // Un solo reintento por modelo: si sigue fallando, conviene pasar al siguiente de la cadena.
         maxRetries: 1,
         maxOutputTokens: 1024,
       });
-      if (!r.text.trim()) throw new EmptyReplyError(m);
-      return r;
+      const check = checkReply(r.text, r.finishReason);
+      if (!check.ok) throw new UnusableReplyError(m, check.reason);
+      return { r, text: check.text };
     },
     { onFallback: logFallback("reply") },
   );
 
   // AI SDK v6 exposes inputTokens / outputTokens; map to stable naming
-  const promptTokens = result.usage?.inputTokens ?? 0;
-  const completionTokens = result.usage?.outputTokens ?? 0;
+  const promptTokens = result.r.usage?.inputTokens ?? 0;
+  const completionTokens = result.r.usage?.outputTokens ?? 0;
 
   return {
     text: result.text,
@@ -241,6 +264,8 @@ export async function generateChatReply(params: {
   workspaceId?: string;
   /** Optional tool-calling: when provided, the model can invoke these tools. */
   tools?: ForgeTool[];
+  /** Overrides DEFAULT_TEMPERATURE (agent config). */
+  temperature?: number;
   toolContext?: ToolContext;
 }): Promise<GenerateReplyResult> {
   const modelId =
@@ -275,10 +300,9 @@ export async function generateChatReply(params: {
       const r = await withTransientRetry(() =>
         generateText({
           model: openrouter.chat(m),
-          messages: [
-            { role: "system", content: params.systemPrompt },
-            ...params.messages,
-          ],
+          system: params.systemPrompt,
+          messages: params.messages,
+          temperature: params.temperature ?? DEFAULT_TEMPERATURE,
           tools: hasTools ? aiTools : undefined,
           stopWhen: hasTools ? stepCountIs(5) : undefined,
           // Un solo reintento por modelo: si sigue fallando, conviene pasar al siguiente de la cadena.
@@ -286,16 +310,15 @@ export async function generateChatReply(params: {
         maxOutputTokens: params.maxOutputTokens ?? 512,
         }),
       );
-      if (!r.text.trim() && !toolsRan) throw new EmptyReplyError(m);
-      return r;
+      return guardReply(r, m, toolsRan);
     },
     { hasSideEffects: () => toolsRan, onFallback: logFallback("chat") },
   );
 
   return {
     text: result.text,
-    promptTokens: result.usage?.inputTokens ?? 0,
-    completionTokens: result.usage?.outputTokens ?? 0,
+    promptTokens: result.r.usage?.inputTokens ?? 0,
+    completionTokens: result.r.usage?.outputTokens ?? 0,
     modelUsed,
   };
 }
@@ -313,6 +336,8 @@ export interface GenerateWithToolsParams {
   toolContext: ToolContext;
   /** Prior conversation turns (oldest→newest), injected between system and the current batch. */
   history?: Array<{ role: "user" | "assistant"; content: string }>;
+  /** Overrides DEFAULT_TEMPERATURE (agent config). */
+  temperature?: number;
 }
 
 export interface GenerateWithToolsResult {
@@ -371,28 +396,28 @@ export async function generateWithTools(
     async (m) => {
       const r = await generateText({
         model: openrouter.chat(m),
+        system: params.systemPrompt,
         messages: [
-          { role: "system", content: params.systemPrompt },
           ...(params.history ?? []),
           { role: "user", content: params.userMessage },
         ],
+        temperature: params.temperature ?? DEFAULT_TEMPERATURE,
         tools: hasTools ? aiTools : undefined,
         stopWhen: hasTools ? stepCountIs(5) : undefined,
         // Un solo reintento por modelo: si sigue fallando, conviene pasar al siguiente de la cadena.
         maxRetries: 1,
         maxOutputTokens: 1024,
       });
-      if (!r.text.trim() && !toolsRan) throw new EmptyReplyError(m);
-      return r;
+      return guardReply(r, m, toolsRan);
     },
     { hasSideEffects: () => toolsRan, onFallback: logFallback("tools") },
   );
 
   return {
     text: result.text,
-    inputTokens: result.usage?.inputTokens ?? 0,
-    outputTokens: result.usage?.outputTokens ?? 0,
-    toolCallsExecuted: result.steps?.length ?? 0,
+    inputTokens: result.r.usage?.inputTokens ?? 0,
+    outputTokens: result.r.usage?.outputTokens ?? 0,
+    toolCallsExecuted: result.r.steps?.length ?? 0,
     modelUsed,
   };
 }

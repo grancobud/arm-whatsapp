@@ -435,6 +435,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       availableTools: decisionResult.availableTools,
       toolContext: toolCtx,
       history,
+      temperature: activeAgent?.config.temperature,
     });
 
     // ── 8. Record LLM usage ──────────────────────────────────────────────────

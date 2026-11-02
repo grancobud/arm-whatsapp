@@ -87,6 +87,18 @@ export class EmptyReplyError extends Error {
   }
 }
 
+/**
+ * The model answered, but the text must not reach a customer: empty, cut by
+ * the token limit, or its own reasoning leaked as the reply (see reply-guard).
+ * Named like EmptyReplyError so shouldFallBack moves on to the next model.
+ */
+export class UnusableReplyError extends Error {
+  constructor(model: string, reason?: string) {
+    super(`Model ${model} returned an unusable reply (${reason ?? "unknown"})`);
+    this.name = "NoContentError";
+  }
+}
+
 export interface ChainAttempt {
   model: string;
   error: string;
@@ -112,7 +124,18 @@ export async function runWithModelChain<T>(
   for (let i = 0; i < models.length; i++) {
     const model = models[i];
     try {
-      return { result: await call(model), model, attempts };
+      try {
+        return { result: await call(model), model, attempts };
+      } catch (first) {
+        // A router model ("auto") picks a different upstream each call, so an
+        // unusable reply deserves one more try with the same id — unless a
+        // tool already ran.
+        if (!(first instanceof UnusableReplyError) || opts.hasSideEffects?.()) {
+          throw first;
+        }
+        attempts.push({ model, error: first.message.slice(0, 200) });
+        return { result: await call(model), model, attempts };
+      }
     } catch (err) {
       lastErr = err;
       const attempt = { model, error: err instanceof Error ? err.message.slice(0, 200) : String(err) };
