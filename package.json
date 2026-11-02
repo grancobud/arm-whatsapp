@@ -10,7 +10,9 @@
     "lint": "eslint src/ middleware.ts",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:unit": "node --test evals/agente/calificadores.test.ts",
+    "eval:agente": "node evals/agente/correr.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.68",
