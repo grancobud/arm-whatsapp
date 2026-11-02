@@ -1,118 +1,176 @@
-# ARM WhatsApp — Agent Relationship Management
+<div align="center">
 
-Plataforma **multi-tenant** donde un agente de IA y tu equipo trabajan juntos la
-relación con cada cliente por WhatsApp. No es solo un bot que contesta: el agente
-**recuerda con fuentes**, **propone y espera aprobación** para lo importante, y
-**sale a reactivar clientes** con consentimiento. Cada workspace es un negocio.
+# 🤝 ARM WhatsApp
 
-## Qué lo hace un ARM
+### Agent Relationship Management por WhatsApp
 
-- **Memoria con fuentes.** El agente guarda necesidades, objeciones, compromisos
-  y datos del cliente citando el mensaje que los respalda. Lo que no tiene fuente
-  queda marcado como *corazonada*. En la próxima charla el agente arranca sabiendo
-  todo eso, y el equipo lo ve en «Lo que sabemos».
-- **El agente propone, una persona decide.** Las acciones sensibles quedan en
-  **Revisión** hasta que un manager las aprueba; recién ahí se ejecutan.
-- **Reactivación saliente.** **Campañas** a segmentos de contactos con opt-in,
-  con plantillas aprobadas por Meta, aprobación previa y envío por tandas. Cuando
-  el cliente responde, el agente sigue la conversación. Métricas de enviados,
-  respuestas, bajas y fallidos.
-- **Los datos son tuyos.** Configuración → Datos exporta todo (JSON) o los
-  contactos (CSV). Las credenciales nunca se exportan.
+**Un agente de IA y tu equipo trabajando juntos la relación con cada cliente.**
+No es un bot que contesta: recuerda con fuentes, propone y espera tu aprobación,
+y sale a reactivar clientes con consentimiento.
 
-## La IA del agente
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-RLS%20%2B%20pgvector-3ECF8E?logo=supabase&logoColor=white)
+![WhatsApp](https://img.shields.io/badge/WhatsApp-YCloud-25D366?logo=whatsapp&logoColor=white)
+![FreeLLMAPI](https://img.shields.io/badge/IA-FreeLLMAPI%20gratis-8A2BE2)
+![Cloudflare](https://img.shields.io/badge/T%C3%BAnel-Cloudflare-F38020?logo=cloudflare&logoColor=white)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel&logoColor=white)
+![Licencia](https://img.shields.io/badge/licencia-MIT-blue)
 
-El agente no es un único prompt: es una cadena de piezas de IA, cada una con su
-tarea y su modelo.
+**[🌐 arm-whatsapp.vercel.app](https://arm-whatsapp.vercel.app)**
 
-| Pieza | Qué hace |
-| --- | --- |
-| **Respuesta con herramientas** | Lee la memoria del cliente, el negocio y la Knowledge Base, y responde. Puede llamar herramientas (hasta 5 pasos por turno): consultar disponibilidad, agendar en HighLevel, guardar datos del cliente, llamar webhooks. |
-| **Buffer de turnos** | Agrupa los mensajes que el cliente manda seguidos y responde una sola vez, como una persona. |
-| **Notas de voz e imágenes** | Transcribe audios y describe imágenes con un modelo multimodal barato, así el agente «escucha» y «ve» sin cambiar de modelo. |
-| **Knowledge Base (RAG)** | Búsqueda semántica con pgvector sobre los documentos del negocio; los fragmentos relevantes entran al prompt de cada respuesta. |
-| **Memoria con fuentes** | La herramienta `remember_fact` guarda necesidades, objeciones y compromisos con la cita del cliente. |
-| **Modo setter** | Califica leads con preguntas eliminatorias y un puntaje estructurado; los calificados pasan al CRM. |
-| **Etiquetas y resumen automáticos** | Después de cada respuesta, etiqueta la conversación y actualiza un resumen que mantiene el contexto largo. |
-| **Juez de mensajes (Jev)** | Opcional: estima intención, probabilidad de respuesta automática y de baja, y frena respuestas que no corresponden. |
-| **Generador de plantillas** | Redacta plantillas de WhatsApp listas para enviar a aprobación de Meta. |
-| **Playground** | Probás cada agente y su prompt en un chat de prueba antes de publicarlo. |
+</div>
 
-### Que la conversación nunca se corte
+---
 
-- **Cadena de modelos de respaldo:** si un modelo falla, se satura o se queda
-  sin saldo, la misma charla sigue con el siguiente, con los mismos mensajes.
-  Por defecto son 7 modelos gratis y uno pago barato al final
-  (`OPENROUTER_FALLBACK_MODELS` la reemplaza sin tocar código).
-- **Reintentos** ante errores transitorios del proveedor.
-- **Control de costos por workspace:** pasado un umbral diario de tokens, pasa a
-  un modelo más barato; pasado el tope, frena la IA y avisa.
-- **Guardrails** por prompt: reglas que el agente cumple siempre y cosas que no
-  hace nunca.
+## 🧠 ¿Qué es un ARM y por qué esto es uno?
 
-### Proveedores de modelos
+Un **CRM** guarda lo que tu equipo carga a mano. Un **ARM** (*Agent Relationship
+Management*) pone a un agente de IA a trabajar la relación **junto** al equipo:
+conversa, recuerda, propone y actúa, siempre con una persona al mando de lo
+importante.
 
-Por defecto usa **[OpenRouter](https://openrouter.ai)**: cientos de modelos con
-una sola clave, incluidos modelos gratis. Cada agente puede tener su propio
-modelo.
+| | Pilar | Cómo lo hace ARM WhatsApp |
+| :---: | --- | --- |
+| 🧾 | **Memoria con fuentes** | El agente guarda necesidades, objeciones, compromisos y datos citando el mensaje del cliente que los respalda. Lo que no tiene fuente queda como *corazonada*. En la próxima charla arranca sabiendo todo, y el equipo lo ve en «Lo que sabemos». |
+| ✋ | **El agente propone, una persona decide** | Las acciones sensibles quedan en **Revisión** hasta que un manager las aprueba. Recién ahí se ejecutan. |
+| 📣 | **Reactivación saliente** | **Campañas** a segmentos con opt-in, plantillas aprobadas por Meta, aprobación previa y envío por tandas. Cuando el cliente responde, el agente sigue la charla. |
+| 📦 | **Los datos son tuyos** | Configuración → Datos exporta todo en JSON o los contactos en CSV. Las credenciales nunca salen. |
 
-La app también puede usar **cualquier endpoint compatible con la API de
-OpenAI**, con dos variables de entorno:
+```mermaid
+flowchart LR
+    C([📱 Cliente]) -->|WhatsApp| B[⏳ Buffer de turnos]
+    B --> A{🤖 Agente}
+    M[(🧾 Memoria<br/>con fuentes)] --> A
+    K[(📚 Knowledge<br/>Base)] --> A
+    A -->|respuesta| C
+    A -->|acción sensible| R[✋ Revisión]
+    R -->|manager aprueba| X[⚙️ Se ejecuta]
+    A -->|dato nuevo| M
+    CA[📣 Campañas] -->|plantilla con opt-in| C
 
-| Variable | Valor |
-| --- | --- |
-| `LLM_BASE_URL` | URL del endpoint, ej. `https://llm.tu-dominio.com/v1` |
-| `LLM_API_KEY` | La clave de ese endpoint |
-| `OPENROUTER_DEFAULT_MODEL` | Un modelo que ese endpoint conozca (ej. `auto`) |
-| `OPENROUTER_FALLBACK_MODELS` | Lista separada por comas (ej. `auto`) |
-
-Sin `LLM_BASE_URL`, todo sigue por OpenRouter.
-
-### Modelos gratis con FreeLLMAPI
-
-**FreeLLMAPI** es un router local que reparte los pedidos entre proveedores con
-cupo gratis y pasa al siguiente cuando uno se agota (modelo `auto`). Corre en tu
-PC; para que la app en Vercel lo alcance se publica con un **túnel de
-Cloudflare en Docker**:
-
-```
-WhatsApp → Vercel (ARM WhatsApp) → https://llm.tu-dominio.com/v1
-        → Cloudflare Tunnel → contenedor cloudflared → FreeLLMAPI (tu PC :31415)
+    style A fill:#8A2BE2,color:#fff
+    style R fill:#F38020,color:#fff
+    style M fill:#3ECF8E,color:#000
+    style CA fill:#25D366,color:#000
 ```
 
-1. Levantá el túnel con [`deploy/freellmapi-tunnel/docker-compose.yml`](deploy/freellmapi-tunnel/docker-compose.yml)
-   (`docker compose up -d`). Se reinicia solo con Docker.
-2. En Vercel cargá `LLM_BASE_URL`, `LLM_API_KEY` y los modelos en `auto`.
-3. Redeploy.
+---
 
-**Antes de usarlo con clientes reales:** el agente responde solo mientras tu PC
-esté prendida, y los proveedores gratis pueden guardar o entrenar con lo que
-reciben. Para demos y pruebas es ideal; con datos personales de clientes
-conviene un modelo pago que no entrene con los datos.
+## ⚡ La IA: modelos gratis con FreeLLMAPI
 
-## Qué más incluye
+El agente corre con **FreeLLMAPI**, un router
+local que reparte cada pedido entre proveedores con cupo gratis y salta al
+siguiente cuando uno se agota (modelo `auto`). **Costo de IA: cero.**
 
-- **Inbox** tipo WhatsApp Web con buffer inteligente (agrupa mensajes y responde
-  como un solo turno coherente).
-- **Motor de agente** con state machine + handoff humano, prompting
-  personalizable y tools activables (incluye modo setter y agendamiento).
-- **CRM** con sincronización opcional a HighLevel (por workspace).
-- **Knowledge Base** con búsqueda semántica (pgvector).
-- **Templates** y manejo de la ventana de 24 h de Meta.
-- **Multi-tenant** con roles, RLS por workspace y super admin.
+Corre en tu PC y la app en Vercel lo alcanza por un **túnel de Cloudflare dentro
+de Docker**, que arranca solo junto con Docker:
 
-## Stack
+```mermaid
+flowchart LR
+    W([📱 WhatsApp]) --> V[▲ Vercel<br/>ARM WhatsApp]
+    V -->|HTTPS + clave| T[☁️ Cloudflare Tunnel]
+    T --> D[🐳 cloudflared<br/>en Docker]
+    D --> F[⚡ FreeLLMAPI<br/>tu PC :31415]
+    F --> P1[Gemini]
+    F --> P2[Qwen]
+    F --> P3[Mistral]
+    F --> P4[…y más]
 
-| Capa      | Tecnología                                   |
-| --------- | -------------------------------------------- |
-| Framework | Next.js 16 + React 19 + TypeScript           |
-| Estilos   | Tailwind CSS + shadcn/ui                     |
-| Backend   | Supabase (Auth + PostgreSQL + RLS + Storage) |
-| IA        | OpenRouter, o cualquier endpoint compatible con OpenAI (`LLM_BASE_URL`) |
-| WhatsApp  | YCloud                                       |
-| Hosting   | Vercel                                       |
+    style F fill:#8A2BE2,color:#fff
+    style T fill:#F38020,color:#fff
+    style V fill:#000,color:#fff
+```
 
-## Instalar
+**Conectarlo en 3 pasos**
+
+1. 🐳 Levantá el túnel: [`deploy/freellmapi-tunnel/docker-compose.yml`](deploy/freellmapi-tunnel/docker-compose.yml) → `docker compose up -d`.
+2. 🔑 En Vercel cargá las variables:
+
+   | Variable | Valor |
+   | --- | --- |
+   | `LLM_BASE_URL` | `https://llm.tu-dominio.com/v1` |
+   | `LLM_API_KEY` | la clave de FreeLLMAPI |
+   | `OPENROUTER_DEFAULT_MODEL` | `auto` |
+   | `OPENROUTER_FALLBACK_MODELS` | `auto,auto:fast` |
+
+3. 🚀 Redeploy.
+
+> [!NOTE]
+> Sirve cualquier endpoint compatible con la API de OpenAI: cambiás `LLM_BASE_URL`
+> y listo. Las variables `OPENROUTER_*` conservan ese nombre por compatibilidad,
+> pero apuntan al endpoint que configures. La transcripción de audios y los
+> embeddings de la Knowledge Base todavía usan su propia clave de proveedor.
+
+> [!WARNING]
+> **Antes de usarlo con clientes reales:** el agente responde solo mientras tu PC
+> esté prendida, y los proveedores gratis pueden guardar o entrenar con lo que
+> reciben. Ideal para demos y pruebas. Con datos personales de clientes, conviene
+> un modelo pago que no entrene con los datos.
+
+### 🧩 Las piezas de IA
+
+| | Pieza | Qué hace |
+| :---: | --- | --- |
+| 💬 | **Respuesta con herramientas** | Lee memoria, negocio y Knowledge Base y responde. Hasta 5 pasos de herramientas por turno: disponibilidad, agendar en HighLevel, guardar datos del cliente, webhooks. |
+| ⏳ | **Buffer de turnos** | Junta los mensajes que el cliente manda seguidos y responde una sola vez, como una persona. |
+| 🎙️ | **Notas de voz e imágenes** | Transcribe audios y describe imágenes, así el agente «escucha» y «ve». |
+| 📚 | **Knowledge Base (RAG)** | Búsqueda semántica con pgvector sobre los documentos del negocio. |
+| 🎯 | **Modo setter** | Califica leads con preguntas eliminatorias y puntaje; los calificados pasan al CRM. |
+| 🏷️ | **Etiquetas y resumen** | Etiqueta cada conversación y mantiene un resumen para el contexto largo. |
+| ⚖️ | **Juez de mensajes (Jev)** | Opcional: estima intención y probabilidad de baja, y frena lo que no corresponde. |
+| 📝 | **Generador de plantillas** | Redacta plantillas listas para la aprobación de Meta. |
+| 🧪 | **Playground** | Probás cada agente y su prompt antes de publicarlo. |
+
+### 🛡️ Que la conversación nunca se corte ni se rompa
+
+- 🔁 **Cadena de respaldo:** si un modelo falla o se satura, la misma charla sigue con el siguiente, con los mismos mensajes.
+- 🚫 **Guardia de respuestas:** nunca le llega al cliente un texto cortado, vacío o con el razonamiento interno del modelo. Se reintenta o se pasa a otro modelo.
+- 🌡️ **Temperatura baja (0.3):** respuestas consistentes de un mensaje al otro.
+- 💰 **Control de costos por workspace:** pasado un umbral diario baja a un modelo más barato; pasado el tope, frena y avisa.
+- 📏 **Guardrails** por prompt: lo que el agente hace siempre y lo que no hace nunca.
+
+---
+
+## ✅ Auditado contra el curso «Building with the Claude API»
+
+Revisamos ARM WhatsApp **capítulo por capítulo** contra el curso de Anthropic
+Academy, probando cada requisito con tráfico real contra FreeLLMAPI (las
+funciones exclusivas de Anthropic quedan afuera). Cada falla encontrada se
+corrige en el repo.
+
+| Capítulo | Estado | Qué se corrigió |
+| --- | :---: | --- |
+| 1 · Fundamentos de la API | ✅ | Guardia contra respuestas cortadas o con razonamiento filtrado, temperatura fija, system prompt por el canal correcto. |
+| 2 · Evals | 🔄 | Dataset de conversaciones de WhatsApp + calificador por código y por modelo + comparación de prompts (`npm run eval:agente`). |
+| 3 · Prompt engineering | ⏳ | — |
+| 4 · Tool use | ⏳ | — |
+| 5 · RAG | ⏳ | — |
+| 6 · Funciones avanzadas | ⏳ | — |
+
+---
+
+## 📦 Qué más incluye
+
+- 📥 **Inbox** tipo WhatsApp Web con buffer inteligente.
+- 🔀 **Motor de agente** con state machine, handoff humano, prompts personalizables y herramientas activables.
+- 👥 **CRM** con sincronización opcional a HighLevel.
+- 🕐 **Templates** y manejo de la ventana de 24 h de Meta.
+- 🏢 **Multi-tenant** con roles, RLS por workspace y super admin.
+
+## 🛠️ Stack
+
+| Capa | Tecnología |
+| --- | --- |
+| ⚛️ Framework | Next.js 16 + React 19 + TypeScript |
+| 🎨 Estilos | Tailwind CSS + shadcn/ui |
+| 🗄️ Backend | Supabase (Auth + PostgreSQL + RLS + Storage + pgvector) |
+| ⚡ IA | FreeLLMAPI (o cualquier endpoint compatible con OpenAI) |
+| 💚 WhatsApp | YCloud |
+| ▲ Hosting | Vercel |
+
+## 🚀 Instalar
 
 ```bash
 git clone https://github.com/grancobud/arm-whatsapp.git
@@ -123,7 +181,7 @@ claude "lee INSTALAR.md e instálalo"
 El agente configura Supabase, despliega a Vercel, crea el super admin y deja el
 cron corriendo. Ver [`INSTALAR.md`](INSTALAR.md).
 
-## Desarrollo local
+## 💻 Desarrollo local
 
 ```bash
 npm install
@@ -133,14 +191,14 @@ npm run dev                        # http://localhost:3000
 
 Otros comandos: `npm run build`, `npm run lint`, `npm run typecheck`.
 
-## El cron
+## ⏱️ El cron
 
 Un job de **pg_cron + pg_net** llama cada minuto a `/api/cron/buffer-flush`
-(autenticado con `CRON_SECRET`). Drena los mensajes entrantes agrupados y envía
-la siguiente tanda de las campañas aprobadas. Ver
+(autenticado con `CRON_SECRET`). Drena los mensajes agrupados y envía la
+siguiente tanda de las campañas aprobadas. Ver
 [`supabase/cron/schedule-buffer-flush.sql`](supabase/cron/schedule-buffer-flush.sql).
 
-## Estructura
+## 🗂️ Estructura
 
 ```
 src/
@@ -150,24 +208,34 @@ src/
 supabase/
 ├── migrations/ # Schema (RLS, super admin, pg_cron, ARM, …)
 └── cron/       # SQL post-deploy del cron
+deploy/
+└── freellmapi-tunnel/  # Túnel de Cloudflare en Docker
 scripts/
 ├── setup.mjs       # Orquestador de instalación (secrets, env, db, cron)
 └── seed-admin.mjs  # Super admin + workspace demo
 ```
 
-## Variables de entorno
+## 🔐 Variables de entorno y seguridad
 
 Ver [`.env.local.example`](.env.local.example). `ENCRYPTION_KEY`,
 `BUFFER_PROCESS_SECRET` y `CRON_SECRET` las genera `scripts/setup.mjs`. YCloud y
-HighLevel no son variables de entorno: se configuran por workspace en
-Settings → Integraciones.
+HighLevel se configuran por workspace en Settings → Integraciones.
 
 Lo que se guarda en Integraciones se cifra con **AES-256-GCM** antes de tocar la
-base, ligado a su `workspace_id` + proveedor: un blob copiado de un tenant a otro
+base, ligado a su `workspace_id` y proveedor: un blob copiado de un tenant a otro
 no descifra.
 
 ---
 
-## Licencia
+## 👥 Autores
+
+ARM WhatsApp es un trabajo conjunto de:
+
+| | |
+| :---: | --- |
+| <img src="https://github.com/grancobud.png" width="56" alt="Gastón" /> | **Gastón R. Persoglia** · [@grancobud](https://github.com/grancobud) |
+| <img src="https://github.com/thomasskarp.png" width="56" alt="Tomas" /> | **Tomas Skarp** · [@thomasskarp](https://github.com/thomasskarp) |
+
+## 📄 Licencia
 
 [MIT](LICENSE).
