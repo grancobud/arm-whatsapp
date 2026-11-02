@@ -9,6 +9,8 @@ export interface Caso {
   mensajes: { role: "user" | "assistant"; content: string }[];
   criterio: string;
   memoria?: { kind: string; text: string; source_message_id: string | null }[];
+  /** Fragmentos recuperados de la base de conocimiento que ve el agente. */
+  conocimiento?: { titulo: string; texto: string }[];
   debe_incluir_alguno?: string[];
   no_debe_incluir?: string[];
   max_chars?: number;
@@ -29,6 +31,7 @@ const FUGAS = [
   /## Información del Negocio/i,
   /REGLAS ESTRICTAS/i,
   /<\/?memoria_cliente>/i,
+  /<\/?base_conocimiento>/i,
   /remember_fact/i,
 ];
 

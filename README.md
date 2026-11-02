@@ -100,8 +100,10 @@ flowchart LR
 > [!NOTE]
 > Sirve cualquier endpoint compatible con la API de OpenAI: cambiás `LLM_BASE_URL`
 > y listo. Las variables `OPENROUTER_*` conservan ese nombre por compatibilidad,
-> pero apuntan al endpoint que configures. La transcripción de audios y los
-> embeddings de la Knowledge Base todavía usan su propia clave de proveedor.
+> pero apuntan al endpoint que configures. Los embeddings de la Knowledge Base
+> también salen de ahí (`gemini-embedding-001`, fijo; `KB_EMBEDDING_MODEL` lo
+> cambia, pero hay que volver a cargar los documentos). La transcripción de
+> audios todavía usa su propia clave de proveedor.
 
 > [!WARNING]
 > **Antes de usarlo con clientes reales:** el agente responde solo mientras tu PC
@@ -204,7 +206,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 📊 Evaluación del agente | ✅ | Set de 14 conversaciones de WhatsApp con calificación automática por código y por modelo (`npm run eval:agente`). Encontró y se corrigió que una anotación en la memoria del cliente podía hacer que el agente ofreciera descuentos inexistentes. |
 | ✍️ Prompts | ✅ | Prompts de arranque nuevos para los 4 tipos de agente: reglas claras con su porqué, etiquetas XML y ejemplos para los casos difíciles. En la evaluación pasó de 9.1 a 9.6: respeta la baja, usa la memoria del cliente y no revela sus instrucciones. |
 | 🔧 Herramientas | ✅ | Prueba con la función real y herramientas simuladas (`npm run eval:herramientas`): de 14/20 a 40/42 chequeos. Ahora consulta la agenda antes de ofrecer turnos, no tapa un error del calendario, guarda la memoria del cliente desde la primera charla, siempre responde con texto después de usar una herramienta, no reintenta acciones que podrían reservar dos veces y cuenta bien los tokens de los turnos con herramientas. |
-| 📚 Base de conocimiento | ⏳ | — |
+| 📚 Base de conocimiento | ✅ | Embeddings gratis por FreeLLMAPI con un modelo fijo, corte de documentos por secciones (sin partir palabras ni precios) y fragmentos marcados como datos para que una página importada no pueda dar órdenes. Medido con `npm run eval:conocimiento`: el fragmento correcto queda primero en 15 de 17 preguntas (antes 11). Se quitó una búsqueda de respaldo que armaba SQL pegando texto. |
 | 🖼️ Imágenes, documentos y caché | ⏳ | — |
 
 ---

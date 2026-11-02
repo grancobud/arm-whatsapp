@@ -1,0 +1,85 @@
+[
+  {
+    "q": "qué pasa si llego tarde?",
+    "seccion": "Turnos y demoras",
+    "evidencia": "más de 15 minutos tarde"
+  },
+  {
+    "q": "si cancelo a último momento me cobran algo?",
+    "seccion": "Turnos y demoras",
+    "evidencia": "2 horas antes"
+  },
+  {
+    "q": "cuánto sale el aceite lobo de mar?",
+    "seccion": "Productos a la venta",
+    "evidencia": "$7.200"
+  },
+  {
+    "q": "tienen algo para la caspa?",
+    "seccion": "Productos a la venta",
+    "evidencia": "anticaspa"
+  },
+  {
+    "q": "cada cuántos cortes me regalan uno?",
+    "seccion": "Tarjeta de fidelidad",
+    "evidencia": "8 sellos"
+  },
+  {
+    "q": "el PROMO-NOV-24 sirve un sábado?",
+    "seccion": "Promociones vigentes",
+    "evidencia": "martes y miércoles"
+  },
+  {
+    "q": "las navajas son nuevas?",
+    "seccion": "Higiene",
+    "evidencia": "navajas descartables"
+  },
+  {
+    "q": "puedo ir en silla de ruedas?",
+    "seccion": "Accesibilidad y estacionamiento",
+    "evidencia": "sin escalones"
+  },
+  {
+    "q": "dónde dejo el auto?",
+    "seccion": "Accesibilidad y estacionamiento",
+    "evidencia": "estacionamiento medido"
+  },
+  {
+    "q": "vienen a domicilio para la boda de mi hermano?",
+    "seccion": "Grupos y eventos",
+    "evidencia": "recargo del 30%"
+  },
+  {
+    "q": "qué es el código PROMO-DIC-05?",
+    "evidencia": "PROMO-DIC-05"
+  },
+  {
+    "q": "tengo el ESTUDIANTE-15, sirve los lunes?",
+    "evidencia": "ESTUDIANTE-15"
+  },
+  {
+    "q": "cuánto cuesta el gel Ancla?",
+    "evidencia": "$5.400"
+  },
+  {
+    "q": "tienen algo para que no se me caiga el pelo?",
+    "evidencia": "Faro Force"
+  },
+  {
+    "q": "puedo pagar con crédito?",
+    "evidencia": "recargo del 10%"
+  },
+  {
+    "q": "el aceite Brisa de qué aroma es?",
+    "evidencia": "aroma cítrico"
+  },
+  {
+    "q": "si traigo un amigo me hacen descuento?",
+    "evidencia": "REFERIDO-10"
+  },
+  {
+    "q": "a qué hora juega Boca hoy?",
+    "seccion": null,
+    "evidencia": null
+  }
+]
