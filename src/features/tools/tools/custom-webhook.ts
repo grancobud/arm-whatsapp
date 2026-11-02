@@ -147,7 +147,9 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
 export const customWebhookTool: Tool<Args> = {
   name: "custom_webhook",
   description:
-    "Envía los datos del contacto a un webhook externo configurado por el negocio. Úsalo cuando debas notificar o registrar al contacto en un sistema externo.",
+    "Envía los datos del contacto al sistema externo del negocio (por ejemplo, para que el equipo lo llame). " +
+    "Usala cuando el cliente pida que lo contacten o lo registren. Es una acción sensible: queda pendiente hasta que una persona del equipo la aprueba. " +
+    "Devuelve si quedó pendiente de aprobación; en ese caso no le digas al cliente que ya está hecho.",
   sensitivity: "sensitive",
   schema,
   enabledFor: () => true,

@@ -1,7 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, tool, zodSchema, stepCountIs, APICallError } from "ai";
-import type { ToolSet } from "ai";
-import { checkReply } from "./reply-guard";
+import type { ModelMessage, ToolSet } from "ai";
+import { checkReply, stripThinking } from "./reply-guard";
 
 // Customer-facing replies should be consistent, not creative: the same
 // question should get the same answer. An agent can override it.
@@ -382,7 +382,8 @@ export async function generateWithTools(
       description: forgeTool.description,
       inputSchema: zodSchema(forgeTool.schema),
       execute: async (args: unknown): Promise<unknown> => {
-        toolsRan = true;
+        // A read (e.g. check_availability) is safe to repeat with another model.
+        if (forgeTool.sensitivity !== "read") toolsRan = true;
         return registry.run(forgeTool.name, args, ctx);
       },
     });
@@ -394,13 +395,14 @@ export async function generateWithTools(
   const { result, model: modelUsed } = await runWithModelChain(
     buildModelChain(modelId),
     async (m) => {
+      const messages: ModelMessage[] = [
+        ...(params.history ?? []),
+        { role: "user", content: params.userMessage },
+      ];
       const r = await generateText({
         model: openrouter.chat(m),
         system: params.systemPrompt,
-        messages: [
-          ...(params.history ?? []),
-          { role: "user", content: params.userMessage },
-        ],
+        messages,
         temperature: params.temperature ?? DEFAULT_TEMPERATURE,
         tools: hasTools ? aiTools : undefined,
         stopWhen: hasTools ? stepCountIs(5) : undefined,
@@ -408,7 +410,41 @@ export async function generateWithTools(
         maxRetries: 1,
         maxOutputTokens: 1024,
       });
-      return guardReply(r, m, toolsRan);
+
+      // After tools the model may stop without writing (it answered only with a
+      // tool call, or the 5 steps ran out mid-tool). The customer would get
+      // nothing — e.g. a booked slot with no confirmation. One closing call
+      // without tools turns the tool results into a reply.
+      if (hasTools && r.steps.length > 1 && !stripThinking(r.text)) {
+        const closing = await generateText({
+          model: openrouter.chat(m),
+          system: params.systemPrompt,
+          messages: [...messages, ...r.response.messages],
+          temperature: params.temperature ?? DEFAULT_TEMPERATURE,
+          maxRetries: 1,
+          maxOutputTokens: 600,
+        });
+        return guardReply(
+          {
+            text: closing.text,
+            finishReason: closing.finishReason,
+            steps: r.steps.length + 1,
+            usage: {
+              inputTokens: (r.totalUsage?.inputTokens ?? 0) + (closing.usage?.inputTokens ?? 0),
+              outputTokens: (r.totalUsage?.outputTokens ?? 0) + (closing.usage?.outputTokens ?? 0),
+            },
+          },
+          m,
+          toolsRan,
+        );
+      }
+      return guardReply(
+        // totalUsage, not usage: usage is only the last step, and with tools
+        // the cost guard would undercount every multi-step turn.
+        { text: r.text, finishReason: r.finishReason, steps: r.steps.length, usage: r.totalUsage },
+        m,
+        toolsRan,
+      );
     },
     { hasSideEffects: () => toolsRan, onFallback: logFallback("tools") },
   );
@@ -417,7 +453,7 @@ export async function generateWithTools(
     text: result.text,
     inputTokens: result.r.usage?.inputTokens ?? 0,
     outputTokens: result.r.usage?.outputTokens ?? 0,
-    toolCallsExecuted: result.r.steps?.length ?? 0,
+    toolCallsExecuted: result.r.steps,
     modelUsed,
   };
 }

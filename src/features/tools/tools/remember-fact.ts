@@ -48,7 +48,9 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
 export const rememberFactTool: Tool<Args> = {
   name: "remember_fact",
   description:
-    "Guarda en la memoria del cliente una necesidad, objetivo, objeción, compromiso, riesgo o dato importante que dijo. Citá sus palabras exactas en quote. No se lo menciones al cliente.",
+    "Guarda en la memoria del cliente algo importante que dijo, para recordarlo en las próximas charlas. " +
+    "Usala cada vez que el cliente mencione una necesidad, un objetivo, un evento con fecha (casamiento, viaje), una objeción, un compromiso o un dato personal relevante, aunque también le respondas otra cosa. " +
+    "Citá sus palabras exactas en quote. Devuelve si se guardó. No se lo menciones al cliente.",
   sensitivity: "write",
   schema,
   enabledFor: () => true,

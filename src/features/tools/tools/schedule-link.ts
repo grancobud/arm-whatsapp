@@ -3,7 +3,10 @@ import { z } from "zod";
 import type { Tool, ToolContext, ToolResult } from "../core/tool";
 
 const schema = z.object({
-  contact_name: z.string().optional(),
+  contact_name: z
+    .string()
+    .optional()
+    .describe("Nombre del contacto, si lo dijo"),
 });
 
 type Args = z.infer<typeof schema>;
@@ -53,7 +56,9 @@ async function run(_args: Args, ctx: ToolContext): Promise<ToolResult> {
 export const scheduleLinkTool: Tool<Args> = {
   name: "schedule_link",
   description:
-    "Returns a scheduling link so the contact can book an appointment. Use when the user asks to schedule a meeting, appointment, or call.",
+    "Devuelve el link de agenda del negocio para que el cliente reserve solo. " +
+    "Usala cuando el cliente quiera agendar una cita, reunión o llamada y no haya calendario conectado para reservar directo. " +
+    "Devuelve la URL; pasásela al cliente tal cual.",
   sensitivity: "read",
   schema,
   enabledFor: () => true,

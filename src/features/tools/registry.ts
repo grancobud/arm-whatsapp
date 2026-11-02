@@ -150,7 +150,9 @@ class ToolRegistry {
     }
 
     const timeoutMs = opts?.timeoutMs ?? 10_000;
-    const retries = opts?.retries ?? 1;
+    // The timeout does not cancel the first attempt, so a retry of a write tool
+    // could run it twice (e.g. book the same slot twice). Only reads retry.
+    const retries = opts?.retries ?? (tool.sensitivity === "read" ? 1 : 0);
 
     const attempt = () =>
       runWithTimeout(() => tool.run(parsed.data, ctx, opts), timeoutMs);

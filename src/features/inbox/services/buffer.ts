@@ -396,6 +396,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       kbContext,
       responseStyle: activeAgent?.config.responseStyle ?? null,
       guardrails: resolvedPrompt?.guardrails ?? null,
+      toolNames: (decisionResult.availableTools ?? []).map((t) => t.name),
       vars: {
         agentName: activeAgent?.name ?? null,
         businessName: structured?.name ?? null,
