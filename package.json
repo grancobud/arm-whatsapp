@@ -11,10 +11,12 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:unit": "node --import ./evals/registrar.mjs --test evals/agente/calificadores.test.ts evals/herramientas/cierre.test.ts evals/conocimiento/corte.test.ts",
+    "test:unit": "node --import ./evals/registrar.mjs --test evals/agente/calificadores.test.ts evals/herramientas/cierre.test.ts evals/conocimiento/corte.test.ts evals/multimedia/entrada.test.ts",
     "eval:agente": "node --import ./evals/registrar.mjs evals/agente/correr.ts",
     "eval:herramientas": "node --import ./evals/registrar.mjs evals/herramientas/correr.ts",
-    "eval:conocimiento": "node --import ./evals/registrar.mjs evals/conocimiento/correr.ts"
+    "eval:conocimiento": "node --import ./evals/registrar.mjs evals/conocimiento/correr.ts",
+    "eval:multimedia": "node --import ./evals/registrar.mjs evals/multimedia/correr.ts",
+    "eval:cache": "node --import ./evals/registrar.mjs evals/cache/medir.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.68",
@@ -49,6 +51,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "unpdf": "1.9.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },

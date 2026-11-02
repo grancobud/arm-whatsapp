@@ -4,9 +4,10 @@
  * Both production (buffer.ts) and the in-UI playground (test-chat) MUST use this
  * so they never drift. Pure string assembly — no DB, no "use server".
  *
- * Order (guardrails go LAST — models obey end-of-prompt instructions most):
- *   now → summary → business info → knowledge base → response style →
- *   prompt base → WhatsApp format note → strict rules/restrictions
+ * Order: what is fixed per workspace first (prompt base → format notes →
+ *   business info → response style), so prompt caching can reuse it; then what
+ *   changes each turn (now → summary → memory → knowledge base); and LAST the
+ *   tools note and strict rules — models obey end-of-prompt instructions most.
  */
 
 export type ResponseStyle = "concise" | "balanced" | "detailed";
@@ -86,7 +87,7 @@ function buildToolsNote(toolNames: string[] | undefined): string {
   ];
   if (toolNames.includes("remember_fact")) {
     lines.push(
-      "- Cuando el cliente cuente algo importante (una necesidad, un evento con fecha, una objeción, un compromiso, un dato personal relevante), llamá a remember_fact en ese mismo turno, además de responderle.",
+      "- Memoria: si el último mensaje del cliente cuenta algo importante (una necesidad, un evento con fecha como un casamiento o un viaje, una objeción, un compromiso, un dato personal relevante), tu PRIMER paso es llamar a remember_fact con sus palabras exactas; recién después respondele. Si no cuenta nada de eso, no la llames.",
     );
   }
   return lines.join("\n");
@@ -136,16 +137,21 @@ export function buildSystemPrompt(parts: BuildSystemPromptParts): string {
   const guardrailsBlock = buildGuardrailsBlock(parts.guardrails);
 
   return [
-    parts.nowContext,
-    summaryBlock,
-    parts.memoryContext ?? "",
-    parts.bizContext,
-    parts.kbContext ?? "",
-    styleBlock,
+    // Fixed per workspace first: providers with automatic prompt caching reuse
+    // only an identical PREFIX, and the clock used to come first (it changes
+    // every minute), so nothing was ever reused. Measured with evals/cache.
     base,
     WHATSAPP_FORMAT_NOTE,
     MEDIA_CAPABILITY_NOTE,
+    parts.bizContext,
+    styleBlock,
+    // Changes every turn.
+    parts.nowContext,
+    summaryBlock,
+    parts.memoryContext ?? "",
+    parts.kbContext ?? "",
     parts.memoryContext ? MEMORY_IS_DATA_NOTE : "",
+    // Last: the model obeys end-of-prompt instructions most.
     buildToolsNote(parts.toolNames),
     guardrailsBlock,
   ]
