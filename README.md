@@ -168,6 +168,13 @@ no descifra.
 
 ---
 
+## Autores
+
+ARM WhatsApp es un trabajo conjunto de:
+
+- **Gastón R. Persoglia** — [@grancobud](https://github.com/grancobud)
+- **Tomas Skarp** — [@thomasskarp](https://github.com/thomasskarp)
+
 ## Licencia
 
 [MIT](LICENSE).
