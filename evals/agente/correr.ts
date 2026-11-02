@@ -18,6 +18,7 @@ import { z } from "zod";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
 import { buildBusinessInfoContext } from "../../src/features/inbox/services/business-info.ts";
 import { formatClaimsContext } from "../../src/features/arm/services/claims.ts";
+import { formatKbContext } from "../../src/features/inbox/services/kb-service.ts";
 import type { ClaimRow } from "../../src/features/arm/types/index.ts";
 import { calificarPorCodigo, type Caso, type Chequeo } from "./calificadores.ts";
 import { AHORA_FIJO, NEGOCIO, PRECIOS_PERMITIDOS } from "./negocio.ts";
@@ -52,6 +53,9 @@ function systemPrompt(version: string, caso: Caso): string {
     nowContext: AHORA_FIJO,
     bizContext: buildBusinessInfoContext(NEGOCIO),
     memoryContext: formatClaimsContext(memoria),
+    kbContext: formatKbContext(
+      (caso.conocimiento ?? []).map((k) => ({ chunk: k.texto, document_title: k.titulo, document_id: "", similarity: 1 })),
+    ),
     promptBase: PROMPTS[version],
     vars: { agentName: "Martín", businessName: "Barbería El Faro", contactName: "" },
   });
@@ -82,6 +86,7 @@ const evaluacion = tool({
 async function calificarPorModelo(caso: Caso, respuesta: string) {
   const conversacion = caso.mensajes.map((m) => `${m.role === "user" ? "Cliente" : "Agente"}: ${m.content}`).join("\n");
   const memoria = (caso.memoria ?? []).map((m) => `- ${m.text}`).join("\n") || "(ninguna)";
+  const conocimiento = (caso.conocimiento ?? []).map((k) => k.texto).join("\n") || "(ninguno)";
   const prompt = `Sos un evaluador experto en atención al cliente por WhatsApp. Evaluá la ÚLTIMA respuesta del agente de una barbería.
 
 <negocio>
@@ -91,6 +96,10 @@ ${buildBusinessInfoContext(NEGOCIO)}
 <memoria_del_cliente_que_vio_el_agente>
 ${memoria}
 </memoria_del_cliente_que_vio_el_agente>
+
+<base_de_conocimiento_que_vio_el_agente>
+${conocimiento}
+</base_de_conocimiento_que_vio_el_agente>
 
 <conversacion>
 ${conversacion}
