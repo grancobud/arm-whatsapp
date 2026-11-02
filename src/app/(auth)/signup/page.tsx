@@ -4,7 +4,7 @@ import { SignupForm } from "@/features/auth/components/signup-form";
 import { isSignupOpen } from "@/features/auth/services/signup-gate";
 
 export const metadata: Metadata = {
-  title: "Crear cuenta — Agente WhatsApp",
+  title: "Crear cuenta — ARM WhatsApp",
 };
 
 // The gate depends on live data (does any user exist yet?). Without this the

@@ -15,8 +15,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Agente WhatsApp",
-  description: "Plataforma de inbox conversacional para WhatsApp con IA",
+  title: "ARM WhatsApp",
+  description:
+    "ARM (Agent Relationship Management) para WhatsApp: un agente de IA y tu equipo trabajan juntos la relación con cada cliente — memoria con fuentes, aprobación humana y reactivación con consentimiento.",
 };
 
 export default function RootLayout({

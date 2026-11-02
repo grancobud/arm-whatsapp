@@ -9,6 +9,7 @@ import {
   Send,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ArmExplainer } from "@/features/arm/components/arm-explainer";
 import type {
   WorkspaceMetrics,
   RecentConversation,
@@ -120,6 +121,8 @@ export function DashboardMetrics({
           Actividad del workspace hoy
         </p>
       </div>
+
+      <ArmExplainer />
 
       {/* KPI grid — 2x2 on mobile, 1x4 on lg */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

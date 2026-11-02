@@ -3,4 +3,4 @@
 # The REMOTE project is linked at install time with:
 #   supabase link --project-ref <your-ref>
 # (scripts/setup.mjs db-push derives <your-ref> from NEXT_PUBLIC_SUPABASE_URL.)
-project_id = "whatsapp-saas"
+project_id = "arm-whatsapp"

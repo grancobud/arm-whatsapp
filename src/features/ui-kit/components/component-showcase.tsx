@@ -98,7 +98,7 @@ import {
 // Primary source: globals.css CSS variables.
 // ============================================================
 const BRAND = {
-  name: "Agente WhatsApp",
+  name: "ARM WhatsApp",
   primaryHex: "#B5F23D", // oklch(0.90 0.21 126) — Electric Lime
   accentHex: "#B5F23D",
   font: "Space Grotesk (display) · Geist Sans (body) · Geist Mono",
@@ -1114,7 +1114,7 @@ function PatternSidebar() {
               <MessageSquare className="h-4 w-4" />
             </div>
             <span className="font-display text-sm font-semibold">
-              Agente WhatsApp
+              ARM WhatsApp
             </span>
           </div>
           <nav className="flex-1 space-y-1">
@@ -1139,7 +1139,7 @@ function PatternSidebar() {
               <AvatarFallback className="text-xs">CD</AvatarFallback>
             </Avatar>
             <div className="flex-1 text-xs">
-              <p className="font-medium">Carlos D.</p>
+              <p className="font-medium">Martina R.</p>
               <p className="text-muted-foreground">Admin</p>
             </div>
             <Settings className="h-4 w-4 text-muted-foreground" />
@@ -1234,7 +1234,7 @@ function PatternNavbar() {
               <MessageSquare className="h-4 w-4" />
             </div>
             <span className="font-display text-sm font-semibold">
-              Agente WhatsApp
+              ARM WhatsApp
             </span>
           </div>
           <nav className="hidden items-center gap-1 sm:flex">

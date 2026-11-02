@@ -173,7 +173,7 @@ export async function completeOnboarding(
   // is active (general → setter); each agent gets its own mode-scoped prompt.
   const activeType = data.useCase === "general" ? "setter" : data.useCase;
   const AGENT_NAMES: Record<string, string> = {
-    setter: "Carlos",
+    setter: "Martín",
     soporte: "Sofía",
     agendamiento: "Andrés",
   };

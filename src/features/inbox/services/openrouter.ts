@@ -173,7 +173,7 @@ export async function generateReply(
     headers: {
       "HTTP-Referer":
         process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      "X-Title": "Agente WhatsApp",
+      "X-Title": "ARM WhatsApp",
     },
   });
 
@@ -239,7 +239,7 @@ export async function generateChatReply(params: {
     headers: {
       "HTTP-Referer":
         process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      "X-Title": "Agente WhatsApp",
+      "X-Title": "ARM WhatsApp",
     },
   });
 
@@ -340,7 +340,7 @@ export async function generateWithTools(
     headers: {
       "HTTP-Referer":
         process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      "X-Title": "Agente WhatsApp",
+      "X-Title": "ARM WhatsApp",
     },
   });
 

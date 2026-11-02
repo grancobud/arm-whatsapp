@@ -1,43 +1,34 @@
-# Agente WhatsApp — Inbox Conversacional con IA
+# ARM WhatsApp — Agent Relationship Management
 
-Plataforma **multi-tenant** de inbox de WhatsApp con un agente de IA operable por
-humano: inbox tipo WhatsApp Web, CRM, motor de agente con handoff, agendamiento y
-cumplimiento de la ventana de 24h de Meta. Cada workspace es un cliente.
+Plataforma **multi-tenant** donde un agente de IA y tu equipo trabajan juntos la
+relación con cada cliente por WhatsApp. No es solo un bot que contesta: el agente
+**recuerda con fuentes**, **propone y espera aprobación** para lo importante, y
+**sale a reactivar clientes** con consentimiento. Cada workspace es un negocio.
 
-## Instalar (one-click con tu agente)
+## Qué lo hace un ARM
 
-Clona el repo, ábrelo en Claude Code y deja que el agente lo instale:
+- **Memoria con fuentes.** El agente guarda necesidades, objeciones, compromisos
+  y datos del cliente citando el mensaje que los respalda. Lo que no tiene fuente
+  queda marcado como *corazonada*. En la próxima charla el agente arranca sabiendo
+  todo eso, y el equipo lo ve en «Lo que sabemos».
+- **El agente propone, una persona decide.** Las acciones sensibles quedan en
+  **Revisión** hasta que un manager las aprueba; recién ahí se ejecutan.
+- **Reactivación saliente.** **Campañas** a segmentos de contactos con opt-in,
+  con plantillas aprobadas por Meta, aprobación previa y envío por tandas. Cuando
+  el cliente responde, el agente sigue la conversación. Métricas de enviados,
+  respuestas, bajas y fallidos.
+- **Los datos son tuyos.** Configuración → Datos exporta todo (JSON) o los
+  contactos (CSV). Las credenciales nunca se exportan.
 
-```bash
-git clone https://github.com/Carlos-Dominguez-faber/whatsapp-saas.git
-cd whatsapp-saas
-claude "lee INSTALAR.md e instálalo"
-```
-
-(O arrastra **[`INSTALAR.md`](INSTALAR.md)** al chat de Claude Code y escribe
-**"instálalo"**.)
-
-El agente configura tu Supabase, despliega a tu Vercel, crea tu super admin y deja
-el cron corriendo en ~15 minutos. Solo te pedirá tus keys y los logins de
-Supabase/Vercel.
-
-> Los comandos del instalador (`npm`, `supabase`, `vercel`, los scripts de
-> `scripts/`) ya vienen **pre-aprobados** en
-> [`.claude/settings.json`](.claude/settings.json), así que la instalación fluye sin
-> clics de permiso. Los únicos pasos que pueden pedirte confirmación son los que
-> cargan tus secrets (keys / contraseñas) — apruébalos con confianza.
-
-> Sin git: usa **"Use this template"** en GitHub, o descarga el ZIP del repo.
-
-## Qué incluye
+## Qué más incluye
 
 - **Inbox** tipo WhatsApp Web con buffer inteligente (agrupa mensajes y responde
   como un solo turno coherente).
-- **Motor de agente** con state machine + handoff humano, prompting personalizable
-  y tools activables (incluye modo setter y agendamiento).
+- **Motor de agente** con state machine + handoff humano, prompting
+  personalizable y tools activables (incluye modo setter y agendamiento).
 - **CRM** con sincronización opcional a HighLevel (por workspace).
 - **Knowledge Base** con búsqueda semántica (pgvector).
-- **Templates** y manejo de la ventana de 24h de Meta.
+- **Templates** y manejo de la ventana de 24 h de Meta.
 - **Multi-tenant** con roles, RLS por workspace y super admin.
 
 ## Stack
@@ -47,79 +38,48 @@ Supabase/Vercel.
 | Framework | Next.js 16 + React 19 + TypeScript           |
 | Estilos   | Tailwind CSS + shadcn/ui                     |
 | Backend   | Supabase (Auth + PostgreSQL + RLS + Storage) |
-| IA        | OpenRouter (LLM gateway)                     |
-| WhatsApp  | YCloud (ver abajo)                           |
+| IA        | OpenRouter, o cualquier endpoint compatible con OpenAI (`LLM_BASE_URL`) |
+| WhatsApp  | YCloud                                       |
 | Hosting   | Vercel                                       |
 
-## Elegir proveedor de WhatsApp
-
-El proveedor no es intercambiable por configuración: su API define la forma de los
-envíos, el payload de los webhooks y el esquema de firma. Por eso vive en una
-rama, no en una variable de entorno.
-
-| Rama | Proveedor | Cuándo usarla |
-| --- | --- | --- |
-| `main` | **YCloud** | Por defecto |
-| `provider/kapso` | **Kapso** | **Obligatoria en Estados Unidos** — YCloud no opera ahí |
+## Instalar
 
 ```bash
-# YCloud (por defecto)
-git clone https://github.com/Carlos-Dominguez-faber/whatsapp-saas.git
-
-# Kapso
-git clone -b provider/kapso https://github.com/Carlos-Dominguez-faber/whatsapp-saas.git
+git clone https://github.com/grancobud/arm-whatsapp.git
+cd arm-whatsapp
+claude "lee INSTALAR.md e instálalo"
 ```
 
-### En qué se diferencian
-
-| | YCloud (`main`) | Kapso (`provider/kapso`) |
-| --- | --- | --- |
-| Disponible en EE.UU. | ❌ | ✅ |
-| Identidad del emisor | `phone_number` (E.164) | `phone_number_id` de Meta |
-| Firma del webhook | con timestamp, ventana anti-replay de 300 s | HMAC-SHA256 sin timestamp |
-| Nombre del evento | en el body | en el header `X-Webhook-Event` |
-| Coexistence | no soportado | soportado |
-| Prueba de conexión | `GET /balance` | listado de números del proyecto |
-
-La rama de Kapso pide **dos IDs de Meta** que YCloud no necesita —`phone_number_id`
-y `waba_id`— y ambos se autocompletan al pulsar «Probar conexión» en
-Settings → Integraciones. Trae además dos migraciones propias y soporte de
-**coexistence**: si el mismo número se usa también desde la app de WhatsApp
-Business en un celular, esas respuestas humanas se guardan y la conversación pasa
-a `human_active` para que el agente no conteste encima de la persona.
-
-> `provider/kapso` incluye todo lo de `main` más el cambio de proveedor. Las
-> mejoras que no son del proveedor (inbox, KB, agente) se llevan allá con
-> `git merge main`.
+El agente configura Supabase, despliega a Vercel, crea el super admin y deja el
+cron corriendo. Ver [`INSTALAR.md`](INSTALAR.md).
 
 ## Desarrollo local
 
 ```bash
 npm install
-cp .env.local.example .env.local   # llena tus keys (o usa: node scripts/setup.mjs env)
+cp .env.local.example .env.local   # completá tus keys (o: node scripts/setup.mjs env)
 npm run dev                        # http://localhost:3000
 ```
 
 Otros comandos: `npm run build`, `npm run lint`, `npm run typecheck`.
 
-## El cron del buffer
+## El cron
 
-El inbox agrupa los mensajes entrantes en _batches_ que un worker debe drenar
-~cada minuto. Como Vercel Cron solo corre por-minuto en el plan Pro, esta
-distribución agenda el flush dentro de Postgres con **pg_cron + pg_net**, que
-llaman a `/api/cron/buffer-flush` (autenticado con `CRON_SECRET`). Lo configura el
-instalador — ver [`supabase/cron/schedule-buffer-flush.sql`](supabase/cron/schedule-buffer-flush.sql).
+Un job de **pg_cron + pg_net** llama cada minuto a `/api/cron/buffer-flush`
+(autenticado con `CRON_SECRET`). Drena los mensajes entrantes agrupados y envía
+la siguiente tanda de las campañas aprobadas. Ver
+[`supabase/cron/schedule-buffer-flush.sql`](supabase/cron/schedule-buffer-flush.sql).
 
 ## Estructura
 
 ```
 src/
 ├── app/        # Next.js App Router ((auth), (main), api/)
-├── features/   # Feature-First (inbox, settings, crm, tools, kb, …)
+├── features/   # Feature-First (arm, inbox, settings, tools, agents, …)
 └── shared/     # Reutilizable (components, lib, types)
 supabase/
-├── migrations/ # Schema (RLS, super admin, pg_cron, …)
-└── cron/       # SQL post-deploy del buffer-flush
+├── migrations/ # Schema (RLS, super admin, pg_cron, ARM, …)
+└── cron/       # SQL post-deploy del cron
 scripts/
 ├── setup.mjs       # Orquestador de instalación (secrets, env, db, cron)
 └── seed-admin.mjs  # Super admin + workspace demo
@@ -127,37 +87,17 @@ scripts/
 
 ## Variables de entorno
 
-Ver [`.env.local.example`](.env.local.example). Las de Supabase y OpenRouter las
-pegas tú; `ENCRYPTION_KEY`, `BUFFER_PROCESS_SECRET` y `CRON_SECRET` las **genera**
-`scripts/setup.mjs`. **YCloud y HighLevel NO son env vars** — se configuran por
-workspace en Settings → Integraciones.
+Ver [`.env.local.example`](.env.local.example). `ENCRYPTION_KEY`,
+`BUFFER_PROCESS_SECRET` y `CRON_SECRET` las genera `scripts/setup.mjs`. YCloud y
+HighLevel no son variables de entorno: se configuran por workspace en
+Settings → Integraciones.
 
-### Credenciales de integraciones
-
-Lo que guardas en Settings → Integraciones (API key de YCloud, signing secret,
-PIT de HighLevel) se cifra con **AES-256-GCM** antes de tocar la base. La llave
-es `ENCRYPTION_KEY` y vive solo en el entorno del servidor: quien tenga acceso
-de lectura a Postgres ve ciphertext, no las keys.
-
-Cada valor queda ligado a su `workspace_id` + proveedor, así que un blob copiado
-de un tenant a otro no descifra.
-
-> **Si instalaste antes de esta versión**, tus credenciales están en texto plano.
-> La app las sigue leyendo, pero para cifrarlas corre:
->
-> ```bash
-> node scripts/encrypt-credentials.mjs --dry-run   # ver qué cambiaría
-> node scripts/encrypt-credentials.mjs             # aplicar
-> ```
+Lo que se guarda en Integraciones se cifra con **AES-256-GCM** antes de tocar la
+base, ligado a su `workspace_id` + proveedor: un blob copiado de un tenant a otro
+no descifra.
 
 ---
 
 ## Licencia
 
-[MIT](LICENSE). Puedes usar, modificar, forkear, redistribuir, vender y cobrar
-por este software, incluso con fines comerciales y sin pagar regalías. La única
-condición es conservar el aviso de copyright y el texto de la licencia en las
-copias o partes sustanciales que distribuyas. Se entrega **sin garantía**.
-
-_Nacido como material para miembros de Imperio Agentico — el código es MIT para
-cualquiera._
+[MIT](LICENSE).

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { ArmExplainer } from "@/features/arm/components/arm-explainer";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesión — Agente WhatsApp",
+  title: "Iniciar sesión — ARM WhatsApp",
 };
 
 export default async function LoginPage({
@@ -11,5 +12,10 @@ export default async function LoginPage({
   searchParams: Promise<{ message?: string }>;
 }) {
   const { message } = await searchParams;
-  return <LoginForm message={message} />;
+  return (
+    <div className="w-full max-w-md space-y-4 py-8">
+      <LoginForm message={message} />
+      <ArmExplainer compact />
+    </div>
+  );
 }
