@@ -8,6 +8,7 @@ import { TeamTab } from "./team-tab";
 import { TemplatesTab } from "./templates-tab";
 import { AutomationsTab } from "./automations-tab";
 import { KbTab } from "./kb-tab";
+import { DataExportTab } from "./data-export-tab";
 import { AgentsTab } from "@/features/agents/components/agents-tab";
 import type { AgentDto } from "@/features/agents/types";
 import type { JevSettings } from "@/features/jev-judge/components/jev-panel";
@@ -67,6 +68,7 @@ export function SettingsShell({
             <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
             <TabsTrigger value="equipo">Equipo</TabsTrigger>
             <TabsTrigger value="automatizaciones">Automatizaciones</TabsTrigger>
+            <TabsTrigger value="datos">Datos</TabsTrigger>
           </TabsList>
         </div>
 
@@ -128,6 +130,15 @@ export function SettingsShell({
         <TabsContent value="automatizaciones">
           <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <AutomationsTab workspaceId={workspaceId} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="datos">
+          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+            <DataExportTab
+              workspaceId={workspaceId}
+              canExport={role === "admin" || role === "manager"}
+            />
           </div>
         </TabsContent>
       </Tabs>
