@@ -133,15 +133,21 @@ flowchart LR
 
 ---
 
-## ✅ Auditado contra el curso «Building with the Claude API»
+## ✅ Auditado y mejorado
 
-Revisamos ARM WhatsApp **capítulo por capítulo** contra el curso de Anthropic
-Academy, probando cada requisito con tráfico real contra FreeLLMAPI (las
-funciones exclusivas de Anthropic quedan afuera). Cada falla encontrada se
-corrige en el repo.
+ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
+FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 
-| Capítulo | Estado | Qué se corrigió |
+| Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
+| 💬 Respuestas de la IA | ✅ | Guardia contra respuestas cortadas o con razonamiento filtrado, temperatura fija y system prompt por el canal correcto. |
+| 📊 Evaluación del agente | 🔄 | Set de conversaciones de WhatsApp con calificación automática por código y por modelo, y comparación de prompts (`npm run eval:agente`). |
+| ✍️ Prompts | ⏳ | — |
+| 🔧 Herramientas | ⏳ | — |
+| 📚 Base de conocimiento | ⏳ | — |
+| 🖼️ Imágenes, documentos y caché | ⏳ | — |
+
+--- | :---: | --- |
 | 1 · Fundamentos de la API | ✅ | Guardia contra respuestas cortadas o con razonamiento filtrado, temperatura fija, system prompt por el canal correcto. |
 | 2 · Evals | 🔄 | Dataset de conversaciones de WhatsApp + calificador por código y por modelo + comparación de prompts (`npm run eval:agente`). |
 | 3 · Prompt engineering | ⏳ | — |
