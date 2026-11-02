@@ -147,14 +147,6 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 📚 Base de conocimiento | ⏳ | — |
 | 🖼️ Imágenes, documentos y caché | ⏳ | — |
 
---- | :---: | --- |
-| 1 · Fundamentos de la API | ✅ | Guardia contra respuestas cortadas o con razonamiento filtrado, temperatura fija, system prompt por el canal correcto. |
-| 2 · Evals | 🔄 | Dataset de conversaciones de WhatsApp + calificador por código y por modelo + comparación de prompts (`npm run eval:agente`). |
-| 3 · Prompt engineering | ⏳ | — |
-| 4 · Tool use | ⏳ | — |
-| 5 · RAG | ⏳ | — |
-| 6 · Funciones avanzadas | ⏳ | — |
-
 ---
 
 ## 📦 Qué más incluye
