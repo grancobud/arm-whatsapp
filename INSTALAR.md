@@ -1,6 +1,6 @@
-# Instalar — Agente WhatsApp (Inbox con IA)
+# Instalar — ARM WhatsApp
 
-## Para ti (miembro de Imperio Digital)
+## Para vos
 
 Arrastraste este archivo al chat de tu agente — **Claude Code** (recomendado),
 Codex, o cualquier agente que pueda correr comandos en tu terminal. Solo escribe:
@@ -59,7 +59,7 @@ cd "<carpeta donde está este INSTALAR.md>"
 ```
 
 Si está en `~/Downloads`, pregúntale al usuario si lo mueves a un lugar fijo
-(p.ej. `~/Developer/whatsapp-saas`) antes de seguir.
+(p.ej. `~/Developer/arm-whatsapp`) antes de seguir.
 
 **2. Prerequisitos.** Verifica las herramientas y dime qué falta:
 

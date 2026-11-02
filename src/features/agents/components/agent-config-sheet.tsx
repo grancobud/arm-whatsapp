@@ -138,7 +138,7 @@ export function AgentConfigSheet({
                 id="agent-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej: Carlos"
+                placeholder="Ej: Martín"
                 maxLength={60}
               />
             </div>

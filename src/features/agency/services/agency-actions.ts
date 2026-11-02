@@ -205,7 +205,7 @@ export async function createWorkspaceForClient(
   // active (general → setter); each agent gets its own mode-scoped prompt.
   const activeType = useCase === "general" ? "setter" : useCase;
   const AGENT_NAMES: Record<string, string> = {
-    setter: "Carlos",
+    setter: "Martín",
     soporte: "Sofía",
     agendamiento: "Andrés",
   };
