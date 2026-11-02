@@ -1,0 +1,27 @@
+# Túnel de Cloudflare hacia un FreeLLMAPI que corre en tu PC.
+#
+# FreeLLMAPI escucha en 127.0.0.1:31415 y la app vive en Vercel, que no puede
+# llegar a tu PC. Este contenedor abre un túnel saliente a Cloudflare y publica
+# FreeLLMAPI en un subdominio tuyo (ej. https://llm.tu-dominio.com) sin abrir
+# puertos en el router. Docker lo vuelve a levantar solo tras un reinicio.
+#
+# Uso:
+#   1. En Cloudflare Zero Trust → Networks → Tunnels, creá un túnel y una ruta
+#      pública: llm.tu-dominio.com → http://host.docker.internal:31415
+#   2. Copiá el token del túnel a un archivo .env junto a este compose:
+#        TUNNEL_TOKEN=eyJ...
+#   3. docker compose up -d
+#
+# FreeLLMAPI sigue exigiendo su API key: el túnel no la reemplaza.
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0
+    container_name: cloudflared-freellmapi
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    restart: unless-stopped
+    extra_hosts:
+      # Linux no trae host.docker.internal por defecto; Docker Desktop sí.
+      - "host.docker.internal:host-gateway"
