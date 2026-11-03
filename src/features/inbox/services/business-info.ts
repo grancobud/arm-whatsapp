@@ -43,6 +43,9 @@ export async function getBusinessInfo(
   };
 }
 
+/** Timezone when a workspace hasn't configured one. */
+export const DEFAULT_TIMEZONE = "America/Argentina/Buenos_Aires";
+
 /** UTC offset (e.g. "-05:00") for a timezone right now. */
 function offsetFor(timeZone: string, now: Date): string {
   const raw =
@@ -56,11 +59,11 @@ function offsetFor(timeZone: string, now: Date): string {
 /**
  * Current date/time context for the system prompt, so the agent can resolve
  * "hoy", "mañana", "esta semana" and build correct ISO times when checking
- * availability / booking. Timezone is per-workspace (defaults to CDMX).
+ * availability / booking. Timezone is per-workspace (defaults to Argentina).
  */
-export function buildNowContext(timeZone = "America/Mexico_City"): string {
+export function buildNowContext(timeZone = DEFAULT_TIMEZONE): string {
   const now = new Date();
-  const human = now.toLocaleString("es-MX", {
+  const human = now.toLocaleString("es-AR", {
     timeZone,
     dateStyle: "full",
     timeStyle: "short",

@@ -414,7 +414,7 @@ export function ChatThread({
               <Textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Escribe un mensaje..."
+                placeholder="Escribí un mensaje..."
                 className="min-h-[40px] max-h-32 resize-none flex-1 text-sm"
                 rows={2}
                 aria-label="Mensaje"

@@ -97,7 +97,7 @@ export async function POST(
   } catch (err) {
     console.error("[POST /api/workspace/[id]/templates/generate]:", err);
     return NextResponse.json(
-      { error: "El modelo no pudo generar la plantilla. Intenta de nuevo." },
+      { error: "El modelo no pudo generar la plantilla. Probá de nuevo." },
       { status: 500 },
     );
   }

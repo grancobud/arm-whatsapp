@@ -13,6 +13,7 @@ import { McpTab } from "@/features/tools/mcp/mcp-tab";
 import { AgentsTab } from "@/features/agents/components/agents-tab";
 import type { AgentDto } from "@/features/agents/types";
 import type { JevSettings } from "@/features/jev-judge/components/jev-panel";
+import { LlmProviderProvider } from "@/features/agents/lib/llm-provider";
 
 interface ToolItem {
   id: string;
@@ -33,6 +34,8 @@ interface Props {
   initialTemplates?: unknown[];
   initialAgents?: AgentDto[];
   jev: JevSettings;
+  /** The server uses its own LLM endpoint (LLM_BASE_URL), not OpenRouter. */
+  llmCustom: boolean;
 }
 
 export function SettingsShell({
@@ -44,6 +47,7 @@ export function SettingsShell({
   initialTemplates = [],
   initialAgents = [],
   jev,
+  llmCustom,
 }: Props) {
   const biForForm = initialBusinessInfo as {
     structured: Record<string, unknown>;
@@ -53,9 +57,10 @@ export function SettingsShell({
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <h1 className="font-display text-xl font-semibold text-foreground mb-6">
-        Configuración del Workspace
+        Configuración
       </h1>
 
+      <LlmProviderProvider custom={llmCustom}>
       <Tabs defaultValue="agentes">
         {/* Scroll the tab strip within its own track instead of letting 11 tabs
             push horizontal overflow onto the whole page. */}
@@ -64,10 +69,10 @@ export function SettingsShell({
             <TabsTrigger value="agentes">Agentes</TabsTrigger>
             <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
             <TabsTrigger value="negocio">Negocio</TabsTrigger>
-            <TabsTrigger value="tools">Tools</TabsTrigger>
+            <TabsTrigger value="tools">Herramientas</TabsTrigger>
             <TabsTrigger value="sistemas">Sistemas (MCP)</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-            <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
+            <TabsTrigger value="templates">Plantillas</TabsTrigger>
+            <TabsTrigger value="knowledge-base">Base de conocimiento</TabsTrigger>
             <TabsTrigger value="equipo">Equipo</TabsTrigger>
             <TabsTrigger value="automatizaciones">Automatizaciones</TabsTrigger>
             <TabsTrigger value="datos">Datos</TabsTrigger>
@@ -153,6 +158,7 @@ export function SettingsShell({
           </div>
         </TabsContent>
       </Tabs>
+      </LlmProviderProvider>
     </div>
   );
 }

@@ -251,7 +251,7 @@ export function KbTab({ workspaceId }: Props) {
     if (!body.content) {
       toast.error(
         sourceType === "url"
-          ? "Ingresa una URL"
+          ? "Ingresá una URL"
           : "El contenido es obligatorio",
       );
       return;
@@ -355,8 +355,8 @@ export function KbTab({ workspaceId }: Props) {
             Agregar documento
           </h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            El contenido se divide en chunks y se embebe para búsqueda
-            semántica.
+            El texto se divide en partes y se indexa para que el agente encuentre
+            lo que necesita aunque el cliente lo pregunte con otras palabras.
           </p>
         </div>
 
@@ -414,7 +414,7 @@ export function KbTab({ workspaceId }: Props) {
             <Textarea
               id="kb-content"
               value={content}
-              placeholder="Pega el texto del documento aquí…"
+              placeholder="Pegá acá el texto del documento…"
               onChange={(e) => setContent(e.target.value)}
               maxLength={10_000}
               rows={6}
@@ -481,8 +481,8 @@ export function KbTab({ workspaceId }: Props) {
                 Sin documentos
               </p>
               <p className="mt-1 text-xs text-muted-foreground max-w-xs">
-                La IA usará este knowledge base para responder preguntas. Agrega
-                el primer documento arriba.
+                El agente va a responder con lo que cargues acá. Agregá el
+                primer documento arriba.
               </p>
             </div>
           </div>

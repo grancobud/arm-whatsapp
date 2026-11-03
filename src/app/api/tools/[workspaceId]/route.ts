@@ -89,7 +89,7 @@ const patchSchema = z
     config: z.record(z.string(), z.unknown()).optional(),
   })
   .refine((b) => b.enabled !== undefined || b.config !== undefined, {
-    message: "Debes enviar 'enabled' y/o 'config'",
+    message: "Tenés que mandar 'enabled' y/o 'config'",
   });
 
 export async function PATCH(

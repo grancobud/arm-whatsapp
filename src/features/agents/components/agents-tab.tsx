@@ -98,7 +98,7 @@ export function AgentsTab({
         canManage={canManage}
       />
       <p className="text-sm text-muted-foreground">
-        Configura tus 3 agentes. Solo uno puede estar activo a la vez.
+        Configurá tus 3 agentes. Solo uno puede estar activo a la vez.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -19,6 +19,7 @@ import {
   getBusinessInfo,
   buildBusinessInfoContext,
   buildNowContext,
+  DEFAULT_TIMEZONE,
 } from "./business-info";
 import {
   searchKb,
@@ -344,7 +345,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       timezone?: string;
       name?: string;
     } | null;
-    const tz = structured?.timezone ?? "America/Mexico_City";
+    const tz = structured?.timezone ?? DEFAULT_TIMEZONE;
     // WS1: surface the rolling conversation summary so the model keeps long-term
     // context beyond the recent-message window.
     const summary =

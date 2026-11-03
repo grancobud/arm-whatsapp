@@ -133,6 +133,7 @@ export default async function SettingsPage() {
         keyReady: Boolean(process.env.TYPESAFE_API_KEY),
         judgmentsToday,
       }}
+      llmCustom={Boolean(process.env.LLM_BASE_URL?.trim())}
     />
   );
 }

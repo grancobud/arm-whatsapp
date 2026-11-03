@@ -89,7 +89,7 @@ export async function signup(
     await markAsSuperAdmin(data.user.id, parsed.data.email);
   }
 
-  redirect("/login?message=Revisa%20tu%20email");
+  redirect("/login?message=Revis%C3%A1%20tu%20email");
 }
 
 export async function logout(): Promise<void> {
