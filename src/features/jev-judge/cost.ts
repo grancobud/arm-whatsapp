@@ -1,7 +1,9 @@
 /** Published TypeSafe price for jev input tokens, checked 18 Sep 2026. Output is not billed. */
 export const JEV_INPUT_USD_PER_MILLION = 0.042;
 
-export function estimateCostUsd(inputTokens: number): number {
+export function estimateCostUsd(inputTokens: number, model?: string): number {
+  // The free judge (FreeLLMAPI) costs nothing.
+  if (model?.startsWith("freellmapi/")) return 0;
   return (inputTokens * JEV_INPUT_USD_PER_MILLION) / 1_000_000;
 }
 

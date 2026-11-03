@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { applyTransition } from "@/features/inbox/services/decision-engine";
 import { estimateCostUsd } from "@/features/jev-judge/cost";
-import { callJev, jevFailureCode, type JevCall } from "@/features/jev-judge/judge";
+import { callJev, jevAvailable, jevFailureCode, type JevCall } from "@/features/jev-judge/judge";
 import {
   stageToPersist,
   type MappedJudgment,
@@ -50,7 +50,7 @@ async function runJevBatch(
   if (!input.mergedText.trim()) return IDLE;
   const runtime = await loadRuntime(supabase, input.workspaceId);
   if (!runtime.enabled) return IDLE;
-  if (!process.env.TYPESAFE_API_KEY) {
+  if (!jevAvailable()) {
     await recordFallback(supabase, input, "missing_api_key", 0);
     return IDLE;
   }
@@ -184,7 +184,7 @@ function judgmentPayload(
     model: judged.model,
     input_tokens: judged.inputTokens,
     output_tokens: judged.outputTokens,
-    estimated_cost_usd: estimateCostUsd(judged.inputTokens),
+    estimated_cost_usd: estimateCostUsd(judged.inputTokens, judged.model),
     fallback: false,
     prompt_version: PROMPT_VERSION,
   };

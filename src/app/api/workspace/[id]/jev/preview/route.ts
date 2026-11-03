@@ -4,7 +4,7 @@ import {
   readJsonBody,
   requireWorkspaceMember,
 } from "@/lib/auth/workspace-access";
-import { callJev, jevFailureCode, publicJevError } from "@/features/jev-judge/judge";
+import { callJev, jevAvailable, jevFailureCode, publicJevError } from "@/features/jev-judge/judge";
 import { applyUses, readJevUses, type JevUses } from "@/features/jev-judge/uses";
 import { trackJudgment } from "@/features/jev-judge/observe";
 import { previewWithoutJev } from "@/features/jev-judge/preview";
@@ -43,7 +43,7 @@ export async function POST(
       { status: 429 },
     );
   }
-  if (!process.env.TYPESAFE_API_KEY) {
+  if (!jevAvailable()) {
     return NextResponse.json({
       without,
       with: null,

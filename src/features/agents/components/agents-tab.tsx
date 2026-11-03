@@ -97,6 +97,7 @@ export function AgentsTab({
         initialEnabled={jev.enabled}
         initialUses={jev.uses}
         keyReady={jev.keyReady}
+        provider={jev.provider}
         judgmentsToday={jev.judgmentsToday}
         canManage={canManage}
       />

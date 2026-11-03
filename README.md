@@ -164,7 +164,7 @@ flowchart LR
 | 📚 | **Knowledge Base (RAG)** | Búsqueda semántica con pgvector sobre los documentos del negocio. |
 | 🎯 | **Modo setter** | Califica leads con preguntas eliminatorias y puntaje; los calificados pasan al CRM. |
 | 🏷️ | **Etiquetas y resumen** | Etiqueta cada conversación y mantiene un resumen para el contexto largo. |
-| ⚖️ | **Juez de mensajes (Jev)** | Opcional: estima intención y probabilidad de baja, y frena lo que no corresponde. |
+| ⚖️ | **Juez de mensajes (Jev)** | Opcional: estima intención y probabilidad de baja, y frena lo que no corresponde. Gratis con FreeLLMAPI (12/12 en `npm run eval:jev`) o con TypeSafe si hay `TYPESAFE_API_KEY`. |
 | 📝 | **Generador de plantillas** | Redacta plantillas listas para la aprobación de Meta. |
 | 🧪 | **Playground** | Probás cada agente y su prompt antes de publicarlo. |
 
