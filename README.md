@@ -242,6 +242,156 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 📌 Citas y razonamiento | ✅ | Cada respuesta que usa la base de conocimiento deja rastro del fragmento que la respalda: el agente lo marca, la marca se saca antes de llegar al cliente y el inbox muestra «Fuentes» con el texto citado. En la evaluación citó bien 8 de 8 (incluido no citar cuando el fragmento no servía). El razonamiento extendido no se activa: el agente ya saca 9.6 y la guardia descarta el razonamiento que algunos modelos mezclan en la respuesta. |
 | 🔌 MCP | ✅ | **Servidor:** el MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce, 4 recursos, 3 prompts probados y las funciones del ARM: 28/28 con un cliente MCP real. **Cliente:** cada negocio conecta el servidor MCP de su stock, agenda o CRM y el agente lo usa, con aprobación humana por defecto, resultados marcados como datos y aviso honesto si el sistema no responde: 28/28 en `npm run eval:mcp`. Encontró que el agente decía «no tenemos» sin consultar sus herramientas: corregido sin bajar la evaluación (agente 9.6, herramientas 40/42). |
 
+### 🔎 Cómo se auditó y se mejoró cada área
+
+Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la
+**falla**, se **corrige** y se **vuelve a medir**.
+
+```mermaid
+flowchart LR
+    P[🔍 Prueba real]:::p --> F[❌ Falla]:::f
+    F --> M[🔧 Mejora]:::m
+    M --> R[✅ Medido<br/>de nuevo]:::r
+    R -.->|si bajó algo| M
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**💬 Respuestas de la IA**
+
+```mermaid
+flowchart LR
+    P[🔍 Charlas con<br/>modelos gratis]:::p --> F1[❌ Cortadas<br/>o vacías]:::f
+    P --> F2[❌ Razonamiento<br/>filtrado]:::f
+    P --> F3[❌ Cambian<br/>cada vez]:::f
+    F1 & F2 --> M1[🔧 Guardia<br/>+ otro modelo]:::m
+    F3 --> M2[🔧 Temperatura<br/>0.3]:::m
+    M1 & M2 --> R[✅ Nunca llega<br/>texto roto]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**📊 Evaluación del agente**
+
+```mermaid
+flowchart LR
+    P[🔍 Charlas de<br/>WhatsApp]:::p --> C[🧮 Nota por código<br/>⚖️ y por un juez]:::p
+    C --> F[❌ Una nota en la<br/>memoria daba<br/>descuentos falsos]:::f
+    F --> M[🔧 Memoria citada<br/>sin autorizar<br/>precios]:::m
+    M --> R[✅ Ese caso<br/>4.7 → 10]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**✍️ Prompts**
+
+```mermaid
+flowchart LR
+    P[🔍 Prompts de<br/>los 4 agentes]:::p --> F[❌ Reglas<br/>sin porqué]:::f
+    F --> M1[🔧 Reglas<br/>con porqué]:::m
+    F --> M2[🔧 Etiquetas<br/>XML]:::m
+    F --> M3[🔧 Ejemplos<br/>difíciles]:::m
+    M1 & M2 & M3 --> R[✅ Nota<br/>9.1 → 9.6]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**🔧 Herramientas**
+
+```mermaid
+flowchart LR
+    P[🔍 Función real<br/>+ herramientas<br/>simuladas]:::p --> F1[❌ Turnos sin<br/>mirar la agenda]:::f
+    P --> F2[❌ Tapaba errores<br/>del calendario]:::f
+    P --> F3[❌ Sin respuesta<br/>tras usar una]:::f
+    P --> F4[❌ Reintento que<br/>reserva dos veces]:::f
+    F1 & F2 & F3 & F4 --> M[🔧 Uno por uno<br/>midiendo]:::m
+    M --> R[✅ 14/20<br/>→ 40/42]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**📚 Base de conocimiento**
+
+```mermaid
+flowchart LR
+    P[🔍 17 preguntas<br/>sobre un<br/>documento]:::p --> F1[❌ Cortes que<br/>partían precios]:::f
+    P --> F2[❌ SQL armado<br/>pegando texto]:::f
+    P --> F3[❌ Una página<br/>podía dar órdenes]:::f
+    F1 --> M1[🔧 Corte por<br/>secciones]:::m
+    F2 --> M2[🔧 Respaldo<br/>quitado]:::m
+    F3 --> M3[🔧 Marcados<br/>como datos]:::m
+    M1 & M2 & M3 --> R[✅ Primero en<br/>11 → 15 de 17]:::r
+    P -.-> X[🧪 Búsqueda híbrida<br/>probada: no aportó]:::x
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+    classDef x fill:#64748B,color:#fff
+```
+
+**🖼️ Imágenes, documentos y caché**
+
+```mermaid
+flowchart LR
+    P[🔍 Comprobantes,<br/>fotos y PDFs]:::p --> F1[❌ No podía<br/>leer el PDF]:::f
+    P --> F2[⚠️ Imagen con una<br/>orden escrita]:::f
+    P --> F3[❌ Solo 1% del<br/>prompt reutilizable]:::f
+    F1 --> M1[🔧 PDF leído<br/>en el servidor]:::m
+    F2 --> M2[🔧 Marcada<br/>como dato]:::m
+    F3 --> M3[🔧 Lo fijo<br/>va primero]:::m
+    M1 --> R1[✅ Total y seña<br/>exactos]:::r
+    M2 --> R2[✅ 24/24]:::r
+    M3 --> R3[✅ 72% reutilizable<br/>83% de caché]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**📌 Citas y razonamiento**
+
+```mermaid
+flowchart LR
+    P[🔍 Preguntas<br/>a la base]:::p --> F[❌ Sin rastro<br/>de la fuente]:::f
+    F --> M1[🔧 Marca el<br/>fragmento]:::m
+    M1 --> M2[🔧 Se saca antes<br/>del cliente]:::m
+    M2 --> M3[🔧 Inbox muestra<br/>Fuentes]:::m
+    M3 --> R[✅ 8 de 8]:::r
+    P -.-> X[🧪 Razonamiento<br/>extendido: no<br/>hizo falta]:::x
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+    classDef x fill:#64748B,color:#fff
+```
+
+**🔌 MCP**
+
+```mermaid
+flowchart LR
+    P[🔍 Servidor de stock<br/>+ cliente MCP real]:::p --> F1[❌ No tenemos<br/>sin consultar]:::f
+    P --> F2[❌ Sistema caído:<br/>inventaba]:::f
+    P --> F3[❌ Prometía una<br/>reserva no guardada]:::f
+    F1 --> M1[🔧 Consultar antes<br/>de responder]:::m
+    F2 --> M2[🔧 Aviso de<br/>no disponible]:::m
+    F3 --> M3[🔧 Sin propuesta<br/>no promete]:::m
+    M1 & M2 & M3 --> R[✅ 28/28<br/>y en vivo]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
 ---
 
 ## 📦 Qué más incluye
