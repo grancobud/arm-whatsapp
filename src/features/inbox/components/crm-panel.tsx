@@ -23,6 +23,7 @@ import {
 import { updateContact, syncContactHL } from "../services/contact-actions";
 import type { ContactRow } from "@/features/inbox/types";
 import { ClaimsSection } from "@/features/arm/components/claims-section";
+import { FollowUpsSection } from "@/features/arm/components/follow-ups-section";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -316,6 +317,7 @@ export function CrmPanel({
 
       {/* ── Section: ARM memory ── */}
       <ClaimsSection contactId={contact.id} />
+      <FollowUpsSection contactId={contact.id} />
 
       {/* ── Actions ── */}
       <div className="px-4 py-3 border-t border-border/40 flex flex-col gap-2 mt-auto">

@@ -26,6 +26,7 @@ import {
   type ActionType,
 } from "../services/automation-actions";
 import { AutomationRuleForm } from "./automation-rule-form";
+import { FollowUpTemplateCard } from "./follow-up-template-card";
 import type { TemplateRow } from "@/features/inbox/services/templates";
 
 // ── Trigger metadata ──────────────────────────────────────────────────────────
@@ -50,7 +51,7 @@ const TRIGGER_META: Record<
     className: "text-orange-400 bg-orange-400/10",
   },
   handoff_requested: {
-    label: "IA solicita handoff",
+    label: "Pide una persona",
     Icon: Users,
     className: "text-secondary bg-secondary/10",
   },
@@ -69,11 +70,11 @@ const TRIGGER_META: Record<
 // ── Action metadata ───────────────────────────────────────────────────────────
 
 const ACTION_LABELS: Record<ActionType, string> = {
-  send_template: "Enviar template",
+  send_template: "Enviar plantilla",
   assign_agent: "Asignar agente",
   add_tag: "Agregar etiqueta",
   close_conversation: "Cerrar conversación",
-  handoff_human: "Transferir a humano",
+  handoff_human: "Pasar a una persona",
 };
 
 // ── Loading skeleton ──────────────────────────────────────────────────────────
@@ -378,6 +379,8 @@ export function AutomationsTab({ workspaceId }: Props) {
             Nueva automatización
           </Button>
         </div>
+
+        <FollowUpTemplateCard workspaceId={workspaceId} templates={templates} />
 
         {/* Content — 4 states */}
         {isLoading ? (

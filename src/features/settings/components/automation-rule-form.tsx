@@ -34,19 +34,19 @@ import type { TemplateRow } from "@/features/inbox/services/templates";
 
 const TRIGGER_LABELS: Record<TriggerType, string> = {
   first_message: "Primer mensaje del contacto",
-  inactivity_24h: "Sin respuesta en 24h",
-  window_closing: "Ventana de 24h cerrando (2h restantes)",
-  handoff_requested: "IA solicita handoff",
+  inactivity_24h: "El cliente no contesta en 24 h",
+  window_closing: "Quedan 2 h de la ventana de 24 h",
+  handoff_requested: "La conversación pasa a una persona",
   lead_qualified: "Lead calificado",
   keyword_match: "Palabra clave detectada",
 };
 
 const ACTION_LABELS: Record<ActionType, string> = {
-  send_template: "Enviar template",
+  send_template: "Enviar plantilla",
   assign_agent: "Asignar a agente",
   add_tag: "Agregar etiqueta",
   close_conversation: "Cerrar conversación",
-  handoff_human: "Transferir a humano",
+  handoff_human: "Pasar a una persona",
 };
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -318,7 +318,7 @@ export function AutomationRuleForm({
                   htmlFor="rule-template"
                   className="text-xs font-medium text-muted-foreground"
                 >
-                  Template aprobado
+                  Plantilla aprobada
                 </Label>
                 {approvedTemplates.length === 0 ? (
                   <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning flex items-center gap-1.5">
@@ -399,7 +399,7 @@ export function AutomationRuleForm({
             <p className="rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
               {actionType === "close_conversation"
                 ? "La conversación se marcará como cerrada automáticamente cuando se cumpla el disparador."
-                : "Se iniciará un handoff al equipo humano cuando se cumpla el disparador."}
+                : "La conversación pasa a una persona del equipo y la IA deja de contestar."}
             </p>
           )}
 

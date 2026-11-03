@@ -310,49 +310,23 @@ async function loadSnapshot(db: Db, rules: Rule[], now: Date): Promise<Snapshot>
   };
 }
 
-async function sendTemplateAction(db: Db, f: Firing, contactId: string): Promise<Outcome> {
+async function sendTemplateAction(f: Firing, contactId: string): Promise<Outcome> {
   const name = f.rule.action_config?.template_name;
   if (typeof name !== "string" || !name) return { status: "skipped", detail: "sin plantilla elegida" };
-
-  const { data: tpl } = await db
-    .from("templates")
-    .select("language, variables")
-    .eq("workspace_id", f.rule.workspace_id)
-    .eq("name", name)
-    .eq("status", "approved")
-    .limit(1)
-    .maybeSingle();
-  if (!tpl) return { status: "skipped", detail: `la plantilla ${name} no está aprobada` };
-
-  const vars = Array.isArray(tpl.variables) ? tpl.variables : [];
-  if (vars.length > 1) {
-    return { status: "skipped", detail: "la plantilla pide más de un dato; usá una sin variables o con solo el nombre" };
-  }
-  let components;
-  if (vars.length === 1) {
-    const { data: contact } = await db.from("contacts").select("name").eq("id", contactId).single();
-    const firstName = ((contact?.name as string | null) ?? "").trim().split(/\s+/)[0];
-    if (!firstName) return { status: "skipped", detail: "la plantilla pide el nombre y el contacto no tiene" };
-    components = [{ type: "body" as const, parameters: [{ type: "text" as const, text: firstName }] }];
-  }
-
-  const { dispatchTemplate } = await import("@/features/inbox/services/dispatch");
-  const r = await dispatchTemplate({
+  const { sendApprovedTemplate } = await import("@/features/inbox/services/template-send");
+  const r = await sendApprovedTemplate({
     workspaceId: f.rule.workspace_id,
     conversationId: f.conversationId,
+    contactId,
     templateName: name,
-    templateLanguage: tpl.language as string,
-    components,
   });
-  if (r.ok) return { status: "done", detail: `plantilla ${name}` };
-  if (r.error?.startsWith("OPT_OUT")) return { status: "skipped", detail: "el contacto no quiere mensajes" };
-  return { status: "failed", detail: r.error };
+  return { status: r.status === "sent" ? "done" : r.status, detail: r.detail };
 }
 
 async function execute(db: Db, f: Firing, conv: ConversationRow): Promise<Outcome> {
   switch (f.rule.action_type) {
     case "send_template":
-      return sendTemplateAction(db, f, conv.contact_id);
+      return sendTemplateAction(f, conv.contact_id);
 
     case "add_tag": {
       const tag = f.rule.action_config?.tag;

@@ -4,8 +4,10 @@
 //
 // When it's due:
 //   - WhatsApp's 24h window is open → the message goes out as is.
-//   - The window is closed → free text can't be sent, so it becomes a task for
-//     a person (status needs_human + an alert email) to answer with a template.
+//   - The window is closed → free text can't be sent. If the business chose a
+//     template for this (Configuración → Automatizaciones), it goes out with
+//     that template; otherwise it becomes a task for a person (needs_human +
+//     an alert email).
 //   - A person took the conversation over → also needs_human: they decide.
 //   - The conversation was closed or paused (opt-out) → cancelled.
 // Messages only go out between 9 and 21 in the business's time zone.
@@ -24,6 +26,7 @@ export interface FollowUpRow {
   id: string;
   workspace_id: string;
   conversation_id: string;
+  contact_id: string;
   due_at: string;
   message: string;
 }
@@ -36,6 +39,7 @@ export interface FollowUpConversation {
 export type FollowUpDecision =
   | { action: "wait" }
   | { action: "send" }
+  | { action: "template"; template: string }
   | { action: "needs_human"; detail: string }
   | { action: "cancel"; detail: string };
 
@@ -45,6 +49,8 @@ export function decideFollowUp(
   conv: FollowUpConversation | null,
   now: Date,
   timeZone: string,
+  /** Approved template for promises that fall outside the 24h window. */
+  fallbackTemplate: string | null = null,
 ): FollowUpDecision {
   if (new Date(fu.due_at).getTime() > now.getTime()) return { action: "wait" };
   if (!conv) return { action: "cancel", detail: "la conversación ya no existe" };
@@ -58,6 +64,7 @@ export function decideFollowUp(
   const windowOpen =
     conv.window_expires_at === null || new Date(conv.window_expires_at).getTime() > now.getTime();
   if (!windowOpen) {
+    if (fallbackTemplate) return { action: "template", template: fallbackTemplate };
     return { action: "needs_human", detail: "pasaron más de 24 h: hay que escribirle con una plantilla" };
   }
   return { action: "send" };
@@ -128,7 +135,7 @@ export async function runFollowUps(now = new Date()): Promise<number> {
     const supabase = svc();
     const { data: due, error } = await supabase
       .from("follow_ups")
-      .select("id, workspace_id, conversation_id, due_at, message")
+      .select("id, workspace_id, conversation_id, contact_id, due_at, message")
       .eq("status", "pending")
       .lte("due_at", now.toISOString())
       .order("due_at", { ascending: true })
@@ -136,7 +143,7 @@ export async function runFollowUps(now = new Date()): Promise<number> {
     if (error || !due?.length) return 0;
     const rows = due as FollowUpRow[];
 
-    const [{ data: convs }, { data: infos }] = await Promise.all([
+    const [{ data: convs }, { data: infos }, { data: wsRows }] = await Promise.all([
       supabase
         .from("conversations")
         .select("id, state, window_expires_at")
@@ -145,7 +152,16 @@ export async function runFollowUps(now = new Date()): Promise<number> {
         .from("business_info")
         .select("workspace_id, structured")
         .in("workspace_id", [...new Set(rows.map((r) => r.workspace_id))]),
+      supabase
+        .from("workspaces")
+        .select("id, settings")
+        .in("id", [...new Set(rows.map((r) => r.workspace_id))]),
     ]);
+    const templateOf = new Map(
+      ((wsRows ?? []) as Array<{ id: string; settings: { follow_up_template?: string } | null }>).map(
+        (w) => [w.id, w.settings?.follow_up_template?.trim() || null],
+      ),
+    );
     const convById = new Map(
       ((convs ?? []) as Array<FollowUpConversation & { id: string }>).map((c) => [c.id, c]),
     );
@@ -162,6 +178,7 @@ export async function runFollowUps(now = new Date()): Promise<number> {
         convById.get(fu.conversation_id) ?? null,
         now,
         tzOf.get(fu.workspace_id) ?? DEFAULT_TIMEZONE,
+        templateOf.get(fu.workspace_id) ?? null,
       );
       if (decision.action === "wait") continue;
 
@@ -190,6 +207,22 @@ export async function runFollowUps(now = new Date()): Promise<number> {
           else if (r.error?.startsWith("OPT_OUT")) [status, detail] = ["cancelled", "el contacto pidió la baja"];
           else if (r.error === "WINDOW_EXPIRED") [status, detail] = ["needs_human", "pasaron más de 24 h: hay que escribirle con una plantilla"];
           else [status, detail] = ["failed", r.error ?? "error"];
+        } catch (err) {
+          [status, detail] = ["failed", err instanceof Error ? err.message : String(err)];
+        }
+      } else if (decision.action === "template") {
+        const { sendApprovedTemplate } = await import("@/features/inbox/services/template-send");
+        try {
+          const t = await sendApprovedTemplate({
+            workspaceId: fu.workspace_id,
+            conversationId: fu.conversation_id,
+            contactId: fu.contact_id,
+            templateName: decision.template,
+          });
+          if (t.status === "sent") [status, detail] = ["sent", t.detail];
+          else if (t.detail === "el contacto no quiere mensajes") [status, detail] = ["cancelled", "el contacto pidió la baja"];
+          // The template couldn't go (not approved, needs data): a person writes.
+          else [status, detail] = ["needs_human", `no salió con plantilla: ${t.detail}`];
         } catch (err) {
           [status, detail] = ["failed", err instanceof Error ? err.message : String(err)];
         }
