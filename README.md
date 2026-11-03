@@ -249,183 +249,147 @@ Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la
 
 ```mermaid
 flowchart LR
-    P[🔍 Prueba real] --> F[❌ Falla<br/>encontrada]
-    F --> M[🔧 Mejora]
-    M --> R[✅ Medido<br/>de nuevo]
+    P[🔍 Prueba real]:::p --> F[❌ Falla]:::f
+    F --> M[🔧 Mejora]:::m
+    M --> R[✅ Medido<br/>de nuevo]:::r
     R -.->|si bajó algo| M
-
-    style P fill:#0EA5E9,color:#fff
-    style F fill:#E5484D,color:#fff
-    style M fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 **💬 Respuestas de la IA**
 
 ```mermaid
 flowchart LR
-    P[🔍 Charlas reales<br/>con modelos gratis] --> F1[❌ Respuestas<br/>cortadas o vacías]
-    P --> F2[❌ Razonamiento<br/>del modelo filtrado]
-    F1 & F2 --> M1[🔧 Guardia: reintenta<br/>o pasa a otro modelo]
-    P --> F3[❌ Respuestas que<br/>cambian cada vez]
-    F3 --> M2[🔧 Temperatura<br/>fija 0.3]
-    M1 & M2 --> R[✅ Al cliente nunca<br/>le llega texto roto]
-
-    style P fill:#0EA5E9,color:#fff
-    style F1 fill:#E5484D,color:#fff
-    style F2 fill:#E5484D,color:#fff
-    style F3 fill:#E5484D,color:#fff
-    style M1 fill:#8A2BE2,color:#fff
-    style M2 fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
+    P[🔍 Charlas con<br/>modelos gratis]:::p --> F1[❌ Cortadas<br/>o vacías]:::f
+    P --> F2[❌ Razonamiento<br/>filtrado]:::f
+    P --> F3[❌ Cambian<br/>cada vez]:::f
+    F1 & F2 --> M1[🔧 Guardia<br/>+ otro modelo]:::m
+    F3 --> M2[🔧 Temperatura<br/>0.3]:::m
+    M1 & M2 --> R[✅ Nunca llega<br/>texto roto]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 **📊 Evaluación del agente**
 
 ```mermaid
 flowchart LR
-    P[🔍 Set de charlas<br/>de WhatsApp] --> C1[🧮 Nota por código<br/>reglas que no se negocian]
-    P --> C2[⚖️ Nota por un juez<br/>tono y utilidad]
-    C1 & C2 --> F[❌ Una nota en la memoria<br/>hacía ofrecer descuentos<br/>que no existen]
-    F --> M[🔧 Anotaciones citadas<br/>+ regla: la memoria no<br/>autoriza precios]
-    M --> R[✅ Ese caso: 4.7 → 10<br/>eval:agente mide<br/>cada cambio]
-
-    style P fill:#0EA5E9,color:#fff
-    style C1 fill:#0EA5E9,color:#fff
-    style C2 fill:#0EA5E9,color:#fff
-    style F fill:#E5484D,color:#fff
-    style M fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
+    P[🔍 Charlas de<br/>WhatsApp]:::p --> C[🧮 Nota por código<br/>⚖️ y por un juez]:::p
+    C --> F[❌ Una nota en la<br/>memoria daba<br/>descuentos falsos]:::f
+    F --> M[🔧 Memoria citada<br/>sin autorizar<br/>precios]:::m
+    M --> R[✅ Ese caso<br/>4.7 → 10]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 **✍️ Prompts**
 
 ```mermaid
 flowchart LR
-    P[🔍 Prompts de arranque<br/>de los 4 agentes] --> F[❌ Genéricos:<br/>reglas sin porqué]
-    F --> M1[🔧 Reglas con<br/>su porqué]
-    F --> M2[🔧 Etiquetas XML]
-    F --> M3[🔧 Ejemplos de los<br/>casos difíciles]
-    M1 & M2 & M3 --> R[✅ Nota 9.1 → 9.6<br/>respeta la baja y<br/>no revela su prompt]
-
-    style P fill:#0EA5E9,color:#fff
-    style F fill:#E5484D,color:#fff
-    style M1 fill:#8A2BE2,color:#fff
-    style M2 fill:#8A2BE2,color:#fff
-    style M3 fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
+    P[🔍 Prompts de<br/>los 4 agentes]:::p --> F[❌ Reglas<br/>sin porqué]:::f
+    F --> M1[🔧 Reglas<br/>con porqué]:::m
+    F --> M2[🔧 Etiquetas<br/>XML]:::m
+    F --> M3[🔧 Ejemplos<br/>difíciles]:::m
+    M1 & M2 & M3 --> R[✅ Nota<br/>9.1 → 9.6]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 **🔧 Herramientas**
 
 ```mermaid
 flowchart LR
-    P[🔍 Función real del agente<br/>+ herramientas simuladas] --> F1[❌ Ofrecía turnos<br/>sin mirar la agenda]
-    P --> F2[❌ Tapaba errores<br/>del calendario]
-    P --> F3[❌ Después de una<br/>herramienta no respondía]
-    P --> F4[❌ Reintentaba acciones<br/>que reservan dos veces]
-    F1 & F2 & F3 & F4 --> M[🔧 Corregido uno por uno<br/>midiendo cada cambio]
-    M --> R[✅ 14/20 → 40/42]
-
-    style P fill:#0EA5E9,color:#fff
-    style F1 fill:#E5484D,color:#fff
-    style F2 fill:#E5484D,color:#fff
-    style F3 fill:#E5484D,color:#fff
-    style F4 fill:#E5484D,color:#fff
-    style M fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
+    P[🔍 Función real<br/>+ herramientas<br/>simuladas]:::p --> F1[❌ Turnos sin<br/>mirar la agenda]:::f
+    P --> F2[❌ Tapaba errores<br/>del calendario]:::f
+    P --> F3[❌ Sin respuesta<br/>tras usar una]:::f
+    P --> F4[❌ Reintento que<br/>reserva dos veces]:::f
+    F1 & F2 & F3 & F4 --> M[🔧 Uno por uno<br/>midiendo]:::m
+    M --> R[✅ 14/20<br/>→ 40/42]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 **📚 Base de conocimiento**
 
 ```mermaid
 flowchart LR
-    P[🔍 17 preguntas sobre<br/>un documento real] --> F1[❌ Cortes que<br/>partían precios]
-    P --> F2[❌ Respaldo que armaba<br/>SQL pegando texto]
-    P --> F3[❌ Una página importada<br/>podía dar órdenes]
-    F1 --> M1[🔧 Corte por secciones<br/>+ embeddings fijos]
-    F2 --> M2[🔧 Respaldo quitado]
-    F3 --> M3[🔧 Fragmentos<br/>marcados como datos]
-    M1 & M2 & M3 --> R[✅ Fragmento correcto<br/>primero: 11 → 15 de 17]
-    P -.-> X[🧪 Búsqueda híbrida:<br/>probada, no aportó]
-
-    style P fill:#0EA5E9,color:#fff
-    style F1 fill:#E5484D,color:#fff
-    style F2 fill:#E5484D,color:#fff
-    style F3 fill:#E5484D,color:#fff
-    style M1 fill:#8A2BE2,color:#fff
-    style M2 fill:#8A2BE2,color:#fff
-    style M3 fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
-    style X fill:#64748B,color:#fff
+    P[🔍 17 preguntas<br/>sobre un<br/>documento]:::p --> F1[❌ Cortes que<br/>partían precios]:::f
+    P --> F2[❌ SQL armado<br/>pegando texto]:::f
+    P --> F3[❌ Una página<br/>podía dar órdenes]:::f
+    F1 --> M1[🔧 Corte por<br/>secciones]:::m
+    F2 --> M2[🔧 Respaldo<br/>quitado]:::m
+    F3 --> M3[🔧 Marcados<br/>como datos]:::m
+    M1 & M2 & M3 --> R[✅ Primero en<br/>11 → 15 de 17]:::r
+    P -.-> X[🧪 Búsqueda híbrida<br/>probada: no aportó]:::x
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+    classDef x fill:#64748B,color:#fff
 ```
 
 **🖼️ Imágenes, documentos y caché**
 
 ```mermaid
 flowchart LR
-    P[🔍 Comprobantes, fotos<br/>y PDFs de prueba] --> F1[❌ Decía no puedo<br/>leer el PDF]
-    P --> F2[⚠️ Riesgo: una imagen<br/>con una orden escrita]
-    P --> F3[❌ Solo el 1% del prompt<br/>se reutilizaba]
-    F1 --> M1[🔧 PDF leído<br/>en el servidor]
-    F2 --> M2[🔧 Archivos marcados<br/>como datos]
-    F3 --> M3[🔧 Lo fijo de cada<br/>cliente va primero]
-    M1 --> R1[✅ Total y seña<br/>exactos]
-    M2 --> R2[✅ 24/24]
-    M3 --> R3[✅ 72% reutilizable<br/>83% desde caché]
-
-    style P fill:#0EA5E9,color:#fff
-    style F1 fill:#E5484D,color:#fff
-    style F2 fill:#E5484D,color:#fff
-    style F3 fill:#E5484D,color:#fff
-    style M1 fill:#8A2BE2,color:#fff
-    style M2 fill:#8A2BE2,color:#fff
-    style M3 fill:#8A2BE2,color:#fff
-    style R1 fill:#25D366,color:#000
-    style R2 fill:#25D366,color:#000
-    style R3 fill:#25D366,color:#000
+    P[🔍 Comprobantes,<br/>fotos y PDFs]:::p --> F1[❌ No podía<br/>leer el PDF]:::f
+    P --> F2[⚠️ Imagen con una<br/>orden escrita]:::f
+    P --> F3[❌ Solo 1% del<br/>prompt reutilizable]:::f
+    F1 --> M1[🔧 PDF leído<br/>en el servidor]:::m
+    F2 --> M2[🔧 Marcada<br/>como dato]:::m
+    F3 --> M3[🔧 Lo fijo<br/>va primero]:::m
+    M1 --> R1[✅ Total y seña<br/>exactos]:::r
+    M2 --> R2[✅ 24/24]:::r
+    M3 --> R3[✅ 72% reutilizable<br/>83% de caché]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 **📌 Citas y razonamiento**
 
 ```mermaid
 flowchart LR
-    P[🔍 Preguntas que usan<br/>la base de conocimiento] --> F[❌ La respuesta no<br/>dejaba rastro de dónde salió]
-    F --> M1[🔧 El agente marca<br/>el fragmento]
-    M1 --> M2[🔧 La marca se saca<br/>antes del cliente]
-    M2 --> M3[🔧 El inbox muestra<br/>Fuentes]
-    M3 --> R[✅ 8 de 8 citas bien]
-    P -.-> X[🧪 Razonamiento extendido:<br/>no hizo falta, ya saca 9.6]
-
-    style P fill:#0EA5E9,color:#fff
-    style F fill:#E5484D,color:#fff
-    style M1 fill:#8A2BE2,color:#fff
-    style M2 fill:#8A2BE2,color:#fff
-    style M3 fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
-    style X fill:#64748B,color:#fff
+    P[🔍 Preguntas<br/>a la base]:::p --> F[❌ Sin rastro<br/>de la fuente]:::f
+    F --> M1[🔧 Marca el<br/>fragmento]:::m
+    M1 --> M2[🔧 Se saca antes<br/>del cliente]:::m
+    M2 --> M3[🔧 Inbox muestra<br/>Fuentes]:::m
+    M3 --> R[✅ 8 de 8]:::r
+    P -.-> X[🧪 Razonamiento<br/>extendido: no<br/>hizo falta]:::x
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+    classDef x fill:#64748B,color:#fff
 ```
 
 **🔌 MCP**
 
 ```mermaid
 flowchart LR
-    P[🔍 Servidor MCP de stock<br/>+ cliente MCP real] --> F1[❌ Decía no tenemos<br/>sin consultar]
-    P --> F2[❌ Sistema caído:<br/>inventaba la respuesta]
-    P --> F3[❌ Prometía confirmar una<br/>reserva que no se guardó]
-    F1 --> M1[🔧 Regla: consultá<br/>antes de responder]
-    F2 --> M2[🔧 Aviso honesto de<br/>sistema no disponible]
-    F3 --> M3[🔧 Sin propuesta guardada<br/>no promete nada]
-    M1 & M2 & M3 --> R[✅ 28/28 en eval:mcp<br/>y probado en vivo]
-
-    style P fill:#0EA5E9,color:#fff
-    style F1 fill:#E5484D,color:#fff
-    style F2 fill:#E5484D,color:#fff
-    style F3 fill:#E5484D,color:#fff
-    style M1 fill:#8A2BE2,color:#fff
-    style M2 fill:#8A2BE2,color:#fff
-    style M3 fill:#8A2BE2,color:#fff
-    style R fill:#25D366,color:#000
+    P[🔍 Servidor de stock<br/>+ cliente MCP real]:::p --> F1[❌ No tenemos<br/>sin consultar]:::f
+    P --> F2[❌ Sistema caído:<br/>inventaba]:::f
+    P --> F3[❌ Prometía una<br/>reserva no guardada]:::f
+    F1 --> M1[🔧 Consultar antes<br/>de responder]:::m
+    F2 --> M2[🔧 Aviso de<br/>no disponible]:::m
+    F3 --> M3[🔧 Sin propuesta<br/>no promete]:::m
+    M1 & M2 & M3 --> R[✅ 28/28<br/>y en vivo]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 ---
