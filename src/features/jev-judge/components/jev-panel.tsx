@@ -17,6 +17,8 @@ interface JevPanelProps {
   initialEnabled: boolean;
   initialUses: JevUses;
   keyReady: boolean;
+  /** typesafe (paid) or free (FreeLLMAPI). */
+  provider?: "typesafe" | "free" | null;
   judgmentsToday: number;
   canManage: boolean;
 }
@@ -25,6 +27,7 @@ export interface JevSettings {
   enabled: boolean;
   uses: JevUses;
   keyReady: boolean;
+  provider?: "typesafe" | "free" | null;
   judgmentsToday: number;
 }
 
@@ -57,6 +60,7 @@ export function JevPanel({
   initialEnabled,
   initialUses = JEV_USES_ON,
   keyReady,
+  provider = null,
   judgmentsToday,
   canManage,
 }: JevPanelProps) {
@@ -162,7 +166,7 @@ export function JevPanel({
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs">
-        <StatusPill ok={keyReady} label={keyReady ? "Jev listo" : "Falta la clave de Jev en el servidor (TYPESAFE_API_KEY)"} />
+        <StatusPill ok={keyReady} label={!keyReady ? "Jev no está disponible en el servidor" : provider === "free" ? "Jev listo · gratis con FreeLLMAPI" : "Jev listo · TypeSafe"} />
         <StatusPill ok={enabled} label={enabled ? "Prendido en WhatsApp" : "Apagado en WhatsApp"} />
         <span className="rounded-full border border-border px-2 py-1 text-muted-foreground">
           Hoy: {judgmentsToday} juicios

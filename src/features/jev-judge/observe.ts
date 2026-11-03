@@ -17,7 +17,7 @@ export function trackJudgment(metrics: JudgmentMetrics): void {
       feature: "jev-judge",
       timestamp: new Date().toISOString(),
       ...metrics,
-      estimatedCostUsd: estimateCostUsd(metrics.inputTokens),
+      estimatedCostUsd: estimateCostUsd(metrics.inputTokens, metrics.model),
     }),
   );
 }

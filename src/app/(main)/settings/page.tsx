@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { jevProvider } from "@/features/jev-judge/judge";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { getActiveWorkspace } from "@/features/workspace/services/active-workspace";
@@ -130,7 +131,8 @@ export default async function SettingsPage() {
       jev={{
         enabled: ycloudConfig.jev_enabled === true,
         uses: readJevUses(ycloudConfig),
-        keyReady: Boolean(process.env.TYPESAFE_API_KEY),
+        keyReady: jevProvider() !== null,
+        provider: jevProvider(),
         judgmentsToday,
       }}
       llmCustom={Boolean(process.env.LLM_BASE_URL?.trim())}

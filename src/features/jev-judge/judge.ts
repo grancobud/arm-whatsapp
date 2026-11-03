@@ -6,6 +6,7 @@ import {
 } from "@typesafe-ai/sdk";
 import type { Decision } from "@/features/jev-judge/map-judgment";
 import { QUESTIONS } from "@/features/jev-judge/prompts";
+import { callFreeJudge, FreeJevError, freeJevAvailable } from "@/features/jev-judge/free-judge";
 
 const MODEL = "jev-latest";
 
@@ -20,7 +21,30 @@ export interface JevCall {
   outputTokens: number;
 }
 
+/** Jev can run: with TypeSafe (paid, TYPESAFE_API_KEY) or free on FreeLLMAPI. */
+export function jevAvailable(): boolean {
+  return Boolean(process.env.TYPESAFE_API_KEY) || freeJevAvailable();
+}
+
+export function jevProvider(): "typesafe" | "free" | null {
+  if (process.env.TYPESAFE_API_KEY) return "typesafe";
+  return freeJevAvailable() ? "free" : null;
+}
+
 export async function callJev(text: string): Promise<JevCall> {
+  if (!process.env.TYPESAFE_API_KEY) {
+    const free = await callFreeJudge(text);
+    return {
+      model: free.model,
+      action: free.action,
+      actionConfidence: free.actionConfidence,
+      intentScore: free.intentScore,
+      autoReplyProbability: free.autoReplyProbability,
+      optOutProbability: free.optOutProbability,
+      inputTokens: free.inputTokens,
+      outputTokens: free.outputTokens,
+    };
+  }
   const client = new TypeSafeClient({
     defaultModel: MODEL,
     timeout: 8000,
@@ -44,6 +68,7 @@ export async function callJev(text: string): Promise<JevCall> {
 }
 
 export function jevFailureCode(error: unknown): string {
+  if (error instanceof FreeJevError) return error.code;
   if (error instanceof RateLimitError) return "rate_limit";
   if (error instanceof APITimeoutError) return "timeout";
   if (error instanceof AuthenticationError) return "auth";
@@ -51,7 +76,8 @@ export function jevFailureCode(error: unknown): string {
 }
 
 export function publicJevError(code: string): string {
-  if (code === "missing_api_key") return "Falta TYPESAFE_API_KEY en el servidor.";
+  if (code === "missing_api_key") return "Jev no está disponible: falta TYPESAFE_API_KEY o LLM_BASE_URL en el servidor.";
+  if (code === "unparseable") return "El modelo gratis no devolvió una respuesta válida. Probá de nuevo.";
   if (code === "rate_limit") return "Jev limitó las llamadas. Espera un momento.";
   if (code === "auth") return "La key del servidor fue rechazada.";
   if (code === "timeout") return "Jev no respondió a tiempo.";
