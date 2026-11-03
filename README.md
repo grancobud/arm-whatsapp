@@ -97,6 +97,14 @@ flowchart LR
 
 3. 🚀 Redeploy.
 
+> [!IMPORTANT]
+> **Respaldo:** si `LLM_BASE_URL` no responde (la PC apagada, el túnel caído o
+> FreeLLMAPI sin cupo), la misma consulta va a OpenRouter con
+> `OPENROUTER_API_KEY` y un modelo gratis (`google/gemma-4-31b-it:free` y
+> después `openrouter/free`; `LLM_BACKUP_MODELS` los cambia). Durante un minuto
+> se usa directo el respaldo y llega un mail de alerta. Sin `OPENROUTER_API_KEY`
+> no hay respaldo.
+
 > [!NOTE]
 > Sirve cualquier endpoint compatible con la API de OpenAI: cambiás `LLM_BASE_URL`
 > y listo. Las variables `OPENROUTER_*` conservan ese nombre por compatibilidad,
