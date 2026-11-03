@@ -60,6 +60,49 @@ export async function retractClaim(claimId: string): Promise<Result> {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Promises the agent made (follow_ups)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface FollowUpItem {
+  id: string;
+  due_at: string;
+  message: string;
+  reason: string | null;
+  status: string;
+  detail: string | null;
+}
+
+/** Follow-ups of a contact, read through RLS: pending first, then the latest. */
+export async function listContactFollowUps(
+  contactId: string,
+): Promise<Result<FollowUpItem[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("follow_ups")
+    .select("id, due_at, message, reason, status, detail")
+    .eq("contact_id", contactId)
+    .order("due_at", { ascending: false })
+    .limit(20);
+  if (error) return { ok: false, error: "No se pudieron leer las promesas" };
+  const rows = (data ?? []) as FollowUpItem[];
+  const pending = rows.filter((r) => r.status === "pending").reverse();
+  return { ok: true, data: [...pending, ...rows.filter((r) => r.status !== "pending").slice(0, 5)] };
+}
+
+/** Cancels a pending follow-up. RLS limits it to operators of its workspace. */
+export async function cancelFollowUp(followUpId: string): Promise<Result> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("follow_ups")
+    .update({ status: "cancelled", detail: "cancelado por una persona", done_at: new Date().toISOString() })
+    .eq("id", followUpId)
+    .eq("status", "pending")
+    .select("id");
+  if (error || !data?.length) return { ok: false, error: "No se pudo cancelar (¿ya salió?)" };
+  return { ok: true, data: null };
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Review queue: agent proposals
 // ──────────────────────────────────────────────────────────────────────────────
 

@@ -213,3 +213,46 @@ export async function toggleAutomationRule(
   revalidatePath("/settings");
   return { data: data as AutomationRule };
 }
+
+// ── Template for promises outside the 24h window ─────────────────────────────
+
+export async function getFollowUpTemplate(
+  workspaceId: string,
+): Promise<{ data?: string | null; error?: string }> {
+  const authCheck = await assertAdminOrManager(workspaceId);
+  if (authCheck && "error" in authCheck) return authCheck;
+  const { data } = await svc().from("workspaces").select("settings").eq("id", workspaceId).single();
+  const name = (data?.settings as { follow_up_template?: string } | null)?.follow_up_template;
+  return { data: name?.trim() || null };
+}
+
+export async function saveFollowUpTemplate(
+  workspaceId: string,
+  templateName: string | null,
+): Promise<{ success?: boolean; error?: string }> {
+  const authCheck = await assertAdminOrManager(workspaceId);
+  if (authCheck && "error" in authCheck) return authCheck;
+
+  const name = templateName?.trim() || null;
+  const db = svc();
+  if (name) {
+    const { data: tpl } = await db
+      .from("templates")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("name", name)
+      .eq("status", "approved")
+      .limit(1)
+      .maybeSingle();
+    if (!tpl) return { error: "Esa plantilla no está aprobada" };
+  }
+
+  const { data: ws } = await db.from("workspaces").select("settings").eq("id", workspaceId).single();
+  const settings = { ...((ws?.settings as Record<string, unknown> | null) ?? {}) };
+  if (name) settings.follow_up_template = name;
+  else delete settings.follow_up_template;
+  const { error } = await db.from("workspaces").update({ settings }).eq("id", workspaceId);
+  if (error) return { error: "No se pudo guardar" };
+  revalidatePath("/settings");
+  return { success: true };
+}

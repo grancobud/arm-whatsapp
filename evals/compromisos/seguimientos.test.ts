@@ -11,6 +11,7 @@ const fu = (due: string): FollowUpRow => ({
   id: "f1",
   workspace_id: "w1",
   conversation_id: "c1",
+  contact_id: "k1",
   due_at: due,
   message: "¡Hola! Te escribo como quedamos.",
 });
@@ -53,4 +54,17 @@ test("la fecha tiene que traer offset, ser futura y dentro de 60 días", () => {
   assert.ok("error" in validateDueAt("mañana", NOW));
   assert.ok("error" in validateDueAt("2026-11-05T15:05:00Z", NOW)); // en 5 minutos
   assert.ok("error" in validateDueAt("2027-03-01T10:00:00-03:00", NOW)); // más de 60 días
+});
+
+test("pasaron las 24 h y el negocio eligió plantilla: sale con la plantilla", () => {
+  const closed = { state: "ai_active" as const, window_expires_at: "2026-11-04T10:00:00Z" };
+  assert.deepEqual(decideFollowUp(fu("2026-11-05T14:00:00Z"), closed, NOW, TZ, "seguimiento"), {
+    action: "template",
+    template: "seguimiento",
+  });
+  // Con la ventana abierta sigue saliendo el mensaje del agente, no la plantilla.
+  assert.deepEqual(decideFollowUp(fu("2026-11-05T14:00:00Z"), open, NOW, TZ, "seguimiento"), { action: "send" });
+  // Si la lleva una persona, decide ella aunque haya plantilla.
+  const human = { ...open, state: "human_active" as const };
+  assert.equal(decideFollowUp(fu("2026-11-05T14:00:00Z"), human, NOW, TZ, "seguimiento").action, "needs_human");
 });
