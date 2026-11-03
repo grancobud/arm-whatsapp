@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Settings2,
   ChevronDown,
@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ToolConfigPanel, CONFIGURABLE_TOOLS } from "./tool-config-panel";
+import { getToolAutonomy, setToolAutonomy, type ToolAutonomy } from "../services/autonomy-actions";
+import { APPROVALS_TO_PROMOTE, type AutonomyMode } from "@/features/tools/lib/autonomy";
 
 interface ToolItem {
   id: string;
@@ -83,6 +85,24 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
   );
   const [pending, setPending] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Graduated autonomy: null = not loaded (or the user can't manage it).
+  const [autonomy, setAutonomy] = useState<Record<string, ToolAutonomy> | null>(null);
+
+  useEffect(() => {
+    void getToolAutonomy(workspaceId).then((r) => setAutonomy(r.data ?? null));
+  }, [workspaceId]);
+
+  async function handleAutonomy(toolKey: string, mode: AutonomyMode) {
+    const prev = autonomy;
+    setAutonomy((a) => (a && a[toolKey] ? { ...a, [toolKey]: { ...a[toolKey], mode, isDefault: false } } : a));
+    const res = await setToolAutonomy(workspaceId, toolKey, mode);
+    if (res.error) {
+      setAutonomy(prev);
+      toast.error(res.error);
+    } else {
+      toast.success(mode === "auto" ? "Ahora lo hace solo" : "Ahora lo propone y una persona aprueba en Revisión");
+    }
+  }
 
   function toggleExpanded(id: string) {
     setExpanded((prev) => (prev === id ? null : id));
@@ -199,6 +219,12 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
                       {TOOL_DESCRIPTIONS[tool.key] ?? tool.description}
                     </p>
                   )}
+                  {tool.enabled && sensitivity !== "read" && autonomy?.[tool.key] && (
+                    <AutonomyControl
+                      value={autonomy[tool.key]}
+                      onChange={(mode) => void handleAutonomy(tool.key, mode)}
+                    />
+                  )}
                   {configurable && (
                     <button
                       type="button"
@@ -240,6 +266,60 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
           );
         })}
       </ul>
+    </div>
+  );
+}
+
+function AutonomyControl({
+  value,
+  onChange,
+}: {
+  value: ToolAutonomy;
+  onChange: (mode: AutonomyMode) => void;
+}) {
+  const { mode, record } = value;
+  return (
+    <div className="mt-2 space-y-1.5">
+      <div role="radiogroup" aria-label="Autonomía" className="inline-flex rounded-md border border-border/60 p-0.5 text-[11px]">
+        {(
+          [
+            ["auto", "Lo hace solo"],
+            ["propose", "Lo propone y alguien aprueba"],
+          ] as const
+        ).map(([m, label]) => (
+          <button
+            key={m}
+            type="button"
+            role="radio"
+            aria-checked={mode === m}
+            onClick={() => mode !== m && onChange(m)}
+            className={cn(
+              "rounded px-2 py-1 transition-colors",
+              mode === m ? "bg-primary/15 text-primary font-medium" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {(record.approved > 0 || record.rejected > 0) && (
+        <p className="text-[11px] text-muted-foreground">
+          Propuestas: {record.approved} aprobadas, {record.rejected} rechazadas.
+        </p>
+      )}
+      {record.suggestAuto && (
+        <p className="text-[11px] text-primary">
+          Aprobaste las últimas {record.streak} sin rechazar ninguna.{" "}
+          <button type="button" className="underline font-medium" onClick={() => onChange("auto")}>
+            Dejarlo hacer solo
+          </button>
+        </p>
+      )}
+      {mode === "propose" && !record.suggestAuto && record.streak > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          Con {APPROVALS_TO_PROMOTE} aprobaciones seguidas te sugerimos dejarlo hacer solo ({record.streak}/{APPROVALS_TO_PROMOTE}).
+        </p>
+      )}
     </div>
   );
 }
