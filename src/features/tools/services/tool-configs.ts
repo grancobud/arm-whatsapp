@@ -2,6 +2,7 @@ import { createClient as createSbClient } from "@supabase/supabase-js";
 import { registry } from "../registry";
 import type { Tool } from "../core/tool";
 import { getWorkspaceMcpTools } from "../mcp/mcp-servers";
+import { effectiveSensitivity, parseAutonomy } from "../lib/autonomy";
 
 function svc() {
   return createSbClient(
@@ -23,11 +24,14 @@ interface ToolConfigRow {
 export async function getEnabledTools(workspaceId: string): Promise<Tool[]> {
   const supabase = svc();
 
-  const { data } = await supabase
-    .from("tool_configs")
-    .select("tool:tools(key), enabled, config")
-    .eq("workspace_id", workspaceId)
-    .eq("enabled", true);
+  const [{ data }, { data: ws }] = await Promise.all([
+    supabase
+      .from("tool_configs")
+      .select("tool:tools(key), enabled, config")
+      .eq("workspace_id", workspaceId)
+      .eq("enabled", true),
+    supabase.from("workspaces").select("settings").eq("id", workspaceId).maybeSingle(),
+  ]);
 
   const enabledKeys = new Set(
     ((data as ToolConfigRow[] | null) ?? [])
@@ -35,7 +39,15 @@ export async function getEnabledTools(workspaceId: string): Promise<Tool[]> {
       .filter((k): k is string => typeof k === "string"),
   );
 
-  const builtIn = registry.list().filter((t) => enabledKeys.has(t.name));
+  // Graduated autonomy: the owner may have chosen "do it alone" or "propose
+  // it" for a tool (see lib/autonomy.ts). The registry gates on sensitivity.
+  const modes = parseAutonomy(ws?.settings);
+  const builtIn = registry
+    .list()
+    .filter((t) => enabledKeys.has(t.name))
+    .map((t) =>
+      modes[t.name] ? { ...t, sensitivity: effectiveSensitivity(t.sensitivity, modes[t.name]) } : t,
+    );
   // Plus the tools of the workspace's own MCP servers (never throws).
   const external = await getWorkspaceMcpTools(workspaceId);
   return [...builtIn, ...external];
