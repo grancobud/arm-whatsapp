@@ -83,3 +83,36 @@ test("promesas: sin la tabla no hay sección; con ella se cuentan por estado", (
   const o = computeOutcomes({ ...base, followUpStatuses: ["sent", "sent", "needs_human", "pending", "sending", "cancelled"] });
   assert.deepEqual(o.promises, { kept: 2, needsHuman: 1, cancelled: 1, failed: 0, pending: 2 });
 });
+
+test("por agente: cada resultado va al agente activo en ese momento", async () => {
+  const { agentAt, computeOutcomesByAgent } = await import("@/features/dashboard/services/outcomes");
+  const timeline = [
+    { agentId: "setter", at: "2026-10-01T00:00:00Z" },
+    { agentId: "agenda", at: "2026-11-02T00:00:00Z" },
+  ];
+  assert.equal(agentAt(timeline, "2026-09-30T00:00:00Z"), null);
+  assert.equal(agentAt(timeline, "2026-11-01T00:00:00Z"), "setter");
+  assert.equal(agentAt(timeline, "2026-11-03T00:00:00Z"), "agenda");
+
+  const rows = computeOutcomesByAgent({
+    timeline,
+    agents: [
+      { id: "setter", name: "Martín", type: "setter" },
+      { id: "agenda", name: "Andrés", type: "agendamiento" },
+    ],
+    events: [
+      ev({ type: "setter_evaluation", created_at: "2026-11-01T10:00:00Z", payload: { qualified: true, contact_id: "k1" } }),
+      ev({ created_at: "2026-11-02T10:00:00Z", payload: { tool_name: "schedule_highlevel", result_ok: true } }),
+      ev({ type: "state_change", conversation_id: "c2", created_at: "2026-11-02T11:00:00Z", payload: { to: "handoff_pending" } }),
+    ],
+    inbound: [
+      { conversation_id: "c1", created_at: "2026-11-01T09:00:00Z" },
+      { conversation_id: "c2", created_at: "2026-11-02T09:00:00Z" },
+      { conversation_id: "c3", created_at: "2026-11-02T09:30:00Z" },
+    ],
+  });
+  const by = Object.fromEntries(rows.map((r) => [r.agentId, r]));
+  assert.deepEqual([by.setter.qualifiedLeads, by.setter.conversations, by.setter.aiOnlyPct], [1, 1, 100]);
+  assert.deepEqual([by.agenda.bookings, by.agenda.conversations, by.agenda.aiOnlyPct], [1, 2, 50]);
+  assert.equal(by.agenda.name, "Andrés");
+});

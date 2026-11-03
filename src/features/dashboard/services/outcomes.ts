@@ -29,6 +29,94 @@ export interface CampaignRecipient {
   sent_at: string | null;
 }
 
+export interface AgentActivation {
+  agentId: string;
+  at: string;
+}
+
+export interface AgentOutcome {
+  agentId: string;
+  name: string;
+  type: string;
+  bookings: number;
+  qualifiedLeads: number;
+  conversations: number;
+  aiOnlyPct: number | null;
+}
+
+/**
+ * Pure: the agent that was active at a given moment. Only one agent is active
+ * per workspace, and every activation is an agent_activated event; before the
+ * first one, nobody (null).
+ */
+export function agentAt(timeline: AgentActivation[], at: string): string | null {
+  const t = new Date(at).getTime();
+  let current: string | null = null;
+  for (const a of timeline) {
+    if (new Date(a.at).getTime() <= t) current = a.agentId;
+    else break;
+  }
+  return current;
+}
+
+/** Pure: outcomes split by the agent that was active when each thing happened. */
+export function computeOutcomesByAgent(input: {
+  events: OutcomeEvent[];
+  inbound: InboundMessage[];
+  timeline: AgentActivation[];
+  agents: Array<{ id: string; name: string; type: string }>;
+}): AgentOutcome[] {
+  const timeline = [...input.timeline].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+  const rows = new Map<string, { bookings: number; qualified: Set<string>; convs: Set<string>; aiOnly: number }>();
+  const row = (id: string) => {
+    let r0 = rows.get(id);
+    if (!r0) rows.set(id, (r0 = { bookings: 0, qualified: new Set(), convs: new Set(), aiOnly: 0 }));
+    return r0;
+  };
+
+  for (const e of input.events) {
+    const agent = agentAt(timeline, e.created_at);
+    if (!agent) continue;
+    if (e.type === "tool_call" && e.payload?.tool_name === "schedule_highlevel" && e.payload?.result_ok === true) {
+      row(agent).bookings++;
+    }
+    if (e.type === "setter_evaluation" && e.payload?.qualified === true) {
+      row(agent).qualified.add(String(e.payload.contact_id ?? e.conversation_id));
+    }
+  }
+
+  // A conversation belongs to the agent active at its latest inbound message.
+  const lastIn = new Map<string, string>();
+  for (const m of input.inbound) {
+    const prev = lastIn.get(m.conversation_id);
+    if (!prev || m.created_at > prev) lastIn.set(m.conversation_id, m.created_at);
+  }
+  const neededPerson = new Set(
+    input.events
+      .filter((e) => e.type === "state_change" && (e.payload?.to === "handoff_pending" || e.payload?.to === "human_active"))
+      .map((e) => e.conversation_id),
+  );
+  for (const [conv, at] of lastIn) {
+    const agent = agentAt(timeline, at);
+    if (!agent) continue;
+    row(agent).convs.add(conv);
+    if (!neededPerson.has(conv)) row(agent).aiOnly++;
+  }
+
+  const byId = new Map(input.agents.map((a) => [a.id, a]));
+  return [...rows.entries()]
+    .map(([agentId, x]) => ({
+      agentId,
+      name: byId.get(agentId)?.name ?? "Agente borrado",
+      type: byId.get(agentId)?.type ?? "",
+      bookings: x.bookings,
+      qualifiedLeads: x.qualified.size,
+      conversations: x.convs.size,
+      aiOnlyPct: x.convs.size ? Math.round((x.aiOnly / x.convs.size) * 100) : null,
+    }))
+    .sort((a, b) => b.conversations - a.conversations);
+}
+
 export interface Outcomes {
   bookings: number;
   bookingLinks: number;
@@ -41,6 +129,8 @@ export interface Outcomes {
   campaigns: Array<{ id: string; name: string; sent: number; replied: number; optOuts: number }>;
   /** null when follow-ups aren't available (migration not applied) */
   promises: { kept: number; needsHuman: number; cancelled: number; failed: number; pending: number } | null;
+  /** Filled by getOutcomes; computeOutcomes leaves it empty. */
+  byAgent: AgentOutcome[];
 }
 
 const DAY = 86_400_000;
@@ -132,6 +222,7 @@ export function computeOutcomes(input: {
       .map(([id, c]) => ({ id, name: input.campaignNames[id] ?? "Campaña", ...c }))
       .sort((a, b) => b.sent - a.sent),
     promises,
+    byAgent: [],
   };
 }
 
@@ -146,7 +237,7 @@ export async function getOutcomes(workspaceId: string, now = new Date()): Promis
   const supabase = svc();
   const since = new Date(now.getTime() - OUTCOME_DAYS * DAY).toISOString();
 
-  const [events, inbound, recipients, followUps] = await Promise.all([
+  const [events, inbound, recipients, followUps, activations, agents] = await Promise.all([
     supabase
       .from("events")
       .select("type, conversation_id, payload, created_at")
@@ -174,6 +265,15 @@ export async function getOutcomes(workspaceId: string, now = new Date()): Promis
       .eq("workspace_id", workspaceId)
       .gte("due_at", since)
       .limit(5_000),
+    // All activations (not only the period's): who was active when it started.
+    supabase
+      .from("events")
+      .select("payload, created_at")
+      .eq("workspace_id", workspaceId)
+      .eq("type", "agent_activated")
+      .order("created_at", { ascending: true })
+      .limit(1_000),
+    supabase.from("agents").select("id, name, type").eq("workspace_id", workspaceId),
   ]);
 
   const recipientRows = (recipients.data ?? []) as CampaignRecipient[];
@@ -184,9 +284,11 @@ export async function getOutcomes(workspaceId: string, now = new Date()): Promis
     for (const c of (data ?? []) as Array<{ id: string; name: string }>) campaignNames[c.id] = c.name;
   }
 
-  return computeOutcomes({
-    events: (events.data ?? []) as OutcomeEvent[],
-    inbound: (inbound.data ?? []) as InboundMessage[],
+  const eventRows = (events.data ?? []) as OutcomeEvent[];
+  const inboundRows = (inbound.data ?? []) as InboundMessage[];
+  const outcomes = computeOutcomes({
+    events: eventRows,
+    inbound: inboundRows,
     recipients: recipientRows,
     campaignNames,
     // The table comes with the follow-ups migration; until then, no section.
@@ -194,4 +296,13 @@ export async function getOutcomes(workspaceId: string, now = new Date()): Promis
       ? null
       : ((followUps.data ?? []) as Array<{ status: string }>).map((f) => f.status),
   });
+  outcomes.byAgent = computeOutcomesByAgent({
+    events: eventRows,
+    inbound: inboundRows,
+    timeline: ((activations.data ?? []) as Array<{ payload: { agent_id?: string } | null; created_at: string }>)
+      .filter((a) => a.payload?.agent_id)
+      .map((a) => ({ agentId: a.payload!.agent_id!, at: a.created_at })),
+    agents: (agents.data ?? []) as Array<{ id: string; name: string; type: string }>,
+  });
+  return outcomes;
 }

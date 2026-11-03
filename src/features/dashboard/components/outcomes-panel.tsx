@@ -39,6 +39,12 @@ function Stat({
   );
 }
 
+const AGENT_TYPES: Record<string, string> = {
+  setter: "Setter",
+  soporte: "Soporte",
+  agendamiento: "Agendamiento",
+};
+
 const n = (v: number) => v.toLocaleString("es-AR");
 
 export function OutcomesPanel({ outcomes: o }: { outcomes: Outcomes }) {
@@ -92,6 +98,42 @@ export function OutcomesPanel({ outcomes: o }: { outcomes: Outcomes }) {
           icon={<UserMinus className={icon} aria-hidden="true" />}
         />
       </div>
+
+      {o.byAgent.length > 0 && (
+        <div className="rounded-xl border border-border/50 bg-card overflow-x-auto">
+          <table className="w-full text-sm">
+            <caption className="sr-only">Resultados por agente</caption>
+            <thead>
+              <tr className="text-xs text-muted-foreground border-b border-border/40">
+                <th className="text-left font-medium px-4 py-2">Agente</th>
+                <th className="text-right font-medium px-4 py-2">Conversaciones</th>
+                <th className="text-right font-medium px-4 py-2">Solo la IA</th>
+                <th className="text-right font-medium px-4 py-2">Turnos</th>
+                <th className="text-right font-medium px-4 py-2">Leads calificados</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/30">
+              {o.byAgent.map((a) => (
+                <tr key={a.agentId}>
+                  <td className="px-4 py-2 text-foreground">
+                    {a.name}
+                    {AGENT_TYPES[a.type] && (
+                      <span className="ml-2 text-[10px] text-muted-foreground">{AGENT_TYPES[a.type]}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2 text-right tabular-nums">{n(a.conversations)}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{a.aiOnlyPct === null ? "—" : `${a.aiOnlyPct}%`}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{n(a.bookings)}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{n(a.qualifiedLeads)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="px-4 py-2 text-[11px] text-muted-foreground border-t border-border/30">
+            Cada resultado se cuenta para el agente que estaba activo en ese momento.
+          </p>
+        </div>
+      )}
 
       {o.campaigns.length > 0 && (
         <div className="rounded-xl border border-border/50 bg-card overflow-x-auto">
