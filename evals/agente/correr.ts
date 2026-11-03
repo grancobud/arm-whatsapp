@@ -30,7 +30,8 @@ import { calificarPorCodigo, montosEn, type Caso, type Chequeo } from "./calific
 import { AHORA_FIJO, NEGOCIO, PRECIOS_PERMITIDOS } from "./negocio.ts";
 import { PROMPTS } from "./prompts.ts";
 import {
-  aprobarHuella, calcularHuella, explicarRechazo, hashTexto, normalizarModelo, resumenHuella, revisarHuella,
+  aprobarHuella, calcularHuella, cierreDeImports, explicarRechazo, hashTexto, normalizarModelo, resumenHuella,
+  revisarHuella,
 } from "../huella.ts";
 
 const args = Object.fromEntries(
@@ -57,18 +58,13 @@ const CONFIG_EXAMEN = {
   gen: GEN, jueces: JUECES, juezFijo: JUEZ_FIJO, temperatura: TEMPERATURA,
   maxTokensRespuesta: MAX_TOKENS_RESPUESTA, maxTokensJuez: MAX_TOKENS_JUEZ,
 };
-const ARCHIVOS_EXAMEN = [
-  "evals/huella.ts",
-  "evals/agente/correr.ts", // incluye el prompt del juez
-  "evals/agente/calificadores.ts",
-  "evals/agente/casos.json",
-  "evals/agente/negocio.ts",
-  "src/features/inbox/services/prompt-builder.ts",
-  "src/features/inbox/services/business-info.ts",
-  "src/features/arm/services/claims.ts",
-  "src/features/inbox/services/kb-service.ts",
-  "src/features/inbox/services/kb-citations.ts",
-];
+// El runner (incluye el prompt del juez), los casos y todo el código que importan,
+// menos los prompts que se comparan.
+const ARCHIVOS_EXAMEN = cierreDeImports(
+  ["evals/agente/correr.ts", "evals/agente/casos.json"],
+  undefined,
+  ["evals/agente/prompts.ts"],
+);
 const APROBACION = fileURLToPath(new URL("./huella-aprobada.json", import.meta.url));
 const huella = calcularHuella(ARCHIVOS_EXAMEN, CONFIG_EXAMEN);
 if ("aprobar-huella" in args) {
@@ -181,6 +177,10 @@ async function juzgarCon(juez: string, prompt: string) {
   });
   const llamada = r.toolCalls[0];
   if (!llamada) throw new Error(`El juez no llamó a la herramienta: ${r.text.slice(0, 120)}`);
+  // Con --juez-fijo el proxy no puede cambiar de modelo a escondidas: si respondió otro, no cuenta.
+  if (JUEZ_FIJO && normalizarModelo(r.response.modelId) !== normalizarModelo(juez)) {
+    throw new Error(`Se pidió el juez ${juez} y respondió ${r.response.modelId}`);
+  }
   return { ...(llamada.input as z.infer<typeof evaluacion.inputSchema>), modelo: r.response.modelId };
 }
 

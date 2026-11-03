@@ -11,8 +11,8 @@
 // una versión no exige re-aprobar. Su hash se guarda aparte en cada resultado.
 
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { relative, resolve } from "node:path";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const RAIZ = fileURLToPath(new URL("../", import.meta.url));
@@ -40,6 +40,42 @@ function ordenar(valor: unknown): unknown {
     return Object.fromEntries(Object.keys(valor).sort().map((k) => [k, ordenar((valor as Record<string, unknown>)[k])]));
   }
   return valor;
+}
+
+// Imports con valor (no `import type`), multilínea incluidos, y re-exports.
+const IMPORTS = /^\s*(?:import|export)\s+(?!type\b)(?:[^;'"]*?\sfrom\s+)?["']([^"']+)["']/gm;
+
+function resolverImport(especificador: string, desde: string, raiz: string): string | null {
+  let base: string;
+  if (especificador.startsWith("@/")) base = resolve(raiz, "src", especificador.slice(2));
+  else if (especificador.startsWith(".")) base = resolve(desde, "..", especificador);
+  else return null; // paquete de node_modules: no es parte del examen
+  for (const candidato of [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts")]) {
+    if (existsSync(candidato) && statSync(candidato).isFile()) return candidato;
+  }
+  return null;
+}
+
+/**
+ * Los archivos de entrada más todo lo que importan, recursivamente (mismas reglas que
+ * evals/cargador.mjs: "@/" es src/, imports relativos sin extensión). Así un cambio en
+ * cualquier código del que depende la nota cambia la huella, sin una lista a mano.
+ */
+export function cierreDeImports(entradas: string[], raiz = RAIZ, excluir: string[] = []): string[] {
+  const fuera = new Set(excluir.map((e) => resolve(raiz, e)));
+  const vistos = new Set<string>();
+  const pendientes = entradas.map((e) => resolve(raiz, e));
+  while (pendientes.length) {
+    const archivo = pendientes.pop() as string;
+    if (vistos.has(archivo) || fuera.has(archivo)) continue;
+    vistos.add(archivo);
+    if (!/\.(ts|tsx)$/.test(archivo)) continue;
+    for (const m of readFileSync(archivo, "utf8").matchAll(IMPORTS)) {
+      const dep = resolverImport(m[1], archivo, raiz);
+      if (dep) pendientes.push(dep);
+    }
+  }
+  return [...vistos].map((a) => relative(raiz, a).replaceAll("\\", "/")).sort();
 }
 
 export function calcularHuella(archivos: string[], config: Record<string, unknown>, raiz = RAIZ): Huella {

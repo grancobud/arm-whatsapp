@@ -104,8 +104,10 @@ hasta entender por qué.
 
 **Huella del examen (`eval:agente`).** Una nota solo se compara con otra si el
 examen es el mismo. `evals/huella.ts` calcula un hash del runner (incluido el
-prompt del juez), los calificadores, los casos, el código de producción que arma
-el prompt y la configuración (modelo, jueces, temperatura). La huella aprobada
+prompt del juez), los casos y **todo el código que importan**, siguiendo los
+imports solo (calificadores, `reply-guard.ts`, el código de producción que arma el
+prompt), más la configuración (modelo, jueces, temperatura). Las versiones de los
+paquetes de `node_modules` no entran. La huella aprobada
 vive en `evals/agente/huella-aprobada.json`, con fecha, quién la aprobó y por qué.
 Si algo de eso cambia, la eval **no corre** y dice qué componente cambió; para
 seguir hay que re-aprobarla con un motivo:
@@ -114,8 +116,8 @@ npm run eval:agente -- --aprobar-huella="motivo del cambio" --aprobada-por="nomb
 ```
 Los prompts (`prompts.ts`) no entran en la huella porque son lo que se evalúa:
 cada resultado guarda su hash aparte. El resumen muestra la nota separada por
-juez, y `--juez-fijo` usa un solo juez (si falla, el caso queda sin juez en vez
-de pasar a otro modelo). La línea base de arriba se midió **antes** de existir la
+juez, y `--juez-fijo` usa un solo juez: si falla, o si el proveedor responde con
+otro modelo, el caso queda sin juez en vez de calificarlo otro. La línea base de arriba se midió **antes** de existir la
 huella y con la cadena de jueces; vale como referencia, no como comparación
 controlada. Idea de Arian Z. Pendiente: llevar la huella a las otras evals.
 
