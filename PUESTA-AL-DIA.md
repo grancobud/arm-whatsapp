@@ -30,22 +30,26 @@ prueba de verdad con modelos reales, se mide, se corrige lo que falla y se
 vuelve a medir. Nada se mergea sin números.
 
 ```mermaid
-flowchart LR
-    A[🧱 Base<br/>fork endurecido<br/>+ arreglo de seguridad] --> B[💬 Respuestas<br/>seguras]
-    B --> C[📊 Evaluación<br/>del agente]
-    C --> D[✍️ Prompts<br/>9.1 → 9.6]
-    D --> E[🔧 Herramientas<br/>14/20 → 40/42]
-    E --> F[📚 Conocimiento<br/>11 → 15 de 17]
-    F --> G[🖼️ Imágenes, PDFs<br/>y caché]
-    G --> H[📌 Citas<br/>8/8]
-    H --> I[🔌 MCP<br/>28/28]
-    I --> T1[🧭 Agentes y flujos<br/>👉 Tomas]
-    I --> T2[🎯 RAG reranking<br/>👉 Tomas]
-
-    style A fill:#64748B,color:#fff
-    style I fill:#3ECF8E,color:#000
-    style T1 fill:#F38020,color:#fff
-    style T2 fill:#F38020,color:#fff
+flowchart TB
+    subgraph E1 [1 · Base]
+        direction LR
+        A[🔐 Seguridad]:::h --> B[💬 Respuestas<br/>seguras]:::h --> C[📊 Evaluación]:::h
+    end
+    subgraph E2 [2 · Calidad del agente]
+        direction LR
+        D[✍️ Prompts<br/>9.1 → 9.6]:::h --> E[🔧 Herramientas<br/>14/20 → 40/42]:::h --> F[📚 Conocimiento<br/>11 → 15 de 17]:::h
+    end
+    subgraph E3 [3 · Más allá del texto]
+        direction LR
+        G[🖼️ Imágenes<br/>PDFs y caché]:::h --> H[📌 Citas<br/>8/8]:::h --> I[🔌 MCP<br/>28/28]:::h
+    end
+    subgraph E4 [4 · Lo que sigue: Tomas]
+        direction LR
+        T2[🎯 RAG reranking<br/>#20]:::t --> T1[🧭 Agentes y flujos<br/>#19]:::t
+    end
+    E1 --> E2 --> E3 --> E4
+    classDef h fill:#3ECF8E,color:#000
+    classDef t fill:#F38020,color:#fff
 ```
 
 | # | Área | PR | Qué se encontró | Qué quedó |
@@ -77,19 +81,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    L[📖 Lección<br/>qué tiene que<br/>cumplir la app] --> P[🧪 Probar de verdad<br/>modelos reales<br/>datos ficticios]
-    P --> T{📋 Tabla<br/>✅ ⚠️ ❌}
-    T -->|❌ o ⚠️| C[🔧 Corregir]
-    C --> M[📏 Volver a medir]
+    L[📖 Qué tiene<br/>que cumplir]:::p --> P[🧪 Probar<br/>de verdad]:::p
+    P --> T{📋 ✅ ⚠️ ❌}
+    T -->|falla| C[🔧 Corregir]:::m
+    C --> M[📏 Volver<br/>a medir]:::o
     M -->|bajó algo| C
-    M -->|mejoró o igual| PR[🚀 PR con números<br/>antes y después]
-    T -->|✅ todo| PR
-    PR --> RM[📝 Fila nueva en<br/>Auditado y mejorado]
-
-    style P fill:#0EA5E9,color:#fff
-    style C fill:#8A2BE2,color:#fff
-    style M fill:#F38020,color:#fff
-    style PR fill:#25D366,color:#000
+    M -->|mejoró| PR[🚀 PR con<br/>números]:::r
+    T -->|todo ✅| PR
+    classDef p fill:#0EA5E9,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef o fill:#F38020,color:#fff
+    classDef r fill:#25D366,color:#000
 ```
 
 Tres reglas que aprendimos a los golpes:
@@ -135,18 +137,17 @@ En el README se dice "auditado y mejorado". **No se nombra el curso ni sus capí
 
 ```mermaid
 flowchart LR
-    Q([❓ Pregunta]) --> E[🔢 Embedding]
-    E --> S[(📚 pgvector<br/>top N)]
-    S --> RR[🎯 Reranking<br/>NUEVO]
-    RR --> A{{🤖 Agente}}
-    D[📄 Documento] --> CH[✂️ Corte por<br/>secciones]
-    CH --> CX[🧩 Contexto por<br/>fragmento · NUEVO]
-    CX --> IX[(Índice)]
-    IX -.-> S
-
-    style RR fill:#F38020,color:#fff
-    style CX fill:#F38020,color:#fff
-    style A fill:#8A2BE2,color:#fff
+    subgraph Q [Al responder]
+        direction LR
+        Q1([❓ Pregunta]) --> S[(📚 pgvector<br/>top 10)] --> RR[🎯 Reranking<br/>NUEVO]:::n --> A{{🤖 Agente}}:::a
+    end
+    subgraph I [Al cargar un documento]
+        direction LR
+        D[📄 Documento] --> CH[✂️ Secciones] --> CX[🧩 Contexto<br/>NUEVO]:::n --> IX[(Índice)]
+    end
+    I --> Q
+    classDef n fill:#F38020,color:#fff
+    classDef a fill:#8A2BE2,color:#fff
 ```
 
 1. `git checkout main && git pull && git checkout -b audit/rag-reranking`
@@ -172,20 +173,25 @@ queda documentado con números por qué ninguna de las dos técnicas aporta.
 ### 🧭 Tarea B · #19 Agentes y flujos de trabajo
 
 ```mermaid
-flowchart LR
+flowchart TB
     M([📱 Mensaje]) --> B[⏳ Buffer]
-    B --> J{⚖️ Jev<br/>ENRUTAMIENTO}
-    J -->|IA| P1[🧾 Memoria]
+    B --> J{⚖️ Jev<br/>ENRUTAMIENTO}:::o
     J -->|persona| H[🙋 Handoff]
-    P1 & P2[📚 KB] & P3[🏪 Negocio] --> A{{🤖 Agente<br/>PARALELIZACIÓN}}
-    A --> E[🏷️ Etiquetas<br/>y resumen]
-    E --> S[🎯 Setter]
-    S --> CRM[👥 CRM<br/>ENCADENAMIENTO]
-    A -.-> EV[(📋 events<br/>DEPURACIÓN)]
-
-    style J fill:#F38020,color:#fff
-    style A fill:#8A2BE2,color:#fff
-    style EV fill:#64748B,color:#fff
+    J -->|IA| CTX
+    subgraph CTX [PARALELIZACIÓN]
+        direction LR
+        P1[(🧾 Memoria)] ~~~ P2[(📚 KB)] ~~~ P3[(🏪 Negocio)]
+    end
+    CTX --> A{{🤖 Agente}}:::a
+    A --> CH
+    subgraph CH [ENCADENAMIENTO]
+        direction LR
+        E[🏷️ Etiquetas<br/>y resumen] --> S[🎯 Setter] --> CRM[👥 CRM]
+    end
+    A -.-> EV[(📋 events<br/>DEPURACIÓN)]:::g
+    classDef o fill:#F38020,color:#fff
+    classDef a fill:#8A2BE2,color:#fff
+    classDef g fill:#64748B,color:#fff
 ```
 
 1. `git checkout main && git pull && git checkout -b audit/agentes`
