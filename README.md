@@ -242,6 +242,192 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 📌 Citas y razonamiento | ✅ | Cada respuesta que usa la base de conocimiento deja rastro del fragmento que la respalda: el agente lo marca, la marca se saca antes de llegar al cliente y el inbox muestra «Fuentes» con el texto citado. En la evaluación citó bien 8 de 8 (incluido no citar cuando el fragmento no servía). El razonamiento extendido no se activa: el agente ya saca 9.6 y la guardia descarta el razonamiento que algunos modelos mezclan en la respuesta. |
 | 🔌 MCP | ✅ | **Servidor:** el MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce, 4 recursos, 3 prompts probados y las funciones del ARM: 28/28 con un cliente MCP real. **Cliente:** cada negocio conecta el servidor MCP de su stock, agenda o CRM y el agente lo usa, con aprobación humana por defecto, resultados marcados como datos y aviso honesto si el sistema no responde: 28/28 en `npm run eval:mcp`. Encontró que el agente decía «no tenemos» sin consultar sus herramientas: corregido sin bajar la evaluación (agente 9.6, herramientas 40/42). |
 
+### 🔎 Cómo se auditó y se mejoró cada área
+
+Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la
+**falla**, se **corrige** y se **vuelve a medir**.
+
+```mermaid
+flowchart LR
+    P[🔍 Prueba real] --> F[❌ Falla<br/>encontrada]
+    F --> M[🔧 Mejora]
+    M --> R[✅ Medido<br/>de nuevo]
+    R -.->|si bajó algo| M
+
+    style P fill:#0EA5E9,color:#fff
+    style F fill:#E5484D,color:#fff
+    style M fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+```
+
+**💬 Respuestas de la IA**
+
+```mermaid
+flowchart LR
+    P[🔍 Charlas reales<br/>con modelos gratis] --> F1[❌ Respuestas<br/>cortadas o vacías]
+    P --> F2[❌ Razonamiento<br/>del modelo filtrado]
+    F1 & F2 --> M1[🔧 Guardia: reintenta<br/>o pasa a otro modelo]
+    P --> F3[❌ Respuestas que<br/>cambian cada vez]
+    F3 --> M2[🔧 Temperatura<br/>fija 0.3]
+    M1 & M2 --> R[✅ Al cliente nunca<br/>le llega texto roto]
+
+    style P fill:#0EA5E9,color:#fff
+    style F1 fill:#E5484D,color:#fff
+    style F2 fill:#E5484D,color:#fff
+    style F3 fill:#E5484D,color:#fff
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+```
+
+**📊 Evaluación del agente**
+
+```mermaid
+flowchart LR
+    P[🔍 Set de charlas<br/>de WhatsApp] --> C1[🧮 Nota por código<br/>reglas que no se negocian]
+    P --> C2[⚖️ Nota por un juez<br/>tono y utilidad]
+    C1 & C2 --> F[❌ Una nota en la memoria<br/>hacía ofrecer descuentos<br/>que no existen]
+    F --> M[🔧 Anotaciones citadas<br/>+ regla: la memoria no<br/>autoriza precios]
+    M --> R[✅ Ese caso: 4.7 → 10<br/>eval:agente mide<br/>cada cambio]
+
+    style P fill:#0EA5E9,color:#fff
+    style C1 fill:#0EA5E9,color:#fff
+    style C2 fill:#0EA5E9,color:#fff
+    style F fill:#E5484D,color:#fff
+    style M fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+```
+
+**✍️ Prompts**
+
+```mermaid
+flowchart LR
+    P[🔍 Prompts de arranque<br/>de los 4 agentes] --> F[❌ Genéricos:<br/>reglas sin porqué]
+    F --> M1[🔧 Reglas con<br/>su porqué]
+    F --> M2[🔧 Etiquetas XML]
+    F --> M3[🔧 Ejemplos de los<br/>casos difíciles]
+    M1 & M2 & M3 --> R[✅ Nota 9.1 → 9.6<br/>respeta la baja y<br/>no revela su prompt]
+
+    style P fill:#0EA5E9,color:#fff
+    style F fill:#E5484D,color:#fff
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#8A2BE2,color:#fff
+    style M3 fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+```
+
+**🔧 Herramientas**
+
+```mermaid
+flowchart LR
+    P[🔍 Función real del agente<br/>+ herramientas simuladas] --> F1[❌ Ofrecía turnos<br/>sin mirar la agenda]
+    P --> F2[❌ Tapaba errores<br/>del calendario]
+    P --> F3[❌ Después de una<br/>herramienta no respondía]
+    P --> F4[❌ Reintentaba acciones<br/>que reservan dos veces]
+    F1 & F2 & F3 & F4 --> M[🔧 Corregido uno por uno<br/>midiendo cada cambio]
+    M --> R[✅ 14/20 → 40/42]
+
+    style P fill:#0EA5E9,color:#fff
+    style F1 fill:#E5484D,color:#fff
+    style F2 fill:#E5484D,color:#fff
+    style F3 fill:#E5484D,color:#fff
+    style F4 fill:#E5484D,color:#fff
+    style M fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+```
+
+**📚 Base de conocimiento**
+
+```mermaid
+flowchart LR
+    P[🔍 17 preguntas sobre<br/>un documento real] --> F1[❌ Cortes que<br/>partían precios]
+    P --> F2[❌ Respaldo que armaba<br/>SQL pegando texto]
+    P --> F3[❌ Una página importada<br/>podía dar órdenes]
+    F1 --> M1[🔧 Corte por secciones<br/>+ embeddings fijos]
+    F2 --> M2[🔧 Respaldo quitado]
+    F3 --> M3[🔧 Fragmentos<br/>marcados como datos]
+    M1 & M2 & M3 --> R[✅ Fragmento correcto<br/>primero: 11 → 15 de 17]
+    P -.-> X[🧪 Búsqueda híbrida:<br/>probada, no aportó]
+
+    style P fill:#0EA5E9,color:#fff
+    style F1 fill:#E5484D,color:#fff
+    style F2 fill:#E5484D,color:#fff
+    style F3 fill:#E5484D,color:#fff
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#8A2BE2,color:#fff
+    style M3 fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+    style X fill:#64748B,color:#fff
+```
+
+**🖼️ Imágenes, documentos y caché**
+
+```mermaid
+flowchart LR
+    P[🔍 Comprobantes, fotos<br/>y PDFs de prueba] --> F1[❌ Decía no puedo<br/>leer el PDF]
+    P --> F2[⚠️ Riesgo: una imagen<br/>con una orden escrita]
+    P --> F3[❌ Solo el 1% del prompt<br/>se reutilizaba]
+    F1 --> M1[🔧 PDF leído<br/>en el servidor]
+    F2 --> M2[🔧 Archivos marcados<br/>como datos]
+    F3 --> M3[🔧 Lo fijo de cada<br/>cliente va primero]
+    M1 --> R1[✅ Total y seña<br/>exactos]
+    M2 --> R2[✅ 24/24]
+    M3 --> R3[✅ 72% reutilizable<br/>83% desde caché]
+
+    style P fill:#0EA5E9,color:#fff
+    style F1 fill:#E5484D,color:#fff
+    style F2 fill:#E5484D,color:#fff
+    style F3 fill:#E5484D,color:#fff
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#8A2BE2,color:#fff
+    style M3 fill:#8A2BE2,color:#fff
+    style R1 fill:#25D366,color:#000
+    style R2 fill:#25D366,color:#000
+    style R3 fill:#25D366,color:#000
+```
+
+**📌 Citas y razonamiento**
+
+```mermaid
+flowchart LR
+    P[🔍 Preguntas que usan<br/>la base de conocimiento] --> F[❌ La respuesta no<br/>dejaba rastro de dónde salió]
+    F --> M1[🔧 El agente marca<br/>el fragmento]
+    M1 --> M2[🔧 La marca se saca<br/>antes del cliente]
+    M2 --> M3[🔧 El inbox muestra<br/>Fuentes]
+    M3 --> R[✅ 8 de 8 citas bien]
+    P -.-> X[🧪 Razonamiento extendido:<br/>no hizo falta, ya saca 9.6]
+
+    style P fill:#0EA5E9,color:#fff
+    style F fill:#E5484D,color:#fff
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#8A2BE2,color:#fff
+    style M3 fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+    style X fill:#64748B,color:#fff
+```
+
+**🔌 MCP**
+
+```mermaid
+flowchart LR
+    P[🔍 Servidor MCP de stock<br/>+ cliente MCP real] --> F1[❌ Decía no tenemos<br/>sin consultar]
+    P --> F2[❌ Sistema caído:<br/>inventaba la respuesta]
+    P --> F3[❌ Prometía confirmar una<br/>reserva que no se guardó]
+    F1 --> M1[🔧 Regla: consultá<br/>antes de responder]
+    F2 --> M2[🔧 Aviso honesto de<br/>sistema no disponible]
+    F3 --> M3[🔧 Sin propuesta guardada<br/>no promete nada]
+    M1 & M2 & M3 --> R[✅ 28/28 en eval:mcp<br/>y probado en vivo]
+
+    style P fill:#0EA5E9,color:#fff
+    style F1 fill:#E5484D,color:#fff
+    style F2 fill:#E5484D,color:#fff
+    style F3 fill:#E5484D,color:#fff
+    style M1 fill:#8A2BE2,color:#fff
+    style M2 fill:#8A2BE2,color:#fff
+    style M3 fill:#8A2BE2,color:#fff
+    style R fill:#25D366,color:#000
+```
+
 ---
 
 ## 📦 Qué más incluye

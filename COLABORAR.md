@@ -6,6 +6,7 @@ pisarnos, sin hacer el mismo trabajo dos veces y sin romper producción**.
 - Repo: https://github.com/grancobud/arm-whatsapp
 - App en producción: https://arm-whatsapp.vercel.app
 - Qué es y cómo está armado: [`README.md`](README.md)
+- Todo lo hecho hasta ahora y qué le toca a cada uno: [`PUESTA-AL-DIA.md`](PUESTA-AL-DIA.md)
 
 ---
 
@@ -44,7 +45,7 @@ nadie lo está haciendo: antes de arrancar algo nuevo, creá el issue y asignát
 | Sección | Quién | Estado |
 | --- | --- | --- |
 | Acceso a la API, prompts, herramientas, RAG, funciones avanzadas | Gastón | ✅ hecho |
-| **Model Context Protocol (MCP)** | Gastón | ⏳ |
+| **Model Context Protocol (MCP)** | Gastón | ✅ hecho |
 | **Agentes y flujos de trabajo** | Tomas | ⏳ |
 | **RAG: reranking y recuperación contextual** | Tomas | ⏳ |
 | Claude Code y Computer Use | — | exclusivo de Anthropic, no se audita en la app |
