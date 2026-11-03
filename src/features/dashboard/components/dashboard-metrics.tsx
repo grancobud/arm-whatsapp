@@ -11,6 +11,8 @@ import {
 import { cn } from "@/lib/utils";
 import { ArmExplainer } from "@/features/arm/components/arm-explainer";
 import { OutcomesPanel } from "./outcomes-panel";
+import { SuggestionsPanel } from "./suggestions-panel";
+import type { Suggestion } from "@/features/arm/services/relationship";
 import type { Outcomes } from "@/features/dashboard/services/outcomes";
 import type {
   WorkspaceMetrics,
@@ -22,6 +24,7 @@ interface DashboardMetricsProps {
   metrics: WorkspaceMetrics;
   recentConversations: RecentConversation[];
   outcomes: Outcomes;
+  suggestions: Suggestion[];
 }
 
 interface KpiCardProps {
@@ -113,6 +116,7 @@ export function DashboardMetrics({
   metrics,
   recentConversations,
   outcomes,
+  suggestions,
 }: DashboardMetricsProps) {
   return (
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
@@ -129,6 +133,8 @@ export function DashboardMetrics({
       <ArmExplainer />
 
       <OutcomesPanel outcomes={outcomes} />
+
+      <SuggestionsPanel suggestions={suggestions} />
 
       <h2 className="font-display text-sm font-semibold text-foreground -mb-4">
         Hoy
