@@ -49,6 +49,7 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   schedule_highlevel: "Agenda el turno directo en el calendario de HighLevel.",
   check_availability: "Consulta los horarios libres reales del calendario de HighLevel.",
   remember_fact: "Guarda lo que el cliente cuenta (necesidad, objeción, compromiso, dato) citando su mensaje.",
+  schedule_followup: "Cuando el agente promete escribirle al cliente más adelante, lo agenda y lo cumple.",
   custom_webhook: "Manda los datos a una URL tuya (HTTPS) para conectar otro sistema.",
 };
 

@@ -25,7 +25,8 @@ const COOLDOWN_MINUTES = 30;
 const FIRST_LOOKBACK_MINUTES = 60;
 const MAX_DETAIL_CHARS = 160;
 
-const ALERT_WARN_TYPES = new Set(["mcp_server_error", "cost_alert"]);
+// follow_up_due: a promise to a customer that only a person can keep now.
+const ALERT_WARN_TYPES = new Set(["mcp_server_error", "cost_alert", "follow_up_due"]);
 
 export interface AlertEvent {
   workspace_id: string;

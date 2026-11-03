@@ -66,8 +66,16 @@ export async function processInbound(
 
   // 1. Upsert contact
   // A user messaging the business first is implicit opt-in for service
-  // messages within the 24h window, so inbound contacts are opted in.
-  // (STOP-keyword opt-out handling is future work and would guard this.)
+  // messages within the 24h window, so inbound contacts are opted in —
+  // except someone who asked to stop (opt_out_at set): writing again doesn't
+  // undo a BAJA, only ALTA does (see opt-out.ts).
+  const { data: existing } = await supabase
+    .from("contacts")
+    .select("opt_out_at")
+    .eq("workspace_id", workspaceId)
+    .eq("phone", phone)
+    .maybeSingle();
+  const optedOut = Boolean((existing as { opt_out_at: string | null } | null)?.opt_out_at);
   const { data: contactData, error: contactError } = await supabase
     .from("contacts")
     .upsert(
@@ -76,8 +84,7 @@ export async function processInbound(
         phone,
         // Only update name when the incoming value is non-null
         name: normalized.customerName,
-        opt_in: true,
-        opt_in_at: new Date().toISOString(),
+        ...(optedOut ? {} : { opt_in: true, opt_in_at: new Date().toISOString() }),
       },
       {
         onConflict: "workspace_id,phone",
