@@ -1,7 +1,17 @@
 // Cargador para correr código de src/ con Node sin compilar: resuelve el alias
 // "@/" y los imports relativos sin extensión (".ts", "/index.ts"), como Next.
+// Carga automáticamente .env.local si existe.
 import { existsSync } from "node:fs";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
+
+const ENV_LOCAL = new URL("../.env.local", import.meta.url);
+if (existsSync(ENV_LOCAL) && typeof process.loadEnvFile === "function") {
+  try {
+    process.loadEnvFile(fileURLToPath(ENV_LOCAL));
+  } catch {
+    // Ignorar si hay error de formato
+  }
+}
 
 const SRC = new URL("../src/", import.meta.url);
 
