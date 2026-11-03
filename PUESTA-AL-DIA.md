@@ -136,16 +136,10 @@ En el README se dice "auditado y mejorado". **No se nombra el curso ni sus capí
 ### 🎯 Tarea A · #20 RAG: reranking y recuperación contextual
 
 ```mermaid
-flowchart TB
-    subgraph Q [Al responder]
-        direction LR
-        Q1([❓ Pregunta]) --> S[(📚 pgvector<br/>top 10)] --> RR[🎯 Reranking<br/>NUEVO]:::n --> A{{🤖 Agente}}:::a
-    end
-    subgraph I [Al cargar un documento]
-        direction LR
-        D[📄 Documento] --> CH[✂️ Secciones] --> CX[🧩 Contexto<br/>NUEVO]:::n --> IX[(Índice)]
-    end
-    I --> Q
+flowchart LR
+    D[📄 Documento] --> CH[✂️ Secciones] --> CX[🧩 Contexto<br/>NUEVO]:::n --> IX[(📚 Índice<br/>pgvector)]
+    Q1([❓ Pregunta]) --> S[🔢 Top 10<br/>candidatos] --> RR[🎯 Reranking<br/>NUEVO]:::n --> A{{🤖 Agente}}:::a
+    IX -.-> S
     classDef n fill:#F38020,color:#fff
     classDef a fill:#8A2BE2,color:#fff
 ```
