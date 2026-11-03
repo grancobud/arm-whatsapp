@@ -60,6 +60,67 @@ export async function retractClaim(claimId: string): Promise<Result> {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Lessons: what the team taught the agent
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface LessonItem {
+  id: string;
+  source: string;
+  lesson: string;
+  example: string | null;
+  created_at: string;
+}
+
+/** A person corrects one of the AI's replies. Through RLS: operators only. */
+export async function correctAiMessage(messageId: string, lesson: string): Promise<Result> {
+  const text = lesson.trim();
+  if (text.length < 3) return { ok: false, error: "Escribí qué tendría que haber hecho" };
+  const supabase = await createClient();
+  const { data: msg } = await supabase
+    .from("messages")
+    .select("id, workspace_id, body, direction, sender_user_id")
+    .eq("id", messageId)
+    .maybeSingle();
+  if (!msg) return { ok: false, error: "Mensaje no encontrado" };
+  if (msg.direction !== "out" || msg.sender_user_id) {
+    return { ok: false, error: "Solo se corrigen respuestas de la IA" };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { error } = await supabase.from("agent_lessons").insert({
+    workspace_id: msg.workspace_id,
+    source: "message_correction",
+    lesson: text.slice(0, 300),
+    example: ((msg.body as string | null) ?? "").slice(0, 500) || null,
+    message_id: messageId,
+    created_by: user?.id ?? null,
+  });
+  if (error) return { ok: false, error: "No se pudo guardar la corrección" };
+  return { ok: true, data: null };
+}
+
+export async function listLessons(workspaceId: string): Promise<Result<LessonItem[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("agent_lessons")
+    .select("id, source, lesson, example, created_at")
+    .eq("workspace_id", workspaceId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) return { ok: false, error: "No se pudieron leer las correcciones" };
+  return { ok: true, data: (data ?? []) as LessonItem[] };
+}
+
+export async function archiveLesson(lessonId: string): Promise<Result> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("agent_lessons").update({ status: "archived" }).eq("id", lessonId);
+  if (error) return { ok: false, error: "No se pudo quitar" };
+  return { ok: true, data: null };
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Relationship score
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -129,6 +190,8 @@ export async function cancelFollowUp(followUpId: string): Promise<Result> {
 export async function decideProposal(
   proposalId: string,
   approve: boolean,
+  /** On reject: what it should have done. Saved as a lesson for the agent. */
+  note?: string,
 ): Promise<Result> {
   const supabase = svc();
   const { data: proposal } = await supabase
@@ -156,6 +219,19 @@ export async function decideProposal(
     .select("id")
     .maybeSingle();
   if (!claimed) return { ok: false, error: "La propuesta ya fue decidida" };
+
+  const lesson = note?.trim();
+  if (!approve && lesson && lesson.length >= 3) {
+    const args = JSON.stringify(proposal.args ?? {});
+    await supabase.from("agent_lessons").insert({
+      workspace_id: proposal.workspace_id,
+      source: "rejected_proposal",
+      lesson: lesson.slice(0, 300),
+      example: `${proposal.tool_name ?? "acción"} ${args}`.slice(0, 500),
+      proposal_id: proposalId,
+      created_by: auth.userId,
+    });
+  }
 
   if (approve) {
     // Same write path as the agent: zod validation, timeout and logging live

@@ -5,7 +5,7 @@
  * wait for a person's OK. Nothing here runs until someone approves it.
  */
 
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import Link from "next/link";
 import { Check, Megaphone, Wrench, X } from "lucide-react";
 import { toast } from "sonner";
@@ -44,12 +44,20 @@ export function ReviewQueue({
   usdPerMessage,
 }: Props) {
   const [isPending, startTransition] = useTransition();
+  // Rejecting asks (optionally) what it should have done: the agent learns it.
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [note, setNote] = useState("");
 
-  function onProposal(id: string, approve: boolean) {
+  function onProposal(id: string, approve: boolean, lesson?: string) {
     startTransition(async () => {
-      const res = await decideProposal(id, approve);
-      if (res.ok) toast.success(approve ? "Aprobada y ejecutada" : "Rechazada");
-      else toast.error(res.error);
+      const res = await decideProposal(id, approve, lesson);
+      if (res.ok) {
+        toast.success(
+          approve ? "Aprobada y ejecutada" : lesson?.trim() ? "Rechazada: el agente lo aprende" : "Rechazada",
+        );
+        setRejecting(null);
+        setNote("");
+      } else toast.error(res.error);
     });
   }
 
@@ -177,7 +185,7 @@ export function ReviewQueue({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onProposal(p.id, false)}
+                      onClick={() => setRejecting(rejecting === p.id ? null : p.id)}
                       disabled={isPending}
                     >
                       <X className="h-4 w-4 mr-1" /> Rechazar
@@ -185,6 +193,25 @@ export function ReviewQueue({
                   </>
                 )}
               </div>
+              {canDecide && rejecting === p.id && (
+                <div className="space-y-2 pt-1">
+                  <label htmlFor={`why-${p.id}`} className="text-xs text-muted-foreground">
+                    ¿Qué tendría que haber hecho? Es opcional: si lo escribís, el agente lo aprende.
+                  </label>
+                  <textarea
+                    id={`why-${p.id}`}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    maxLength={300}
+                    rows={2}
+                    placeholder="Ej: No reserves turnos de más de 2 horas sin preguntar."
+                    className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
+                  />
+                  <Button size="sm" variant="destructive" onClick={() => onProposal(p.id, false, note)} disabled={isPending}>
+                    Confirmar rechazo
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </section>

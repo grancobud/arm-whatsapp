@@ -9,6 +9,7 @@ import { applyJevToBatch } from "@/features/jev-judge/apply";
 import type { ToolContext } from "@/features/tools/core/tool";
 import { resolveSystemPrompt } from "./prompt-resolver";
 import { buildSystemPrompt } from "./prompt-builder";
+import { getLessonsContext } from "@/features/arm/services/lessons";
 import {
   getActiveClaims,
   formatClaimsContext,
@@ -310,7 +311,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       : 10;
 
     // ── 6c + 7. Carga concurrente (Paralelización): memoria, agente, negocio y KB ──
-    const [history, activeAgent, businessInfo, kbResults, kbLinks, claims] =
+    const [history, activeAgent, businessInfo, kbResults, kbLinks, claims, lessonsContext] =
       await Promise.all([
         getConversationHistory(batch.conversation_id, {
           limit: historyWindow,
@@ -321,6 +322,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
         searchKb(batch.workspace_id, mergedText, 3),
         listKbSourceLinks(batch.workspace_id),
         getActiveClaims(batch.workspace_id, conversation.contact_id as string),
+        getLessonsContext(batch.workspace_id),
       ]);
 
     const resolvedPrompt = await resolveSystemPrompt(
@@ -356,6 +358,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       bizContext,
       promptBase,
       summary,
+      lessonsContext,
       memoryContext: formatClaimsContext(claims),
       kbContext,
       responseStyle: activeAgent?.config.responseStyle ?? null,

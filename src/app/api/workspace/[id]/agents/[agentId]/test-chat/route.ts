@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getLessonsContext } from "@/features/arm/services/lessons";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as svcClient } from "@supabase/supabase-js";
@@ -150,10 +151,14 @@ export async function POST(
   // check availability / book (e.g. GHL). The playground has no live
   // conversation, so the tool context carries only the workspace; tools that
   // need a contact (booking) take an explicit contact_phone arg instead.
-  const tools = await getEnabledTools(workspaceId);
+  const [tools, lessonsContext] = await Promise.all([
+    getEnabledTools(workspaceId),
+    getLessonsContext(workspaceId),
+  ]);
   const systemPrompt = buildSystemPrompt({
     nowContext: buildNowContext(timeZone),
     bizContext,
+    lessonsContext,
     promptBase: promptBody,
     kbContext,
     responseStyle: agentConfig.responseStyle ?? null,

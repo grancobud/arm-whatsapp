@@ -1,5 +1,6 @@
 "use client";
 
+import { LessonsCard } from "@/features/arm/components/lessons-card";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -89,6 +90,8 @@ export function AgentsTab({
 
   return (
     <div className="space-y-5">
+      <LessonsCard workspaceId={workspaceId} canManage={canManage} />
+
       <JevPanel
         workspaceId={workspaceId}
         initialEnabled={jev.enabled}

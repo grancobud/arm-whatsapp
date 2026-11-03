@@ -32,6 +32,8 @@ export interface BuildSystemPromptParts {
   bizContext: string;
   promptBase: string;
   summary?: string | null;
+  /** ARM: rules the team taught the agent (agent_lessons). */
+  lessonsContext?: string | null;
   /** ARM: claims about the contact, already fenced as data. */
   memoryContext?: string | null;
   kbContext?: string | null;
@@ -158,6 +160,8 @@ export function buildSystemPrompt(parts: BuildSystemPromptParts): string {
     MEDIA_CAPABILITY_NOTE,
     parts.bizContext,
     styleBlock,
+    // Team corrections change rarely, so they stay in the cacheable prefix.
+    parts.lessonsContext ?? "",
     // Changes every turn.
     parts.nowContext,
     summaryBlock,
