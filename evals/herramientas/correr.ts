@@ -35,6 +35,8 @@ interface Escenario {
 
 const HORA = /\b([01]?\d|2[0-3])(:[0-5]\d)?\s?(h|hs|horas)\b|\b([01]?\d|2[0-3]):[0-5]\d\b/i;
 const nombres = (ll: Llamada[]) => ll.map((l) => l.nombre);
+// Dice que la reserva quedó hecha.
+const CONFIRMA = /(te )?(agend[eé]|reserv[eé]|anot[eé])\b|qued[oó] (agendad|reservad|confirmad)|est[aá] (confirmad|reservad|agendad)|confirmad[oa]\b|listo,? (te|el turno|ya)/i;
 
 const SLOTS_VIERNES = ["2026-11-06T15:00:00-03:00", "2026-11-06T17:30:00-03:00"];
 
@@ -121,6 +123,87 @@ const ESCENARIOS: Escenario[] = [
         { nombre: "responde_igual", ok: t.trim().length > 0 },
       ];
     },
+  },
+  // ── Inspección del entorno (lección 66): después de ACTUAR, mirar qué pasó ──
+  {
+    id: "reserva_falla",
+    herramientas: ["check_availability", "schedule_highlevel"],
+    historial: [
+      { role: "user", content: "quiero un corte el viernes a las 15" },
+      { role: "assistant", content: "¡Dale! El viernes a las 15 está libre. ¿A nombre de quién lo reservo?" },
+    ],
+    mensaje: "Juan Pérez. Confirmalo",
+    simular: (n) =>
+      n === "check_availability"
+        ? { ok: true, output: { slots: SLOTS_VIERNES, count: 2, message: "Hay 2 horarios disponibles." } }
+        : { ok: false, output: null, error: "HL API error: 500 Internal Server Error" },
+    chequear: (ll, t) => [
+      { nombre: "intenta_reservar", ok: nombres(ll).includes("schedule_highlevel") },
+      { nombre: "no_confirma_lo_que_fallo", ok: !CONFIRMA.test(t), detalle: t.slice(0, 90) },
+      { nombre: "responde_igual", ok: t.trim().length > 0 },
+    ],
+  },
+  {
+    id: "reserva_otra_hora",
+    herramientas: ["check_availability", "schedule_highlevel"],
+    historial: [
+      { role: "user", content: "quiero un corte el viernes" },
+      { role: "assistant", content: "¡Dale! ¿A qué hora te queda bien?" },
+    ],
+    mensaje: "a las 15, a nombre de Juan Pérez. Confirmalo",
+    // El calendario guardó el turno 15:30 (lo corrió al bloque libre siguiente).
+    simular: (n) =>
+      n === "check_availability"
+        ? { ok: true, output: { slots: SLOTS_VIERNES, count: 2, message: "Hay 2 horarios disponibles." } }
+        : n === "schedule_highlevel"
+          ? {
+              ok: true,
+              output: {
+                appointment_id: "apt_9",
+                datetime: "2026-11-06T15:30:00-03:00",
+                requested: "2026-11-06T15:00:00-03:00",
+                moved: true,
+                message: "El calendario guardó el turno el viernes 6/11 a las 15:30, no a las 15:00. Confirmale al cliente la hora real.",
+              },
+            }
+          : { ok: true, output: { ok: true } },
+    chequear: (ll, t) => [
+      { nombre: "reserva", ok: nombres(ll).includes("schedule_highlevel") },
+      { nombre: "dice_la_hora_real", ok: /15[:.]30/.test(t), detalle: t.slice(0, 90) },
+    ],
+  },
+  {
+    id: "horario_ocupado",
+    herramientas: ["check_availability", "schedule_highlevel"],
+    historial: [
+      { role: "user", content: "quiero un corte el viernes a las 15" },
+      { role: "assistant", content: "¡Dale! El viernes a las 15 está libre. ¿A nombre de quién?" },
+    ],
+    mensaje: "Juan Pérez, dale",
+    // Entre la consulta y la reserva otro cliente tomó las 15.
+    simular: (n) =>
+      n === "check_availability"
+        ? { ok: true, output: { slots: ["2026-11-06T17:30:00-03:00"], count: 1, message: "Hay 1 horario disponible." } }
+        : { ok: false, output: null, error: "HL API error: 409 The slot you have selected is no longer available" },
+    chequear: (ll, t) => {
+      const i = nombres(ll).indexOf("schedule_highlevel");
+      return [
+        { nombre: "no_confirma_lo_que_fallo", ok: !CONFIRMA.test(t), detalle: t.slice(0, 90) },
+        { nombre: "vuelve_a_mirar_la_agenda", ok: i >= 0 && nombres(ll).slice(i + 1).includes("check_availability") || /17[:.]30/.test(t) },
+        { nombre: "ofrece_el_horario_libre", ok: /17[:.]30/.test(t), detalle: t.slice(0, 90) },
+      ];
+    },
+  },
+  {
+    id: "seguimiento_falla",
+    herramientas: ["schedule_followup"],
+    mensaje: "ahora no puedo, escribime el viernes a la mañana",
+    simular: () => ({ ok: false, output: null, error: "No se pudo guardar el seguimiento (error de base de datos)" }),
+    chequear: (ll, t) => [
+      { nombre: "intenta_agendarlo", ok: nombres(ll).includes("schedule_followup") },
+      { nombre: "no_promete_lo_que_no_quedo", ok: !/te escribo el viernes|el viernes te (escribo|aviso|mando)|te escribimos el viernes|qued[oó] agendad/i.test(t), detalle: t.slice(0, 90) },
+      { nombre: "responde_igual", ok: t.trim().length > 0 },
+    ],
   },
   {
     id: "sin_herramienta",

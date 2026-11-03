@@ -34,9 +34,50 @@ interface ContactRow {
   name: string | null;
 }
 
-interface HLAppointmentResponse {
+interface HLAppointment {
   id?: string;
-  appointment?: { id?: string };
+  startTime?: string;
+  appointmentStatus?: string;
+}
+
+interface HLAppointmentResponse extends HLAppointment {
+  appointment?: HLAppointment;
+}
+
+/**
+ * Pure: what the agent is told after booking. It reads what the calendar
+ * actually saved (course, lesson 66: inspect the result of an action) instead
+ * of echoing the time the agent asked for: if the calendar moved the slot or
+ * didn't keep it, the customer must hear the real outcome.
+ */
+export function bookingResult(requestedIso: string, data: HLAppointmentResponse): ToolResult {
+  const appt = data.appointment ?? data;
+  const status = (appt.appointmentStatus ?? data.appointmentStatus ?? "").toLowerCase();
+  if (status === "cancelled" || status === "invalid") {
+    return {
+      ok: false,
+      output: null,
+      error: `El calendario no guardó el turno (estado: ${status}). No le digas al cliente que quedó reservado.`,
+    };
+  }
+  const saved = appt.startTime ?? data.startTime;
+  const savedMs = saved ? new Date(saved).getTime() : NaN;
+  const moved = Number.isFinite(savedMs) && savedMs !== new Date(requestedIso).getTime();
+  return {
+    ok: true,
+    output: {
+      appointment_id: appt.id ?? data.id,
+      // The calendar's time when it says one; otherwise the requested one.
+      datetime: Number.isFinite(savedMs) ? saved : requestedIso,
+      ...(moved
+        ? {
+            requested: requestedIso,
+            moved: true,
+            message: `El calendario guardó el turno a otra hora (${saved}), no a la pedida (${requestedIso}). Confirmale al cliente la hora real.`,
+          }
+        : {}),
+    },
+  };
 }
 
 async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
@@ -144,13 +185,7 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
   }
 
   const data = (await res.json()) as HLAppointmentResponse;
-  return {
-    ok: true,
-    output: {
-      appointment_id: data.id ?? data.appointment?.id,
-      datetime: args.datetime_iso,
-    },
-  };
+  return bookingResult(args.datetime_iso, data);
 }
 
 export const scheduleHighLevelTool: Tool<Args> = {
@@ -158,7 +193,7 @@ export const scheduleHighLevelTool: Tool<Args> = {
   description:
     "Reserva un turno en el calendario del negocio. " +
     "Usala solo cuando el cliente ya confirmó un día y una hora concretos, y después de verificar con check_availability que ese horario está libre. Llamala una sola vez por turno. " +
-    "Devuelve el id de la cita y la fecha reservada; recién ahí confirmale al cliente. Si devuelve un error, avisale que no se pudo reservar.",
+    "Devuelve el id de la cita y la fecha que guardó el calendario; recién ahí confirmale al cliente esa fecha (si dice moved, la hora cambió: decile la real). Si devuelve un error, avisale que no se pudo reservar.",
   sensitivity: "write",
   schema,
   enabledFor: () => true,
