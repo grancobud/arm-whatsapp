@@ -5,6 +5,7 @@ import {
   parseInbound,
 } from "@/features/inbox/services/ycloud-webhook-handler";
 import { processInbound } from "@/features/inbox/services/normalizer";
+import { handleConsentMessage } from "@/features/inbox/services/opt-out";
 import { checkRateLimits } from "@/features/inbox/services/cost-tracker";
 import {
   upsertBatch,
@@ -268,6 +269,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           }
         }
       : null;
+
+    // BAJA / ALTA, and no AI reply to someone who asked to stop.
+    const consent = await handleConsentMessage({
+      workspaceId,
+      contactId: contact.id,
+      contactOptIn: contact.opt_in,
+      conversationId: conversation.id,
+      conversationState: conversation.state,
+      text: normalized.text,
+    });
+    if (consent) {
+      if (mediaJob) after(mediaJob);
+      return NextResponse.json({ received: true, consent });
+    }
 
     // AI is toggled off — still fetch the media so the human agent sees it.
     if (!conversation.ai_enabled) {
