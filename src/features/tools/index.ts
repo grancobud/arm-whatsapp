@@ -5,6 +5,7 @@ import { scheduleHighLevelTool } from "./tools/schedule-highlevel";
 import { checkAvailabilityTool } from "./tools/check-availability";
 import { customWebhookTool } from "./tools/custom-webhook";
 import { rememberFactTool } from "./tools/remember-fact";
+import { scheduleFollowUpTool } from "./tools/schedule-followup";
 
 registry.register(echoTool);
 registry.register(scheduleLinkTool);
@@ -12,6 +13,7 @@ registry.register(scheduleHighLevelTool);
 registry.register(checkAvailabilityTool);
 registry.register(customWebhookTool);
 registry.register(rememberFactTool);
+registry.register(scheduleFollowUpTool);
 
 export { registry };
 export type {
