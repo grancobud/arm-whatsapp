@@ -9,9 +9,14 @@
 //   npm run eval:agente -- --gen=mistral-medium-3.5 --juez=qwen3.8-max --reps=3
 //   npm run eval:agente -- --gen=auto --reps=1          (mide cuánto rechaza la guardia en condiciones reales)
 // Opciones: --versiones=v1,v2  --casos=id1,id2  --paralelo=4
+//   --juez-fijo   usa solo el primer juez: si falla, el caso queda "sin juez" (nunca otro modelo).
+// Huella del evaluador (ver evals/huella.ts): si cambió el examen, la eval no corre hasta re-aprobarla:
+//   npm run eval:agente -- --aprobar-huella="motivo" --aprobada-por="nombre"
 // Variables: EVAL_BASE_URL (o LLM_BASE_URL), EVAL_API_KEY (o LLM_API_KEY / FREELLMAPI_KEY).
 
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { userInfo } from "node:os";
+import { fileURLToPath } from "node:url";
 import { generateText, tool } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
@@ -24,6 +29,9 @@ import type { ClaimRow } from "../../src/features/arm/types/index.ts";
 import { calificarPorCodigo, montosEn, type Caso, type Chequeo } from "./calificadores.ts";
 import { AHORA_FIJO, NEGOCIO, PRECIOS_PERMITIDOS } from "./negocio.ts";
 import { PROMPTS } from "./prompts.ts";
+import {
+  aprobarHuella, calcularHuella, explicarRechazo, hashTexto, normalizarModelo, resumenHuella, revisarHuella,
+} from "../huella.ts";
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
@@ -33,12 +41,45 @@ const args = Object.fromEntries(
 );
 const GEN = args.gen || "mistral-medium-3.5";
 // Varios jueces: si el primero está saturado se pasa al siguiente (nunca el mismo que responde).
-const JUECES = (args.juez || "qwen3.8-max,minimax-m3,qwen3.7-plus,gemma-4-31b-it").split(",");
+const JUEZ_FIJO = "juez-fijo" in args;
+const CADENA = (args.juez || "qwen3.8-max,minimax-m3,qwen3.7-plus,gemma-4-31b-it").split(",");
+const JUECES = JUEZ_FIJO ? CADENA.slice(0, 1) : CADENA;
 const JUEZ = JUECES.join(" → ");
 const REPS = Number(args.reps || 3);
 const PARALELO = Number(args.paralelo || 4);
 const VERSIONES = (args.versiones || "v1,v2").split(",");
 const TEMPERATURA = 0.3; // la de producción (DEFAULT_TEMPERATURE)
+const MAX_TOKENS_RESPUESTA = 700;
+const MAX_TOKENS_JUEZ = 1000;
+
+// ---- Huella del examen: todo lo que define la nota, menos los prompts que se comparan ----
+const CONFIG_EXAMEN = {
+  gen: GEN, jueces: JUECES, juezFijo: JUEZ_FIJO, temperatura: TEMPERATURA,
+  maxTokensRespuesta: MAX_TOKENS_RESPUESTA, maxTokensJuez: MAX_TOKENS_JUEZ,
+};
+const ARCHIVOS_EXAMEN = [
+  "evals/huella.ts",
+  "evals/agente/correr.ts", // incluye el prompt del juez
+  "evals/agente/calificadores.ts",
+  "evals/agente/casos.json",
+  "evals/agente/negocio.ts",
+  "src/features/inbox/services/prompt-builder.ts",
+  "src/features/inbox/services/business-info.ts",
+  "src/features/arm/services/claims.ts",
+  "src/features/inbox/services/kb-service.ts",
+  "src/features/inbox/services/kb-citations.ts",
+];
+const APROBACION = fileURLToPath(new URL("./huella-aprobada.json", import.meta.url));
+const huella = calcularHuella(ARCHIVOS_EXAMEN, CONFIG_EXAMEN);
+if ("aprobar-huella" in args) {
+  aprobarHuella(huella, CONFIG_EXAMEN, APROBACION, args["aprobada-por"] || userInfo().username, args["aprobar-huella"]);
+  console.log(`Huella ${resumenHuella(huella)} aprobada: ${args["aprobar-huella"]}`);
+}
+const revision = revisarHuella(huella, APROBACION);
+if (revision.estado !== "aprobada") {
+  console.error(explicarRechazo(revision, "npm run eval:agente"));
+  process.exit(1);
+}
 
 const baseURL = process.env.EVAL_BASE_URL || process.env.LLM_BASE_URL || "http://localhost:31415/v1";
 const apiKey = process.env.EVAL_API_KEY || process.env.LLM_API_KEY || process.env.FREELLMAPI_KEY;
@@ -136,7 +177,7 @@ async function juzgarCon(juez: string, prompt: string) {
     toolChoice: { type: "tool", toolName: "evaluacion" },
     prompt,
     temperature: 0,
-    maxOutputTokens: 1000,
+    maxOutputTokens: MAX_TOKENS_JUEZ,
   });
   const llamada = r.toolCalls[0];
   if (!llamada) throw new Error(`El juez no llamó a la herramienta: ${r.text.slice(0, 120)}`);
@@ -166,7 +207,7 @@ async function correrUno(version: string, caso: Caso, rep: number): Promise<Resu
         system: systemPrompt(version, caso),
         messages: caso.mensajes,
         temperature: TEMPERATURA,
-        maxOutputTokens: 700,
+        maxOutputTokens: MAX_TOKENS_RESPUESTA,
       }),
     );
     // Como en producción: la línea "FUENTES: F1" se saca antes de que la vea el cliente.
@@ -221,6 +262,10 @@ const promedio = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / 
 const f1 = (x: number) => (Number.isNaN(x) ? "—" : x.toFixed(1));
 
 console.log(`Eval agente · respuesta: ${GEN} · juez: ${JUEZ} · ${casos.length} casos × ${REPS} reps × ${VERSIONES.join("/")}`);
+console.log(
+  `Huella del examen ${resumenHuella(huella)} (aprobada ${revision.aprobacion.fecha.slice(0, 10)} por ${revision.aprobacion.aprobadaPor})` +
+    (args.casos ? " · subconjunto de casos: no comparable con la línea base" : ""),
+);
 const tareas = VERSIONES.flatMap((v) => casos.flatMap((c) => Array.from({ length: REPS }, (_, i) => () => correrUno(v, c, i + 1))));
 const resultados = await enParalelo(tareas, PARALELO);
 
@@ -242,6 +287,19 @@ for (const v of VERSIONES) {
   );
 }
 
+// Si el juez fue rotando, la diferencia entre versiones puede venir del juez y no del prompt:
+// se muestra la nota del juez por versión, separada por qué modelo calificó.
+console.log("\nNota del juez por versión, separada por juez (n = respuestas calificadas):");
+const jueces = [...new Set(resultados.flatMap((r) => (r.juez ? [normalizarModelo(r.juez.modelo)] : [])))].sort();
+for (const j of jueces) {
+  const celdas = VERSIONES.map((v) => {
+    const notas = resultados.filter((r) => r.version === v && r.juez && normalizarModelo(r.juez.modelo) === j).map((r) => r.modelo as number);
+    return `${v} ${f1(promedio(notas))} (n=${notas.length})`;
+  });
+  console.log(`  ${j.padEnd(22)}${celdas.join(" · ")}`);
+}
+if (jueces.length > 1) console.log("  Ojo: calificaron varios jueces. Para comparar versiones con un solo juez, usá --juez-fijo.");
+
 console.log("\nPor caso (final promedio):");
 console.log(`  ${"caso".padEnd(22)}${VERSIONES.map((v) => v.padStart(7)).join("")}   chequeos que fallaron`);
 for (const c of casos) {
@@ -260,5 +318,19 @@ for (const c of casos) {
 const carpeta = new URL("./resultados/", import.meta.url);
 mkdirSync(carpeta, { recursive: true });
 const archivo = new URL(`${new Date().toISOString().replace(/[:.]/g, "-")}_${GEN.replace(/[^\w.-]/g, "_")}.json`, carpeta);
-writeFileSync(archivo, JSON.stringify({ gen: GEN, juez: JUEZ, reps: REPS, temperatura: TEMPERATURA, resultados }, null, 2));
+const promptsEvaluados = Object.fromEntries(VERSIONES.map((v) => [v, hashTexto(PROMPTS[v] ?? "").slice(0, 12)]));
+writeFileSync(
+  archivo,
+  JSON.stringify(
+    {
+      gen: GEN, juez: JUEZ, juezFijo: JUEZ_FIJO, reps: REPS, temperatura: TEMPERATURA,
+      huella: { total: huella.total, aprobadaEl: revision.aprobacion.fecha, aprobadaPor: revision.aprobacion.aprobadaPor },
+      casosUsados: args.casos ? casos.map((c) => c.id) : "todos",
+      promptsEvaluados,
+      resultados,
+    },
+    null,
+    2,
+  ),
+);
 console.log(`\nDetalle completo: ${archivo.pathname}`);

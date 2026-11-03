@@ -92,7 +92,7 @@ Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo.
 | --- | --- | :---: |
 | `npm run test:unit` | 34 tests de calificadores, citas, PDF, cortes, cliente MCP, aprobaciones y alertas | no |
 | `npm run eval:mcp -- --reps=2` | el agente con un servidor MCP real (stock, reserva con aprobación, orden escondida, sistema caído) | sí |
-| `npm run eval:agente -- --versiones=v3 --reps=2` | 17 charlas de WhatsApp, nota por código y por un juez | sí |
+| `npm run eval:agente -- --versiones=v3 --reps=2` | 18 charlas de WhatsApp, nota por código y por un juez | sí |
 | `npm run eval:herramientas -- --reps=2` | uso de herramientas con la función real | sí |
 | `npm run eval:conocimiento` | si la búsqueda trae el fragmento correcto | sí |
 | `npm run eval:multimedia` | notas de voz, imágenes y PDFs | sí |
@@ -101,6 +101,23 @@ Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo.
 **Línea base actual:** agente **9.6** (10/10 en código), herramientas **40/42**,
 multimedia **32/32**. Si tu cambio baja alguno de estos números, no se mergea
 hasta entender por qué.
+
+**Huella del examen (`eval:agente`).** Una nota solo se compara con otra si el
+examen es el mismo. `evals/huella.ts` calcula un hash del runner (incluido el
+prompt del juez), los calificadores, los casos, el código de producción que arma
+el prompt y la configuración (modelo, jueces, temperatura). La huella aprobada
+vive en `evals/agente/huella-aprobada.json`, con fecha, quién la aprobó y por qué.
+Si algo de eso cambia, la eval **no corre** y dice qué componente cambió; para
+seguir hay que re-aprobarla con un motivo:
+```bash
+npm run eval:agente -- --aprobar-huella="motivo del cambio" --aprobada-por="nombre"
+```
+Los prompts (`prompts.ts`) no entran en la huella porque son lo que se evalúa:
+cada resultado guarda su hash aparte. El resumen muestra la nota separada por
+juez, y `--juez-fijo` usa un solo juez (si falla, el caso queda sin juez en vez
+de pasar a otro modelo). La línea base de arriba se midió **antes** de existir la
+huella y con la cadena de jueces; vale como referencia, no como comparación
+controlada. Idea de Arian Z. Pendiente: llevar la huella a las otras evals.
 
 Las evaluaciones de herramientas y multimedia necesitan estas variables (no
 tocan ninguna base real):

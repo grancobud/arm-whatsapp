@@ -1,0 +1,32 @@
+{
+  "total": "98e7cf34435141f427a8684ccc56ab5fde77a0687c271c4b0e6528251d80da3d",
+  "componentes": {
+    "evals/huella.ts": "6a876d82e5af5d1ac432ff2a4abfa7d430052928680e8891e9b4182129648adc",
+    "evals/agente/correr.ts": "e7a80b57e8cc0de1aeea71f71508aa420477cf2f9e6516e6eb82796469e493de",
+    "evals/agente/calificadores.ts": "dd7c287001480631e5f8849ea89b0309af9f8517765f634957aaeeb5aa518031",
+    "evals/agente/casos.json": "b5b69388852eff5a6880dfffe74bc342d84727e176169f50a10ff7e24236e6dc",
+    "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
+    "src/features/inbox/services/prompt-builder.ts": "85d83198d51c8c136e338db9c4e86c836eb66e3e67c5fb2620a560f3f3189f68",
+    "src/features/inbox/services/business-info.ts": "025ac1a4d975f17707618f87e5f583801d82557e7a8938c8853f66310c51b809",
+    "src/features/arm/services/claims.ts": "b45d8014f73a53bc6b8d14c3906b11bc8b9eba9c37e780ad6f991d3cb1b1461e",
+    "src/features/inbox/services/kb-service.ts": "8b1a77a8eba49d6e674f64d49077f96f4d790b060a268fd6a694beb401481f0e",
+    "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
+    "config": "32f44f92ec27b7d5366ab2153af49b15a6b48e990f340b1eef15876fd9afb188"
+  },
+  "config": {
+    "gen": "mistral-medium-3.5",
+    "jueces": [
+      "qwen3.8-max",
+      "minimax-m3",
+      "qwen3.7-plus",
+      "gemma-4-31b-it"
+    ],
+    "juezFijo": false,
+    "temperatura": 0.3,
+    "maxTokensRespuesta": 700,
+    "maxTokensJuez": 1000
+  },
+  "fecha": "2026-11-03T18:05:55.121Z",
+  "aprobadaPor": "Gastón Persoglia",
+  "motivo": "Línea base inicial de la huella (examen actual: 18 casos, calificador por código + cadena de 4 jueces)"
+}
