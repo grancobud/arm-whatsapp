@@ -1,16 +1,25 @@
 // Knowledge-base chunking. Pure module (no imports) so it can be unit-tested.
 //
-// The old splitter cut every 500 chars: words and prices got split in half and
-// a section's title ended up in a different chunk than its content. This one
-// follows the document's structure: a chunk never mixes two sections, keeps the
+// Follows the document's structure: a chunk never mixes two sections, keeps the
 // section title as context, breaks on paragraphs and then sentences (never in
 // the middle of a word), carries one sentence of overlap, and drops chunks that
 // are only a title.
+//
+// Contextual Retrieval (Claude Academy / Anthropic):
+// When contextualPrefix is enabled, each chunk is prefixed with contextual metadata
+// linking it to its document and section so embeddings and search do not lose
+// context when chunks are evaluated in isolation.
 
 export const MAX_CHUNK_CHARS = 800;
 // A title-only section has no body and yields no piece; this only drops stray
 // fragments like "-" or "...", never a short real section ("Cerrado lunes.").
 const MIN_CONTENT_CHARS = 3;
+
+export interface ChunkDocumentOptions {
+  maxChars?: number;
+  docTitle?: string;
+  contextualPrefix?: boolean;
+}
 
 const isHeading = (p: string) => /^#{1,6}\s/.test(p);
 
@@ -55,7 +64,33 @@ function packSection(paragraphs: string[], max: number): string[] {
   return pieces;
 }
 
-export function chunkDocument(text: string, max = MAX_CHUNK_CHARS): string[] {
+/**
+ * Extracts the top-level title of a markdown document if present (e.g. `# Document Title`).
+ */
+export function extractDocumentTitle(text: string): string | undefined {
+  const match = text.match(/^#\s+([^\n]+)/m);
+  return match ? match[1].trim() : undefined;
+}
+
+/**
+ * Chunks a document based on sections, with optional Contextual Retrieval prefix.
+ *
+ * Backwards compatible: chunkDocument(text, maxChars) works as before.
+ * Also supports: chunkDocument(text, { docTitle, contextualPrefix, maxChars }).
+ */
+export function chunkDocument(
+  text: string,
+  maxOrOptions: number | ChunkDocumentOptions = MAX_CHUNK_CHARS,
+): string[] {
+  const max =
+    typeof maxOrOptions === "number"
+      ? maxOrOptions
+      : (maxOrOptions.maxChars ?? MAX_CHUNK_CHARS);
+  const options = typeof maxOrOptions === "object" ? maxOrOptions : undefined;
+  const contextualPrefix = options?.contextualPrefix ?? false;
+  const docTitle =
+    options?.docTitle ?? (contextualPrefix ? extractDocumentTitle(text) : undefined);
+
   const paragraphs = text
     .replace(/\r\n?/g, "\n")
     .split(/\n\s*\n/)
@@ -75,10 +110,24 @@ export function chunkDocument(text: string, max = MAX_CHUNK_CHARS): string[] {
 
   const chunks: string[] = [];
   for (const { title, body } of sections) {
-    const room = title ? max - title.length - 1 : max;
+    let prefix = "";
+    if (contextualPrefix && (docTitle || title)) {
+      const cleanSection = title ? title.replace(/^#{1,6}\s*/, "").trim() : "";
+      if (docTitle && cleanSection) {
+        prefix = `[${docTitle} · ${cleanSection}]`;
+      } else if (docTitle) {
+        prefix = `[${docTitle}]`;
+      } else if (cleanSection) {
+        prefix = `[${cleanSection}]`;
+      }
+    } else if (title) {
+      prefix = title;
+    }
+
+    const room = prefix ? max - prefix.length - 1 : max;
     for (const piece of packSection(body, Math.max(room, 200))) {
       if (piece.replace(/\s/g, "").length < MIN_CONTENT_CHARS) continue;
-      chunks.push(title ? `${title}\n${piece}` : piece);
+      chunks.push(prefix ? `${prefix}\n${piece}` : piece);
     }
   }
   return chunks;
