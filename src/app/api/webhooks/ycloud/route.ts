@@ -79,6 +79,7 @@ async function handleStatusUpdate(
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const requestStartedAt = Date.now();
   try {
     const rawBody = await request.text();
     const sigHeader = request.headers.get("YCloud-Signature");
@@ -331,7 +332,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         setTimeout(resolve, effectiveSilenceMs + 500),
       );
       try {
-        await processNextBatch();
+        // maxDuration is 60 s from the request: keep a margin.
+        await processNextBatch({ deadlineAt: requestStartedAt + (maxDuration - 5) * 1000 });
       } catch (e) {
         console.error(
           "[webhook] fast-path process error:",

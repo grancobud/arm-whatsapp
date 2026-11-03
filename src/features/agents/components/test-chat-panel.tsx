@@ -12,6 +12,27 @@ import type { AgentDto } from "@/features/agents/types";
 interface Msg {
   role: "user" | "assistant";
   content: string;
+  /** What the reply review corrected (shown under the reply, never sent back). */
+  note?: string;
+}
+
+interface Review {
+  outcome: "approved" | "rewritten" | "unresolved" | "review_failed" | "rewrite_failed";
+  problems: string[];
+}
+
+function reviewNote(review: Review | null | undefined): string | undefined {
+  if (!review) return undefined;
+  if (review.outcome === "rewritten") {
+    return `Revisada y corregida antes de enviar: ${review.problems.join("; ")}`;
+  }
+  if (review.outcome === "unresolved") {
+    return `Revisada y corregida, pero puede quedar algo por revisar: ${review.problems.join("; ")}`;
+  }
+  if (review.outcome === "rewrite_failed") {
+    return `La revisión encontró problemas pero no pudo corregirlos: ${review.problems.join("; ")}`;
+  }
+  return undefined;
 }
 
 export function TestChatPanel({
@@ -48,10 +69,16 @@ export function TestChatPanel({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: next }),
+          body: JSON.stringify({
+            messages: next.map(({ role, content }) => ({ role, content })),
+          }),
         },
       );
-      const json = (await res.json()) as { text?: string; error?: string };
+      const json = (await res.json()) as {
+        text?: string;
+        error?: string;
+        review?: Review | null;
+      };
       setMessages((prev) => [
         ...prev,
         {
@@ -59,6 +86,7 @@ export function TestChatPanel({
           content: res.ok
             ? formatWhatsAppMarkdown(json.text ?? "")
             : `⚠️ ${json.error ?? "Error al generar la respuesta"}`,
+          note: res.ok ? reviewNote(json.review) : undefined,
         },
       ]);
     } catch {
@@ -97,6 +125,11 @@ export function TestChatPanel({
               )}
             >
               {m.content}
+              {m.note && (
+                <p className="mt-2 border-t border-border/50 pt-1.5 text-[11px] text-muted-foreground">
+                  {m.note}
+                </p>
+              )}
             </div>
           ))
         )}

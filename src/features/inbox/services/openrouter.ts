@@ -54,6 +54,7 @@ import {
   DEFAULT_FALLBACK_CHAIN,
 } from "./model-chain";
 import { backupModelsFromEnv, createFailoverFetch } from "./llm-failover";
+import { toolOutcome, type Complete, type ToolOutcome } from "./reply-review";
 
 function logFallback(where: string) {
   return (a: { model: string; error: string }, next: string) =>
@@ -284,6 +285,10 @@ export interface GenerateReplyResult {
   completionTokens: number;
   /** The model that actually answered (may differ from the requested one after a fallback). */
   modelUsed?: string;
+  /** Knowledge-base fragment ids the reply cited (chat replies only). */
+  citedIds?: string[];
+  /** What the tools returned this turn (chat replies only). */
+  toolResults?: ToolOutcome[];
 }
 
 interface GenerateReplyParams {
@@ -377,6 +382,8 @@ export async function generateChatReply(params: {
   // Bridge Forge tools → AI SDK ToolSet (same shape as generateWithTools).
   // `toolsRan` blocks the model fallback once a tool had side effects.
   let toolsRan = false;
+  // What each tool returned, for the reply review (reply-review.ts).
+  const toolResults: ToolOutcome[] = [];
   const aiTools: ToolSet = {};
   if (params.tools && params.toolContext) {
     const ctx = params.toolContext;
@@ -386,7 +393,9 @@ export async function generateChatReply(params: {
         inputSchema: toolInputSchema(forgeTool),
         execute: async (args: unknown): Promise<unknown> => {
           if (forgeTool.sensitivity !== "read") toolsRan = true;
-          return registry.runTool(forgeTool, args, ctx);
+          const res = await registry.runTool(forgeTool, args, ctx);
+          toolResults.push(toolOutcome(forgeTool.name, res));
+          return res;
         },
       });
     }
@@ -419,6 +428,8 @@ export async function generateChatReply(params: {
     promptTokens: result.r.usage?.inputTokens ?? 0,
     completionTokens: result.r.usage?.outputTokens ?? 0,
     modelUsed,
+    citedIds: result.citedIds,
+    toolResults,
   };
 }
 
@@ -448,6 +459,8 @@ export interface GenerateWithToolsResult {
   modelUsed?: string;
   /** Knowledge-base fragment ids the reply cited ("F1"…), see kb-citations. */
   citedIds: string[];
+  /** What the tools returned this turn, in order (for the reply review). */
+  toolResults: ToolOutcome[];
 }
 
 /**
@@ -476,6 +489,8 @@ export async function generateWithTools(
   // Once a tool ran (it may have booked, tagged or messaged), a failure must NOT
   // be retried with another model: that would repeat the side effect.
   let toolsRan = false;
+  // What each tool returned, for the reply review (reply-review.ts).
+  const toolResults: ToolOutcome[] = [];
 
   for (const forgeTool of params.availableTools ?? []) {
     const ctx = params.toolContext;
@@ -486,7 +501,9 @@ export async function generateWithTools(
         // A read (e.g. check_availability) is safe to repeat with another model.
         if (forgeTool.sensitivity !== "read") toolsRan = true;
         // runTool, not run(name): a workspace's MCP tools are not in the shared registry.
-        return registry.runTool(forgeTool, args, ctx);
+        const res = await registry.runTool(forgeTool, args, ctx);
+        toolResults.push(toolOutcome(forgeTool.name, res));
+        return res;
       },
     });
   }
@@ -558,5 +575,31 @@ export async function generateWithTools(
     toolCallsExecuted: result.r.steps,
     modelUsed,
     citedIds: result.citedIds,
+    toolResults,
+  };
+}
+
+/**
+ * One plain call (no tools, no model chain) through the same provider as the
+ * replies, so it also gets the OpenRouter backup. Used by the reply review.
+ */
+export async function createCompleter(workspaceId: string, model: string): Promise<Complete> {
+  const provider = await createChatProvider(workspaceId);
+  return async (req) => {
+    const r = await generateText({
+      model: provider.chat(model),
+      system: req.system,
+      prompt: req.prompt,
+      temperature: req.temperature,
+      maxOutputTokens: req.maxOutputTokens,
+      maxRetries: 0,
+      abortSignal: AbortSignal.timeout(req.timeoutMs),
+    });
+    return {
+      text: r.text,
+      finishReason: r.finishReason,
+      inputTokens: r.usage?.inputTokens ?? 0,
+      outputTokens: r.usage?.outputTokens ?? 0,
+    };
   };
 }

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { reviewEnabled, reviewModel, reviewReply, type ReviewOutcome } from "@/features/inbox/services/reply-review";
+import { createCompleter } from "@/features/inbox/services/openrouter";
 import { getLessonsContext } from "@/features/arm/services/lessons";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -187,6 +189,35 @@ export async function POST(
       },
     });
 
+    // Same reply review as production (buffer.ts), so the playground shows
+    // what the customer would get.
+    let text = reply.text;
+    let review: { outcome: ReviewOutcome; problems: string[] } | null = null;
+    let reviewIn = 0;
+    let reviewOut = 0;
+    if (reviewEnabled() && reply.text) {
+      try {
+        const r = await reviewReply({
+          draft: reply.text,
+          customerMessage: lastUserMessage,
+          agentSystemPrompt: systemPrompt,
+          sources: {
+            business: bizContext,
+            knowledge: kbContext,
+            toolResults: reply.toolResults,
+            toolNames: tools.map((t) => t.name),
+          },
+          complete: await createCompleter(workspaceId, reviewModel(model)),
+        });
+        text = r.text;
+        review = { outcome: r.outcome, problems: r.problems };
+        reviewIn = r.inputTokens;
+        reviewOut = r.outputTokens;
+      } catch (err) {
+        console.error("[agents/test-chat] reply review failed:", err);
+      }
+    }
+
     // Best-effort observability — never blocks the response.
     void db
       .from("events")
@@ -196,8 +227,9 @@ export async function POST(
         payload: {
           agent_id: agentId,
           model,
-          input_tokens: reply.promptTokens,
-          output_tokens: reply.completionTokens,
+          input_tokens: reply.promptTokens + reviewIn,
+          output_tokens: reply.completionTokens + reviewOut,
+          review: review?.outcome ?? null,
         },
       })
       .then(
@@ -206,10 +238,11 @@ export async function POST(
       );
 
     return NextResponse.json({
-      text: reply.text,
-      inputTokens: reply.promptTokens,
-      outputTokens: reply.completionTokens,
+      text,
+      inputTokens: reply.promptTokens + reviewIn,
+      outputTokens: reply.completionTokens + reviewOut,
       model,
+      review,
     });
   } catch (err) {
     console.error("[agents/test-chat]", err);

@@ -1,7 +1,8 @@
 import { inboundMessageText } from "./inbound-text";
 import { resolveCitations } from "./kb-citations";
 import { createClient as createSbClient } from "@supabase/supabase-js";
-import { generateWithTools, getWorkspaceModel } from "./openrouter";
+import { createCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
+import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewModel, reviewReply } from "./reply-review";
 import { recordLlmUsage } from "./cost-tracker";
 import { dispatchText, dispatchTemplate } from "./dispatch";
 import { decide, applyTransition } from "./decision-engine";
@@ -220,7 +221,10 @@ async function consolidateBatch(
 //   9. Mark batch 'processed', persist merged_text
 //  10. On error: increment retry counter; if > MAX_BATCH_RETRIES → cancel_batch()
 // ──────────────────────────────────────────────────────────────────────────────
-export async function processNextBatch(): Promise<ProcessBatchResult> {
+export async function processNextBatch(opts?: {
+  /** Epoch ms by which the turn must be done (the caller's function limit). */
+  deadlineAt?: number;
+}): Promise<ProcessBatchResult> {
   const supabase = svc();
 
   // ── 1. Claim one ready batch atomically ───────────────────────────────────
@@ -337,6 +341,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       .filter(Boolean)
       .join("\n\n");
     const bizContext = buildBusinessInfoContext(businessInfo);
+    const memoryContext = formatClaimsContext(claims);
     const promptBase =
       resolvedPrompt?.body ??
       "Eres un asistente de WhatsApp. Responde de forma concisa y útil en español.";
@@ -359,7 +364,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       promptBase,
       summary,
       lessonsContext,
-      memoryContext: formatClaimsContext(claims),
+      memoryContext,
       kbContext,
       responseStyle: activeAgent?.config.responseStyle ?? null,
       guardrails: resolvedPrompt?.guardrails ?? null,
@@ -406,8 +411,60 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       temperature: activeAgent?.config.temperature,
     });
 
+    // ── 8b. Reply review (evaluador-optimizador, reply-review.ts) ───────────
+    // A second call checks the draft against everything the agent had; a
+    // claim with no source gets one text-only rewrite. Fails open: on any
+    // problem the draft goes out as is.
+    let replyText = reply.text;
+    let citedIds = reply.citedIds;
+    let reviewIn = 0;
+    let reviewOut = 0;
+    // Leave time to send: with less than ~8 s left the draft goes out unreviewed.
+    const reviewBudget = opts?.deadlineAt
+      ? Math.min(DEFAULT_REVIEW_BUDGET_MS, opts.deadlineAt - Date.now() - 5_000)
+      : DEFAULT_REVIEW_BUDGET_MS;
+    if (reviewEnabled() && reply.text && reviewBudget >= 3_000) {
+      try {
+        const review = await reviewReply({
+          budgetMs: reviewBudget,
+          draft: reply.text,
+          customerMessage: mergedText,
+          agentSystemPrompt: finalSystemPrompt,
+          sources: {
+            business: bizContext,
+            knowledge: kbContext,
+            memory: memoryContext,
+            toolResults: reply.toolResults,
+            toolNames: (decisionResult.availableTools ?? []).map((t) => t.name),
+          },
+          complete: await createCompleter(batch.workspace_id, reviewModel(model)),
+        });
+        replyText = review.text;
+        // The rewrite's own citations: the draft's may no longer apply.
+        if (review.outcome === "rewritten" || review.outcome === "unresolved") citedIds = review.citedIds ?? [];
+        reviewIn = review.inputTokens;
+        reviewOut = review.outputTokens;
+        if (review.outcome !== "approved") {
+          await supabase.from("events").insert({
+            type: "reply_review",
+            level: review.outcome === "rewritten" ? "info" : "warn",
+            workspace_id: batch.workspace_id,
+            conversation_id: batch.conversation_id,
+            payload: {
+              outcome: review.outcome,
+              problems: review.problems,
+              error: review.error ?? null,
+              draft: review.text !== reply.text ? reply.text.slice(0, 1000) : undefined,
+            },
+          });
+        }
+      } catch (err) {
+        console.error("[buffer] reply review failed, sending the draft:", err);
+      }
+    }
+
     // Which KB fragments the reply says it used (shown in the inbox).
-    const kbSources = resolveCitations(reply.citedIds, kbResults);
+    const kbSources = resolveCitations(citedIds, kbResults);
 
     // ── 8. Record LLM usage ──────────────────────────────────────────────────
     await recordLlmUsage({
@@ -415,8 +472,9 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       conversationId: batch.conversation_id,
       contactId: conversation.contact_id as string,
       model,
-      promptTokens: reply.inputTokens,
-      completionTokens: reply.outputTokens,
+      // The review is part of the turn's cost: the cost cap must see it.
+      promptTokens: reply.inputTokens + reviewIn,
+      completionTokens: reply.outputTokens + reviewOut,
     });
 
     // ── 9. Load YCloud integration credentials ──────────────────────────────
@@ -438,7 +496,7 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
     const dispatchResult = await dispatchText({
       workspaceId: batch.workspace_id,
       conversationId: batch.conversation_id,
-      body: reply.text,
+      body: replyText,
       // AI-generated: no senderUserId
       meta: kbSources.length ? { kb_sources: kbSources } : undefined,
     });
