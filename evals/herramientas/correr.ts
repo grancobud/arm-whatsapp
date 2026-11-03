@@ -140,7 +140,7 @@ const casos = args.casos ? ESCENARIOS.filter((e) => args.casos.split(",").includ
 process.env.OPENROUTER_FALLBACK_MODELS = GEN;
 
 const reales = new Map(registry.list().map((t) => [t.name, t]));
-const runOriginal = registry.run.bind(registry);
+const runOriginal = registry.runTool.bind(registry);
 
 async function correr(e: Escenario, rep: number) {
   const llamadas: Llamada[] = [];
@@ -155,9 +155,10 @@ async function correr(e: Escenario, rep: number) {
   });
   // Se anota cada pedido del modelo en la entrada del registro, así cuentan
   // también las sensibles (que quedan pendientes y nunca llegan a run).
-  registry.run = (nombre, a, ctx, o) => {
-    llamadas.push({ nombre, args: a as Record<string, unknown> });
-    return runOriginal(nombre, a, ctx, o);
+  // generateWithTools ejecuta con registry.runTool (no run), así que se intercepta ahí.
+  registry.runTool = (tool, a, ctx, o) => {
+    llamadas.push({ nombre: tool.name, args: a as Record<string, unknown> });
+    return runOriginal(tool, a, ctx, o);
   };
   const system = buildSystemPrompt({
     nowContext: AHORA_FIJO,

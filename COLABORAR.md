@@ -89,7 +89,8 @@ Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo.
 
 | Comando | Qué mide | Necesita modelos |
 | --- | --- | :---: |
-| `npm run test:unit` | 19 tests de calificadores, citas, PDF y cortes | no |
+| `npm run test:unit` | 27 tests de calificadores, citas, PDF, cortes y cliente MCP | no |
+| `npm run eval:mcp -- --reps=2` | el agente con un servidor MCP real (stock, reserva con aprobación, orden escondida, sistema caído) | sí |
 | `npm run eval:agente -- --versiones=v3 --reps=2` | 17 charlas de WhatsApp, nota por código y por un juez | sí |
 | `npm run eval:herramientas -- --reps=2` | uso de herramientas con la función real | sí |
 | `npm run eval:conocimiento` | si la búsqueda trae el fragmento correcto | sí |
