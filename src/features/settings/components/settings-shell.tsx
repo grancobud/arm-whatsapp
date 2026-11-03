@@ -9,6 +9,7 @@ import { TemplatesTab } from "./templates-tab";
 import { AutomationsTab } from "./automations-tab";
 import { KbTab } from "./kb-tab";
 import { DataExportTab } from "./data-export-tab";
+import { McpTab } from "@/features/tools/mcp/mcp-tab";
 import { AgentsTab } from "@/features/agents/components/agents-tab";
 import type { AgentDto } from "@/features/agents/types";
 import type { JevSettings } from "@/features/jev-judge/components/jev-panel";
@@ -64,6 +65,7 @@ export function SettingsShell({
             <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
             <TabsTrigger value="negocio">Negocio</TabsTrigger>
             <TabsTrigger value="tools">Tools</TabsTrigger>
+            <TabsTrigger value="sistemas">Sistemas (MCP)</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
             <TabsTrigger value="equipo">Equipo</TabsTrigger>
@@ -103,6 +105,15 @@ export function SettingsShell({
             <ToolsCatalog
               workspaceId={workspaceId}
               initialTools={initialTools}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sistemas">
+          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+            <McpTab
+              workspaceId={workspaceId}
+              canManage={role === "admin" || role === "manager"}
             />
           </div>
         </TabsContent>

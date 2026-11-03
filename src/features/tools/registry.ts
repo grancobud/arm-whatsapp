@@ -123,7 +123,23 @@ class ToolRegistry {
     if (!tool) {
       return { ok: false, output: null, error: `Tool "${name}" not found` };
     }
+    return this.runTool(tool, args, ctx, opts);
+  }
 
+  /**
+   * Runs a tool object with the same guarantees as `run` (validation, human
+   * approval for sensitive tools, timeout, retries, logging). Used for tools
+   * that are not registered globally because they belong to ONE workspace
+   * (its MCP servers): keeping them out of the shared Map means a tenant can
+   * never reach another tenant's tool or credentials.
+   */
+  async runTool(
+    tool: Tool,
+    args: unknown,
+    ctx: ToolContext,
+    opts?: ToolRunOptions,
+  ): Promise<ToolResult> {
+    const name = tool.name;
     const parsed = tool.schema.safeParse(args);
     if (!parsed.success) {
       return { ok: false, output: null, error: parsed.error.message };
