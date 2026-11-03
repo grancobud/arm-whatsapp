@@ -98,6 +98,11 @@ function buildToolsNote(toolNames: string[] | undefined): string {
       "- Memoria: si el último mensaje del cliente cuenta algo importante (una necesidad, un evento con fecha como un casamiento o un viaje, una objeción, un compromiso, un dato personal relevante), tu PRIMER paso es llamar a remember_fact con sus palabras exactas; recién después respondele. Si no cuenta nada de eso, no la llames.",
     );
   }
+  if (toolNames.includes("schedule_followup")) {
+    lines.push(
+      "- Compromisos: si le prometés al cliente escribirle más adelante («te escribo el jueves», «mañana te confirmo»), agendalo con schedule_followup en ese mismo turno. Si no lo agendaste, no lo prometas.",
+    );
+  }
   return lines.join("\n");
 }
 
