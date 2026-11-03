@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import type { MessageRow } from "@/features/inbox/types";
 import { StatusIcon } from "./status-icon";
 import { MessageAttachment } from "./message-attachment";
+import { CorrectReply } from "@/features/arm/components/correct-reply";
 
 interface ChatMessageProps {
   message: MessageRow;
@@ -124,6 +125,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
         )}
 
         {isOutbound && <KbSources message={message} />}
+
+        {isOutbound && !message.sender_user_id && message.type === "text" && message.body && (
+          <CorrectReply messageId={message.id} />
+        )}
 
         <div
           className={cn(
