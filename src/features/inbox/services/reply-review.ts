@@ -28,9 +28,9 @@ import { splitCitations } from "./kb-citations";
 export const REVIEW_PROMPT = `Sos el control de calidad de un agente de WhatsApp de un negocio. Te llega un BORRADOR de respuesta y TODO lo que el agente sabía al escribirlo. Tu trabajo es encontrar solo dos tipos de error:
 
 1. Datos del negocio sin fuente: precios, descuentos, promociones, horarios, direcciones, servicios, funciones, plazos, políticas o condiciones que NO aparecen en las fuentes. Si el dato está en las fuentes (aunque esté dicho con otras palabras), está bien.
-2. Acciones sin respaldo: el borrador dice que ya hizo algo ("te agendé", "te mandé", "quedó guardado") y ninguna herramienta de este turno lo hizo, falló o quedó pendiente de aprobación; o promete hacer algo que el agente no puede hacer con sus herramientas. Si una herramienta quedó PENDIENTE DE APROBACIÓN, decir que le pasó el pedido al equipo o que una persona lo va a confirmar es CORRECTO.
+2. Acciones sin respaldo: el borrador dice que ya hizo algo ("te agendé", "te mandé", "quedó guardado") y ninguna herramienta de este turno lo hizo, falló o quedó pendiente de aprobación; o promete hacer algo que el agente no puede hacer con sus herramientas. Prometer que el equipo lo va a confirmar o que alguien le va a escribir solo es correcto si una herramienta quedó PENDIENTE DE APROBACIÓN (entonces el equipo sí lo ve) o si las fuentes dicen que el equipo contacta al cliente. Si no, es una acción sin respaldo: nadie se va a enterar. Ofrecer pasarlo con una persona como pregunta ("¿querés que te pase con alguien del equipo?") siempre está bien.
 
-NO son errores: saludar, preguntar algo para entender mejor, decir que no tiene el dato o que lo consulta con el equipo, ofrecer pasar con una persona, repetir lo que dijo el cliente, que falte un detalle (el servicio, la dirección), el tono o el largo. Solo cuenta lo que se AFIRMA sin fuente. Ante la duda, no es error.
+NO son errores: saludar, preguntar algo para entender mejor, decir que no tiene el dato o que lo consulta con el equipo, ofrecer pasar con una persona, repetir lo que dijo el cliente, que falte un detalle (el servicio, la dirección), el tono o el largo. Decir lo mismo con otras palabras o números equivalentes ("la mitad" = "50%", "media hora" = "30 min") tampoco. Solo cuenta lo que se AFIRMA sin fuente. Antes de marcar una acción, mirá la lista de herramientas de este turno: si ahí figura HECHA o PENDIENTE, tiene respaldo. Ante la duda, no es error.
 
 Ejemplos:
 - Herramienta schedule_highlevel OK con el turno del jueves 15 h; borrador "¡Listo! Te agendé el jueves a las 15 h" → {"ok": true, "problems": []} (la acción se hizo; que no nombre el servicio no importa).
@@ -53,9 +53,9 @@ export interface ToolOutcome {
 }
 
 const STATUS_LABEL: Record<ToolOutcome["status"], string> = {
-  ok: "OK",
-  failed: "FALLÓ",
-  pending: "PENDIENTE DE APROBACIÓN (todavía no se hizo)",
+  ok: "HECHA (la acción se realizó de verdad)",
+  failed: "FALLÓ (la acción NO se realizó)",
+  pending: "PENDIENTE DE APROBACIÓN (todavía no se hizo; el equipo la va a ver y confirmar)",
 };
 
 export interface ReviewSources {
@@ -81,7 +81,7 @@ const cut = (s: string | undefined, n: number) => {
 export function buildReviewInput(customerMessage: string, draft: string, sources: ReviewSources): string {
   const tools = sources.toolResults ?? [];
   const toolLines = tools.length
-    ? tools.map((t) => `- ${t.name}: ${STATUS_LABEL[t.status]} → ${cut(t.summary, 400)}`).join("\n")
+    ? tools.map((t) => `- ${t.name} → ${STATUS_LABEL[t.status]}. Resultado: ${cut(t.summary, 400)}`).join("\n")
     : "(no usó ninguna herramienta en este turno)";
   return [
     "<fuentes>",
@@ -142,12 +142,23 @@ export function parseReview(text: string): ReviewVerdict | null {
   return null;
 }
 
-/** Pure: what the rewrite call gets (its system prompt is the agent's own). */
-export function buildRewriteInput(customerMessage: string, draft: string, problems: string[]): string {
+/**
+ * Pure: what the rewrite call gets (its system prompt is the agent's own).
+ * teamWillSee = a sensitive tool is pending approval, so a person really
+ * will confirm it; otherwise promising that would be a new empty promise.
+ */
+export function buildRewriteInput(
+  customerMessage: string,
+  draft: string,
+  problems: string[],
+  teamWillSee = false,
+): string {
   return [
     "Ibas a mandarle este borrador al cliente, pero el control de calidad encontró problemas.",
     "Reescribilo corrigiendo SOLO eso: sacá o reemplazá lo que no tiene fuente (podés decir que no tenés ese dato y ofrecer consultarlo con el equipo). Todo lo demás queda igual: el tono, lo que sí es correcto y las acciones que de verdad hiciste.",
-    "Si el problema es una acción que no se hizo (ninguna herramienta la hizo, falló o quedó pendiente), no digas que la hiciste ni que quedó reservada o confirmada: decí que lo consultás o que el equipo te lo confirma.",
+    teamWillSee
+      ? "Si el problema es una acción que no se hizo, no digas que la hiciste ni que quedó reservada o confirmada: el pedido quedó pendiente y una persona del equipo lo va a confirmar, así que decí eso."
+      : "Si el problema es una acción que no se hizo, no digas que la hiciste ni que quedó reservada o confirmada, y NO prometas que el equipo lo confirma o le escribe (nadie se va a enterar). Decí que no pudiste hacerlo o confirmarlo y preguntale si quiere que lo pases con una persona del equipo.",
     "Devolvé solo el mensaje nuevo para el cliente, sin explicaciones.",
     "",
     "<mensaje_del_cliente>",
@@ -203,6 +214,14 @@ const REWRITE_MAX_TOKENS = 1500;
 
 /** Rewrites per reply: the evaluator-optimizer loop needs a cap. */
 export const MAX_REWRITES = 2;
+/**
+ * Total time for the whole review, every round included. The reply runs inside
+ * a serverless function (the webhook's has 60 s, after ~30 s of waiting for
+ * more messages): when the budget runs out, the best version so far goes out.
+ */
+export const DEFAULT_REVIEW_BUDGET_MS = 25_000;
+// Don't start a call with less than this left: it would only time out.
+const MIN_CALL_MS = 3_000;
 
 export function reviewEnabled(): boolean {
   return process.env.REPLY_REVIEW?.trim().toLowerCase() !== "off";
@@ -210,14 +229,15 @@ export function reviewEnabled(): boolean {
 
 /**
  * Model for the review. "auto" on FreeLLMAPI lands on reasoning models that
- * time out or get cut mid-rewrite; in `npm run eval:revisor` mistral-small
- * caught every trap in a few seconds. Without our own endpoint (OpenRouter
+ * time out or get cut mid-rewrite. In `npm run eval:revisor` llama-3.3-70b
+ * fixed 13 of 14 traps and left all 11 correct replies alone (mistral-small
+ * fixed every trap but rewrote correct replies that relied on a tool). Without our own endpoint (OpenRouter
  * directly) the reply's model is used. REPLY_REVIEW_MODEL overrides both.
  */
 export function reviewModel(replyModel: string): string {
   const fromEnv = process.env.REPLY_REVIEW_MODEL?.trim();
   if (fromEnv) return fromEnv;
-  return process.env.LLM_BASE_URL?.trim() ? "mistral-small-3.1-24b" : replyModel;
+  return process.env.LLM_BASE_URL?.trim() ? "llama-3.3-70b-fp8-fast" : replyModel;
 }
 
 /**
@@ -232,8 +252,13 @@ export async function reviewReply(params: {
   agentSystemPrompt: string;
   sources: ReviewSources;
   complete: Complete;
+  /** Total ms for the review (default DEFAULT_REVIEW_BUDGET_MS). */
+  budgetMs?: number;
 }): Promise<ReviewResult> {
   const { draft, customerMessage, complete } = params;
+  const deadline = Date.now() + (params.budgetMs ?? DEFAULT_REVIEW_BUDGET_MS);
+  const left = () => deadline - Date.now();
+  const teamWillSee = (params.sources.toolResults ?? []).some((t) => t.status === "pending");
   let inputTokens = 0;
   let outputTokens = 0;
   const done = (r: Omit<ReviewResult, "inputTokens" | "outputTokens">): ReviewResult => ({
@@ -243,13 +268,14 @@ export async function reviewReply(params: {
   });
 
   const review = async (text: string): Promise<ReviewVerdict | string> => {
+    if (left() < MIN_CALL_MS) return "sin tiempo";
     try {
       const r = await complete({
         system: REVIEW_PROMPT,
         prompt: buildReviewInput(customerMessage, text, params.sources),
         temperature: 0,
         maxOutputTokens: REVIEW_MAX_TOKENS,
-        timeoutMs: REVIEW_TIMEOUT_MS,
+        timeoutMs: Math.min(REVIEW_TIMEOUT_MS, left()),
       });
       inputTokens += r.inputTokens;
       outputTokens += r.outputTokens;
@@ -272,12 +298,13 @@ export async function reviewReply(params: {
   for (let round = 1; round <= MAX_REWRITES; round++) {
     let rewritten: { text: string; citedIds: string[] };
     try {
+      if (left() < MIN_CALL_MS) throw new Error("sin tiempo");
       const r = await complete({
         system: params.agentSystemPrompt,
-        prompt: buildRewriteInput(customerMessage, current, problems),
+        prompt: buildRewriteInput(customerMessage, current, problems, teamWillSee),
         temperature: 0.3,
         maxOutputTokens: REWRITE_MAX_TOKENS,
-        timeoutMs: REWRITE_TIMEOUT_MS,
+        timeoutMs: Math.min(REWRITE_TIMEOUT_MS, left()),
       });
       inputTokens += r.inputTokens;
       outputTokens += r.outputTokens;

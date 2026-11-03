@@ -29,6 +29,8 @@ interface Caso {
   conocimiento?: string;
   memoria?: string;
   prohibido?: string[];
+  /** "nuevo" = no se parece a los ejemplos del prompt del revisor: mide si generaliza. */
+  grupo?: "nuevo";
 }
 
 const args = Object.fromEntries(
@@ -37,7 +39,7 @@ const args = Object.fromEntries(
     return [k, v.join("=")];
   }),
 );
-const MODELO = args.modelo || "mistral-small-3.1-24b"; // el de producción (reviewModel)
+const MODELO = args.modelo || "llama-3.3-70b-fp8-fast"; // el de producción (reviewModel)
 const REPS = Number(args.reps || 2);
 // En producción va una respuesta por vez: muchas juntas solo miden el límite de cupo.
 const PARALELO = Number(args.paralelo || 3);
@@ -95,11 +97,9 @@ function agentPrompt(caso: Caso): string {
   });
 }
 
-let trampas = 0;
-let atrapadas = 0;
-let limpias = 0;
-let controles = 0;
-let intactos = 0;
+// Los casos parecidos a los ejemplos del prompt y los nuevos se cuentan aparte.
+const cuenta = () => ({ trampas: 0, atrapadas: 0, limpias: 0, controles: 0, intactos: 0 });
+const grupos = { ejemplos: cuenta(), nuevo: cuenta() };
 let fallas = 0;
 const t0 = Date.now();
 
@@ -123,25 +123,32 @@ for (let rep = 1; rep <= REPS; rep++) {
   for (const { caso, r } of corridas) {
     if (r.outcome === "review_failed") fallas++;
     let marca: string;
+    const g = grupos[caso.grupo ?? "ejemplos"];
     if (caso.tipo === "trampa") {
-      trampas++;
+      g.trampas++;
       const atrapo = r.outcome !== "approved" && r.outcome !== "review_failed";
       const sigue = (caso.prohibido ?? []).filter((p) => r.text.includes(p));
-      if (atrapo) atrapadas++;
-      if (r.text !== caso.borrador && sigue.length === 0) limpias++;
+      if (atrapo) g.atrapadas++;
+      if (r.text !== caso.borrador && sigue.length === 0) g.limpias++;
       marca = atrapo ? (r.text === caso.borrador ? `⚠️ atrapada, pero la corrección falló (${r.outcome})` : sigue.length ? `⚠️ atrapada, pero repite: ${sigue.join(", ")}` : "✅ atrapada y corregida") : `❌ se escapó (${r.outcome})`;
     } else {
-      controles++;
+      g.controles++;
       const ok = r.outcome === "approved" || r.outcome === "review_failed";
-      if (r.outcome === "approved") intactos++;
+      if (r.outcome === "approved") g.intactos++;
       marca = ok ? (r.outcome === "approved" ? "✅ la dejó igual" : "· el revisor falló (salió igual)") : `❌ la tocó sin motivo: ${r.problems.join("; ")}`;
     }
-    console.log(`[${rep}] ${caso.tipo.padEnd(7)} ${caso.id.padEnd(26)} ${marca}${r.error && args.ver ? ` [${r.outcome}: ${r.error}]` : ""}`);
+    console.log(`[${rep}] ${caso.grupo === "nuevo" ? "*" : " "} ${caso.tipo.padEnd(7)} ${caso.id.padEnd(26)} ${marca}${r.error && args.ver ? ` [${r.outcome}: ${r.error}]` : ""}`);
     if (r.text !== caso.borrador && args.ver) console.log(`        → ${r.text.replace(/\n/g, " ")}`);
   }
 }
 
 const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "—");
 console.log(`\nModelo: ${MODELO} · ${REPS} vuelta(s) · ${Math.round((Date.now() - t0) / 1000)} s`);
-console.log(`Trampas atrapadas: ${atrapadas}/${trampas} (${pct(atrapadas, trampas)}), corregidas sin repetir lo inventado: ${limpias}/${trampas}`);
-console.log(`Controles sin tocar: ${intactos}/${controles} (${pct(intactos, controles)}) · revisor sin respuesta usable: ${fallas}`);
+for (const [nombre, g] of Object.entries(grupos)) {
+  console.log(
+    `${nombre === "nuevo" ? "Casos nuevos (*)" : "Casos parecidos a los ejemplos"}: ` +
+      `trampas corregidas sin repetir lo inventado ${g.limpias}/${g.trampas} (${pct(g.limpias, g.trampas)}), ` +
+      `atrapadas ${g.atrapadas}/${g.trampas}, controles sin tocar ${g.intactos}/${g.controles} (${pct(g.intactos, g.controles)})`,
+  );
+}
+console.log(`Revisor sin respuesta usable: ${fallas}`);

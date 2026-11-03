@@ -2,7 +2,7 @@ import { inboundMessageText } from "./inbound-text";
 import { resolveCitations } from "./kb-citations";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
-import { reviewEnabled, reviewModel, reviewReply } from "./reply-review";
+import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewModel, reviewReply } from "./reply-review";
 import { recordLlmUsage } from "./cost-tracker";
 import { dispatchText, dispatchTemplate } from "./dispatch";
 import { decide, applyTransition } from "./decision-engine";
@@ -221,7 +221,10 @@ async function consolidateBatch(
 //   9. Mark batch 'processed', persist merged_text
 //  10. On error: increment retry counter; if > MAX_BATCH_RETRIES → cancel_batch()
 // ──────────────────────────────────────────────────────────────────────────────
-export async function processNextBatch(): Promise<ProcessBatchResult> {
+export async function processNextBatch(opts?: {
+  /** Epoch ms by which the turn must be done (the caller's function limit). */
+  deadlineAt?: number;
+}): Promise<ProcessBatchResult> {
   const supabase = svc();
 
   // ── 1. Claim one ready batch atomically ───────────────────────────────────
@@ -416,9 +419,14 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
     let citedIds = reply.citedIds;
     let reviewIn = 0;
     let reviewOut = 0;
-    if (reviewEnabled() && reply.text) {
+    // Leave time to send: with less than ~8 s left the draft goes out unreviewed.
+    const reviewBudget = opts?.deadlineAt
+      ? Math.min(DEFAULT_REVIEW_BUDGET_MS, opts.deadlineAt - Date.now() - 5_000)
+      : DEFAULT_REVIEW_BUDGET_MS;
+    if (reviewEnabled() && reply.text && reviewBudget >= 3_000) {
       try {
         const review = await reviewReply({
+          budgetMs: reviewBudget,
           draft: reply.text,
           customerMessage: mergedText,
           agentSystemPrompt: finalSystemPrompt,

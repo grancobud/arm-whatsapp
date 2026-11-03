@@ -39,7 +39,7 @@ test("el revisor recibe todas las fuentes, las herramientas y el borrador", () =
     ],
     toolNames: ["check_availability", "schedule_highlevel"],
   });
-  for (const parte of ["Envíos: solo CABA", "[F1]", "Palermo", "check_availability: OK", "PENDIENTE DE APROBACIÓN", "<borrador>\nSí, enviamos gratis."]) {
+  for (const parte of ["Envíos: solo CABA", "[F1]", "Palermo", "check_availability → HECHA", "PENDIENTE DE APROBACIÓN", "<borrador>\nSí, enviamos gratis."]) {
     assert.ok(input.includes(parte), `falta: ${parte}`);
   }
   // Sin datos, se dice explícitamente (que el revisor no suponga que hay).
