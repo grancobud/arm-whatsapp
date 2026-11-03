@@ -77,25 +77,62 @@ async function createProposal(
   args: unknown,
   ctx: ToolContext,
 ): Promise<string | null> {
-  const { data, error } = await svc()
-    .from("agent_proposals")
-    .insert({
-      workspace_id: ctx.workspaceId,
-      conversation_id: ctx.conversationId,
-      contact_id: ctx.contactId,
-      kind: "tool_call",
-      tool_name: name,
-      // Raw (validated) args: approval must replay exactly what was proposed.
-      // They come from the model, never from integration credentials.
-      args: args as Record<string, unknown>,
-    })
-    .select("id")
-    .single();
-  if (error || !data) {
-    console.warn("[registry] createProposal failed:", error?.message);
+  try {
+    const { data, error } = await svc()
+      .from("agent_proposals")
+      .insert({
+        workspace_id: ctx.workspaceId,
+        conversation_id: ctx.conversationId,
+        contact_id: ctx.contactId,
+        kind: "tool_call",
+        tool_name: name,
+        // Raw (validated) args: approval must replay exactly what was proposed.
+        // They come from the model, never from integration credentials.
+        args: args as Record<string, unknown>,
+      })
+      .select("id")
+      .single();
+    if (error || !data) {
+      console.warn("[registry] createProposal failed:", error?.message);
+      return null;
+    }
+    return (data as { id: string }).id;
+  } catch (err) {
+    console.warn("[registry] createProposal failed:", err);
     return null;
   }
-  return (data as { id: string }).id;
+}
+
+/**
+ * What the model reads when a sensitive tool is held for approval. If the
+ * proposal could not be saved (DB error, or the agents playground, which has
+ * no conversation), nobody will ever see it in /revision: the agent must not
+ * promise a confirmation that is not coming.
+ */
+export function pendingApprovalResult(proposalId: string | null): ToolResult {
+  return proposalId
+    ? {
+        ok: false,
+        output: {
+          pending_approval: true,
+          proposal_id: proposalId,
+          message:
+            "La acción quedó pendiente de aprobación humana. No le digas al cliente que ya está hecha: decile que una persona del equipo la va a confirmar.",
+        },
+        requiresConfirmation: true,
+        error: "Sensitive tool requires human approval before execution",
+      }
+    : {
+        ok: false,
+        output: {
+          pending_approval: false,
+          message:
+            "No se pudo registrar el pedido para que lo apruebe una persona. No está hecho ni pendiente: no le prometas al cliente que alguien lo va a confirmar. Decile que ahora no lo podés gestionar y ofrecé que lo atienda una persona del equipo.",
+        },
+        // Still held: it did not run because it needs a person's approval.
+        requiresConfirmation: true,
+        error: "Sensitive tool held for approval, but the proposal could not be saved",
+      };
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -150,17 +187,7 @@ class ToolRegistry {
     // /revision, which re-enters here with approvedProposalId set.
     if (tool.sensitivity === "sensitive" && !opts?.approvedProposalId) {
       const proposalId = await createProposal(name, parsed.data, ctx);
-      const pendingResult: ToolResult = {
-        ok: false,
-        output: {
-          pending_approval: true,
-          proposal_id: proposalId,
-          message:
-            "La acción quedó pendiente de aprobación humana. No le digas al cliente que ya está hecha: decile que una persona del equipo la va a confirmar.",
-        },
-        requiresConfirmation: true,
-        error: "Sensitive tool requires human approval before execution",
-      };
+      const pendingResult = pendingApprovalResult(proposalId);
       void logToolCall(name, args, pendingResult, 0, ctx);
       return pendingResult;
     }
