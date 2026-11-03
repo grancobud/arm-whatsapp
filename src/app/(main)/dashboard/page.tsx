@@ -5,6 +5,7 @@ import {
   getWorkspaceMetrics,
   getRecentConversations,
 } from "@/features/dashboard/services/metrics";
+import { getOutcomes } from "@/features/dashboard/services/outcomes";
 import { DashboardMetrics } from "@/features/dashboard/components/dashboard-metrics";
 
 export const dynamic = "force-dynamic";
@@ -30,15 +31,17 @@ export default async function DashboardPage() {
     );
   }
 
-  const [metrics, recentConversations] = await Promise.all([
+  const [metrics, recentConversations, outcomes] = await Promise.all([
     getWorkspaceMetrics(membership.workspace_id),
     getRecentConversations(membership.workspace_id, 5),
+    getOutcomes(membership.workspace_id),
   ]);
 
   return (
     <DashboardMetrics
       metrics={metrics}
       recentConversations={recentConversations}
+      outcomes={outcomes}
     />
   );
 }

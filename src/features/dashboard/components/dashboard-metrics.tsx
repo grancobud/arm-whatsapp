@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ArmExplainer } from "@/features/arm/components/arm-explainer";
+import { OutcomesPanel } from "./outcomes-panel";
+import type { Outcomes } from "@/features/dashboard/services/outcomes";
 import type {
   WorkspaceMetrics,
   RecentConversation,
@@ -19,6 +21,7 @@ import type { ConversationState } from "@/features/inbox/types";
 interface DashboardMetricsProps {
   metrics: WorkspaceMetrics;
   recentConversations: RecentConversation[];
+  outcomes: Outcomes;
 }
 
 interface KpiCardProps {
@@ -61,8 +64,8 @@ function KpiCard({ label, value, icon, accent = false }: KpiCardProps) {
 
 const STATE_LABELS: Record<ConversationState, string> = {
   ai_active: "IA activa",
-  human_active: "Humano",
-  handoff_pending: "Handoff",
+  human_active: "Persona",
+  handoff_pending: "Espera persona",
   waiting_reply: "Esperando",
   paused: "Pausado",
   closed: "Cerrado",
@@ -109,20 +112,27 @@ function formatRelativeTime(iso: string | null): string {
 export function DashboardMetrics({
   metrics,
   recentConversations,
+  outcomes,
 }: DashboardMetricsProps) {
   return (
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
       {/* Page heading */}
       <div>
         <h1 className="font-display text-xl font-semibold text-foreground">
-          Dashboard
+          Panel
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Actividad del workspace hoy
+          Qué logró el agente y qué pasa hoy
         </p>
       </div>
 
       <ArmExplainer />
+
+      <OutcomesPanel outcomes={outcomes} />
+
+      <h2 className="font-display text-sm font-semibold text-foreground -mb-4">
+        Hoy
+      </h2>
 
       {/* KPI grid — 2x2 on mobile, 1x4 on lg */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -138,17 +148,17 @@ export function DashboardMetrics({
           accent
         />
         <KpiCard
-          label="Handoffs pendientes"
+          label="Esperan una persona"
           value={metrics.handoffPending.toLocaleString("es")}
           icon={<AlertCircle className="h-4 w-4" aria-hidden="true" />}
         />
         <KpiCard
-          label="Costo LLM esta semana"
+          label="Costo de IA esta semana"
           value={formatCost(metrics.llmCostWeekUsd)}
           icon={<DollarSign className="h-4 w-4" aria-hidden="true" />}
         />
         <KpiCard
-          label="Templates enviados (semana)"
+          label="Plantillas enviadas (semana)"
           value={metrics.templatesSentWeek.toLocaleString("es")}
           icon={<Send className="h-4 w-4" aria-hidden="true" />}
         />
