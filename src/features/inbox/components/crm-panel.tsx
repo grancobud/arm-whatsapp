@@ -24,6 +24,7 @@ import { updateContact, syncContactHL } from "../services/contact-actions";
 import type { ContactRow } from "@/features/inbox/types";
 import { ClaimsSection } from "@/features/arm/components/claims-section";
 import { FollowUpsSection } from "@/features/arm/components/follow-ups-section";
+import { RelationshipBadge } from "@/features/arm/components/relationship-badge";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -316,6 +317,7 @@ export function CrmPanel({
       </section>
 
       {/* ── Section: ARM memory ── */}
+      <RelationshipBadge contactId={contact.id} />
       <ClaimsSection contactId={contact.id} />
       <FollowUpsSection contactId={contact.id} />
 

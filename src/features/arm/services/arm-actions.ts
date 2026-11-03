@@ -60,6 +60,26 @@ export async function retractClaim(claimId: string): Promise<Result> {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Relationship score
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function getContactRelationshipAction(
+  contactId: string,
+): Promise<Result<import("./relationship").Relationship | null>> {
+  // Reading the contact through RLS proves the caller is a member.
+  const supabase = await createClient();
+  const { data: contact } = await supabase
+    .from("contacts")
+    .select("workspace_id")
+    .eq("id", contactId)
+    .maybeSingle();
+  if (!contact) return { ok: false, error: "Sin acceso" };
+  const { getContactRelationship } = await import("./relationship");
+  const rel = await getContactRelationship(contact.workspace_id as string, contactId);
+  return { ok: true, data: rel };
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Promises the agent made (follow_ups)
 // ──────────────────────────────────────────────────────────────────────────────
 
