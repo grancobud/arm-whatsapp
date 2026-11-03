@@ -129,6 +129,32 @@ export function findCatalogModel(
   return FLAT_MODELS.find((m) => m.model.id === id);
 }
 
+/**
+ * Models offered when the server uses its own endpoint (LLM_BASE_URL, e.g.
+ * FreeLLMAPI). Short on purpose: "auto" lets the router pick a free model with
+ * quota left, and mistral-medium-3.5 is the model the agent evals ran on.
+ */
+export const CUSTOM_ENDPOINT_MODELS: CatalogModel[] = [
+  {
+    id: "auto",
+    label: "Automático (recomendado)",
+    tier: "balanced",
+    recommendation:
+      "FreeLLMAPI elige un modelo gratis con cupo disponible y, si se agota, pasa a otro.",
+  },
+  {
+    id: "mistral-medium-3.5",
+    label: "Mistral Medium 3.5",
+    tier: "balanced",
+    recommendation:
+      "Siempre el mismo modelo: es con el que se evaluó el agente (9,6/10).",
+  },
+];
+
+export function findCustomEndpointModel(id: string | null | undefined): CatalogModel | undefined {
+  return id ? CUSTOM_ENDPOINT_MODELS.find((m) => m.id === id) : undefined;
+}
+
 export const TIER_LABEL: Record<ModelTier, string> = {
   premium: "Premium",
   balanced: "Equilibrado",

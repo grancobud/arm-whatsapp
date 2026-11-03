@@ -83,7 +83,7 @@ export function SignupForm() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        ¿Ya tienes cuenta?{" "}
+        ¿Ya tenés cuenta?{" "}
         <Link
           href="/login"
           className="text-primary underline-offset-4 hover:underline transition-colors duration-150"

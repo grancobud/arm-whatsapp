@@ -35,7 +35,7 @@ export async function POST(
     if (!res.ok) {
       return NextResponse.json({
         ok: false,
-        error: `HighLevel respondió ${res.status}. Revisa el PIT y el Location ID.`,
+        error: `HighLevel respondió ${res.status}. Revisá el PIT y el Location ID.`,
       });
     }
 

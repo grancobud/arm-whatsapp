@@ -498,7 +498,7 @@ export function SetterAdvancedConfig({ workspaceId }: Props) {
       <div className="space-y-4">
         <SectionHeading
           title="General"
-          description="Activa el modo setter y asigna un nombre a esta configuración."
+          description="Activá el modo setter y ponele un nombre a esta configuración."
         />
 
         <div className="flex items-center justify-between rounded-lg border border-border/60 bg-card p-4">
@@ -537,7 +537,7 @@ export function SetterAdvancedConfig({ workspaceId }: Props) {
         <div className="flex items-center justify-between">
           <SectionHeading
             title="Preguntas de calificación"
-            description="Define las preguntas que el agente hará al prospecto."
+            description="Definí las preguntas que el agente le va a hacer al prospecto."
           />
           <Button
             type="button"
@@ -552,7 +552,7 @@ export function SetterAdvancedConfig({ workspaceId }: Props) {
 
         {draft && draft.questions.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border/60 py-8 text-center text-sm text-muted-foreground">
-            Sin preguntas. Agrega al menos una para que el setter funcione.
+            Sin preguntas. Agregá al menos una para que el setter funcione.
           </p>
         ) : (
           <ul className="space-y-3" role="list">

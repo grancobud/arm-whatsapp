@@ -140,8 +140,8 @@ function EmptyState({
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           {filtered
-            ? "Prueba con otro filtro."
-            : "Crea una nueva, usa la biblioteca o sincroniza desde YCloud."}
+            ? "Probá con otro filtro."
+            : "Creá una nueva, usá la biblioteca o sincronizá desde YCloud."}
         </p>
       </div>
       {!filtered && (

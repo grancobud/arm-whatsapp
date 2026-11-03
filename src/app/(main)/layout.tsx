@@ -91,35 +91,37 @@ export default async function MainLayout({
           )}
         </div>
 
-        {/* Right: agency link (super admin only) + dashboard + settings + logout */}
+        {/* Right: agency link (super admin only) + dashboard + settings + logout.
+            On phones the bottom nav has these links, so only theme + logout stay
+            here (with all the icons the bar overflowed onto the logo). */}
         <div className="flex items-center gap-1 shrink-0">
           <ThemeToggle />
 
           {isSuperAdmin && (
-            <Link href="/workspaces">
+            <Link href="/workspaces" className="hidden md:inline-flex">
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Building2 className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only sm:not-sr-only sm:ml-2">Agency</span>
+                <span className="sr-only sm:not-sr-only sm:ml-2">Agencia</span>
               </Button>
             </Link>
           )}
 
-          <Link href="/inbox">
+          <Link href="/inbox" className="hidden md:inline-flex">
             <Button
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground"
             >
               <MessageCircle className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Inbox</span>
+              <span className="sr-only sm:not-sr-only sm:ml-2">Bandeja</span>
             </Button>
           </Link>
 
-          <Link href="/revision">
+          <Link href="/revision" className="hidden md:inline-flex">
             <Button
               variant="ghost"
               size="sm"
@@ -130,7 +132,7 @@ export default async function MainLayout({
             </Button>
           </Link>
 
-          <Link href="/campanas">
+          <Link href="/campanas" className="hidden md:inline-flex">
             <Button
               variant="ghost"
               size="sm"
@@ -141,25 +143,25 @@ export default async function MainLayout({
             </Button>
           </Link>
 
-          <Link href="/dashboard">
+          <Link href="/dashboard" className="hidden md:inline-flex">
             <Button
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground"
             >
               <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Dashboard</span>
+              <span className="sr-only sm:not-sr-only sm:ml-2">Panel</span>
             </Button>
           </Link>
 
-          <Link href="/settings">
+          <Link href="/settings" className="hidden md:inline-flex">
             <Button
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground"
             >
               <Settings className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Settings</span>
+              <span className="sr-only sm:not-sr-only sm:ml-2">Configuración</span>
             </Button>
           </Link>
 
@@ -193,7 +195,7 @@ export default async function MainLayout({
           className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           <MessageCircle className="h-5 w-5" aria-hidden="true" />
-          <span>Inbox</span>
+          <span>Bandeja</span>
         </Link>
 
         <Link
@@ -217,7 +219,7 @@ export default async function MainLayout({
           className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
-          <span>Dashboard</span>
+          <span>Panel</span>
         </Link>
 
         <Link
@@ -225,7 +227,7 @@ export default async function MainLayout({
           className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           <Settings className="h-5 w-5" aria-hidden="true" />
-          <span>Settings</span>
+          <span>Ajustes</span>
         </Link>
 
         {isSuperAdmin && (
@@ -234,7 +236,7 @@ export default async function MainLayout({
             className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
           >
             <Building2 className="h-5 w-5" aria-hidden="true" />
-            <span>Agency</span>
+            <span>Agencia</span>
           </Link>
         )}
       </nav>

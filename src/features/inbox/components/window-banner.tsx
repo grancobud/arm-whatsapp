@@ -24,7 +24,7 @@ export function WindowBanner({ windowExpiresAt }: WindowBannerProps) {
       )}
     >
       <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
-      <span>Ventana 24h expirada — Solo puedes enviar templates aprobados</span>
+      <span>Pasaron las 24 h: solo podés mandar plantillas aprobadas</span>
     </div>
   );
 }

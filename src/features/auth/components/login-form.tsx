@@ -42,7 +42,7 @@ export function LoginForm({ message }: { message?: string }) {
           Bienvenido de vuelta
         </h1>
         <p className="text-sm text-muted-foreground">
-          Ingresa a tu cuenta para continuar
+          Ingresá a tu cuenta para seguir
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export function LoginForm({ message }: { message?: string }) {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        ¿No tienes cuenta?{" "}
+        ¿No tenés cuenta?{" "}
         <Link
           href="/signup"
           className="text-primary underline-offset-4 hover:underline transition-colors duration-150"

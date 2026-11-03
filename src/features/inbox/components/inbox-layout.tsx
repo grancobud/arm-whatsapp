@@ -131,7 +131,7 @@ export function InboxLayout({
               </p>
               <p className="text-xs text-muted-foreground/60 mt-1">
                 {search || activeTab !== "all"
-                  ? "Intenta con otro filtro o búsqueda"
+                  ? "Probá con otro filtro o búsqueda"
                   : "Los contactos de WhatsApp aparecerán aquí"}
               </p>
             </div>

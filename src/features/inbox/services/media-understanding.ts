@@ -6,9 +6,9 @@ import { getOpenRouterApiKey } from "./openrouter";
 import { checkReply } from "./reply-guard";
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Media understanding — turns inbound voice notes and images into text via a
-// cheap multimodal model (OpenRouter → Gemini Flash) so the agent can "read"
-// them. The result is stored in messages.meta (transcript / description) and
+// Media understanding — turns inbound voice notes and images into text so the
+// agent can "read" them: with LLM_BASE_URL (FreeLLMAPI) a fixed speech-to-text
+// and image model; otherwise OpenRouter → Gemini Flash. The result is stored in messages.meta (transcript / description) and
 // the buffer consolidation injects it as text — the agent keeps its own model.
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -26,6 +26,16 @@ const UNDERSTANDING_MODEL =
  */
 const CUSTOM_IMAGE_MODEL =
   process.env.MEDIA_IMAGE_MODEL?.trim() || "mistral-medium-3.5";
+
+/**
+ * Speech-to-text model when LLM_BASE_URL is set. Voice notes go to the
+ * OpenAI-style /audio/transcriptions endpoint: measured on 2026-11-03,
+ * FreeLLMAPI drops `input_audio` parts in chat completions (the models answered
+ * "no adjuntaste ningún audio"), while whisper-large-v3 transcribed a WhatsApp
+ * ogg/opus note word for word, numbers included.
+ */
+const CUSTOM_AUDIO_MODEL =
+  process.env.MEDIA_AUDIO_MODEL?.trim() || "whisper-large-v3";
 
 /** Characters of a PDF's text passed on to the agent. */
 const MAX_DOCUMENT_CHARS = 2000;
@@ -74,6 +84,18 @@ export async function transcribeAudio(opts: {
 }): Promise<string | null> {
   const bytes = await downloadBytes(opts.storagePath);
   if (!bytes) return null;
+  return transcribeAudioBytes({ ...opts, bytes });
+}
+
+/** transcribeAudio without the storage download (used by the multimedia eval). */
+export async function transcribeAudioBytes(opts: {
+  bytes: Uint8Array;
+  mimeType?: string;
+  workspaceId: string;
+}): Promise<string | null> {
+  const { bytes } = opts;
+  const customBaseUrl = process.env.LLM_BASE_URL?.trim();
+  if (customBaseUrl) return transcribeWithCustomEndpoint(customBaseUrl, bytes, opts.mimeType);
 
   const apiKey = await getOpenRouterApiKey(opts.workspaceId);
   if (!apiKey) return null;
@@ -135,6 +157,49 @@ export async function transcribeAudio(opts: {
     };
     const text = data?.choices?.[0]?.message?.content;
     return typeof text === "string" && text.trim() ? text.trim() : null;
+  } catch (err) {
+    console.error(
+      "[media-understanding] transcribeAudio error:",
+      err instanceof Error ? err.message : "unknown",
+    );
+    return null;
+  }
+}
+
+/** Voice note → text through the OpenAI-compatible /audio/transcriptions endpoint. */
+async function transcribeWithCustomEndpoint(
+  baseUrl: string,
+  bytes: Uint8Array,
+  mimeType?: string,
+): Promise<string | null> {
+  const mime = mimeType || "audio/ogg";
+  const ext = mime.includes("mpeg") || mime.includes("mp3")
+    ? "mp3"
+    : mime.includes("wav")
+      ? "wav"
+      : mime.includes("mp4") || mime.includes("m4a")
+        ? "m4a"
+        : "ogg";
+  const form = new FormData();
+  form.append("file", new Blob([bytes as BlobPart], { type: mime }), `nota.${ext}`);
+  form.append("model", CUSTOM_AUDIO_MODEL);
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/audio/transcriptions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.LLM_API_KEY ?? ""}` },
+      body: form,
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) {
+      console.error(
+        "[media-understanding] transcribeAudio HTTP",
+        res.status,
+        (await res.text()).slice(0, 200),
+      );
+      return null;
+    }
+    const data = (await res.json()) as { text?: unknown };
+    return typeof data.text === "string" && data.text.trim() ? data.text.trim() : null;
   } catch (err) {
     console.error(
       "[media-understanding] transcribeAudio error:",

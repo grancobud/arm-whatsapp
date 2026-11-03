@@ -161,7 +161,7 @@ function WebhookForm({
   function insertVariable(token: string) {
     const idx = focusedIdx ?? fields.length - 1;
     if (idx < 0) {
-      toast.message("Agrega un campo primero para insertar la variable");
+      toast.message("Agregá un campo primero para insertar la variable");
       return;
     }
     setFields((prev) =>
@@ -183,7 +183,7 @@ function WebhookForm({
       payload_fields: fields,
     });
     if (!parsed.success) {
-      toast.error("Revisa la URL (HTTPS) y que cada campo tenga nombre válido");
+      toast.error("Revisá la URL (HTTPS) y que cada campo tenga un nombre válido");
       return;
     }
     setSaving(true);
