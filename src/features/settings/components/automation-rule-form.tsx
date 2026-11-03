@@ -203,7 +203,7 @@ export function AutomationRuleForm({
             {isEdit ? "Editar automatización" : "Nueva automatización"}
           </SheetTitle>
           <SheetDescription>
-            Define cuándo se activa y qué acción ejecuta automáticamente.
+            Definí cuándo se activa y qué hace automáticamente.
           </SheetDescription>
         </SheetHeader>
 
@@ -326,7 +326,7 @@ export function AutomationRuleForm({
                       className="h-3.5 w-3.5 shrink-0"
                       aria-hidden="true"
                     />
-                    No hay templates aprobados por Meta. Sincroniza plantillas
+                    No hay plantillas aprobadas por Meta. Sincronizá plantillas
                     primero.
                   </p>
                 ) : (
@@ -335,7 +335,7 @@ export function AutomationRuleForm({
                     onValueChange={setSelectedTemplate}
                   >
                     <SelectTrigger id="rule-template">
-                      <SelectValue placeholder="Selecciona un template" />
+                      <SelectValue placeholder="Elegí una plantilla" />
                     </SelectTrigger>
                     <SelectContent>
                       {approvedTemplates.map((t) => (

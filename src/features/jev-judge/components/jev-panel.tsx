@@ -32,12 +32,12 @@ const USES: Array<{ key: keyof JevUses; label: string; hint: string }> = [
   {
     key: "stage",
     label: "Etapa",
-    hint: "El score mueve el contacto: interesado, calificado o perdido.",
+    hint: "Según su puntaje, mueve al contacto a interesado, calificado o perdido.",
   },
   {
     key: "reply",
     label: "Quién contesta",
-    hint: "Noul decide si redacta la IA o pasa a una persona.",
+    hint: "Decide si responde la IA o si pasa a una persona.",
   },
   {
     key: "optOut",
@@ -47,7 +47,7 @@ const USES: Array<{ key: keyof JevUses; label: string; hint: string }> = [
 ];
 
 const DECISION_LABEL = {
-  respond: "Contesta el redactor",
+  respond: "Responde la IA",
   handoff: "Pasa a una persona",
   abstain: "No contesta",
 } as const;
@@ -146,11 +146,11 @@ export function JevPanel({
     <section className="space-y-5 rounded-lg border border-border/60 bg-card p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-base font-semibold">Jev</h2>
+          <h2 className="text-base font-semibold">Jev · juez de mensajes</h2>
           <p className="text-sm text-muted-foreground">
             {enabled
-              ? "Jev juzga el texto. El código aplica solo los usos que dejaste prendidos."
-              : "El CRM usa las reglas de hoy: keywords, rate limit y el redactor."}
+              ? "Prendido: Jev lee cada mensaje y decide. Abajo elegís qué de lo que decide se aplica."
+              : "Apagado: se usan las reglas básicas (palabras clave para pedir una persona y un límite de mensajes)."}
           </p>
         </div>
         <Switch
@@ -162,7 +162,7 @@ export function JevPanel({
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs">
-        <StatusPill ok={keyReady} label={keyReady ? "Jev listo" : "Falta TYPESAFE_API_KEY"} />
+        <StatusPill ok={keyReady} label={keyReady ? "Jev listo" : "Falta la clave de Jev en el servidor (TYPESAFE_API_KEY)"} />
         <StatusPill ok={enabled} label={enabled ? "Prendido en WhatsApp" : "Apagado en WhatsApp"} />
         <span className="rounded-full border border-border px-2 py-1 text-muted-foreground">
           Hoy: {judgmentsToday} juicios
@@ -173,7 +173,7 @@ export function JevPanel({
         <div className="space-y-1">
           <p className="text-sm font-medium">Para qué usar Jev</p>
           <p className="text-xs text-muted-foreground">
-            Jev siempre clasifica igual. Estos switches dicen qué escribe el código.
+            Jev siempre analiza igual: acá elegís qué de lo que decide se aplica.
           </p>
         </div>
         {USES.map((use) => (
@@ -217,8 +217,8 @@ export function JevPanel({
           onChange={(event) => setText(event.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          La comparación no escribe el CRM ni manda WhatsApp. En un mensaje real,
-          si pide un humano por keyword, Jev no llega a correr.
+          La prueba no cambia nada ni manda WhatsApp. En un mensaje real, si el
+          cliente pide una persona con palabras clave, Jev ni se consulta.
         </p>
         <Button type="button" size="sm" onClick={compare} disabled={!canManage || busy || !text.trim()}>
           {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}

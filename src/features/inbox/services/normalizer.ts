@@ -9,8 +9,8 @@ function svc() {
   );
 }
 
-/** Default country code when a workspace hasn't configured one (Mexico). */
-export const DEFAULT_COUNTRY_CODE = "52";
+/** Default country code when a workspace hasn't configured one (Argentina). */
+export const DEFAULT_COUNTRY_CODE = "54";
 
 /**
  * Normalises a phone string to E.164 format.

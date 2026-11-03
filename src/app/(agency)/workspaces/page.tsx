@@ -37,7 +37,7 @@ export default async function AgencyWorkspacesPage() {
 
   const kpis = [
     {
-      label: "Workspaces",
+      label: "Clientes",
       value: workspaces.length,
       icon: Building2,
     },
@@ -63,10 +63,10 @@ export default async function AgencyWorkspacesPage() {
       {/* Page header */}
       <div>
         <h1 className="font-display text-2xl font-semibold text-foreground tracking-tight">
-          Workspaces
+          Clientes
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Gestiona todos los workspaces de clientes desde aquí.
+          Gestioná todos los clientes desde acá.
         </p>
       </div>
 

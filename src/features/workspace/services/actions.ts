@@ -37,7 +37,7 @@ export async function switchWorkspace(
 
   const allowed = Boolean(membership) || Boolean(userRow?.is_super_admin);
   if (!allowed) {
-    return { error: "No tienes acceso a este workspace." };
+    return { error: "No tenés acceso a este cliente." };
   }
 
   (await cookies()).set(ACTIVE_WORKSPACE_COOKIE, workspaceId, {

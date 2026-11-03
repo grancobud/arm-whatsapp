@@ -21,6 +21,7 @@ import {
   getBusinessInfo,
   buildBusinessInfoContext,
   buildNowContext,
+  DEFAULT_TIMEZONE,
 } from "@/features/inbox/services/business-info";
 import { getEnabledTools } from "@/features/tools/services/tool-configs";
 import type { AgentConfig } from "@/features/agents/types";
@@ -127,7 +128,7 @@ export async function POST(
   const bizContext = buildBusinessInfoContext(info);
   const timeZone =
     ((info?.structured as { timezone?: string } | null)?.timezone as string) ??
-    "America/Mexico_City";
+    DEFAULT_TIMEZONE;
 
   // KB: search with the latest user message, just like buffer.ts.
   const lastUserMessage =

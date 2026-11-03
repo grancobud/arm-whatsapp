@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { DEFAULT_HANDOFF_ACK } from "@/features/inbox/types/handoff";
 import { ModelPicker } from "@/features/agents/components/model-picker";
+import { useLlmProvider } from "@/features/agents/lib/llm-provider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -219,7 +220,7 @@ function YCloudSection({
   return (
     <Section
       title="YCloud (WhatsApp)"
-      description="Conecta tu número de WhatsApp Business a través de YCloud."
+      description="Conectá tu número de WhatsApp Business a través de YCloud."
       defaultOpen
     >
       <div className="grid gap-4">
@@ -282,7 +283,7 @@ function YCloudSection({
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Pega esta URL en la configuración de webhooks de YCloud.
+            Pegá esta URL en la configuración de webhooks de YCloud.
           </p>
         </div>
 
@@ -353,7 +354,7 @@ function YCloudSection({
           />
           <p className="text-xs text-muted-foreground">
             Se envía en cuanto la conversación queda en espera de un asesor, para
-            que el contacto no se quede sin respuesta. Si lo dejas vacío se usa:
+            que el contacto no se quede sin respuesta. Si lo dejás vacío se usa:
             “{DEFAULT_HANDOFF_ACK}”
           </p>
         </div>
@@ -402,12 +403,13 @@ function OpenRouterSection({
   initial: IntegrationData | undefined;
   onSaved: () => void;
 }) {
+  const { custom } = useLlmProvider();
   const [apiKey, setApiKey] = useState(
     initial?.credentials?.openrouter_api_key ?? "",
   );
   const [model, setModel] = useState(
     (initial?.config?.default_model as string | undefined) ??
-      "anthropic/claude-sonnet-4.6",
+      (custom ? "auto" : "anthropic/claude-sonnet-4.6"),
   );
   const [fallbackModel, setFallbackModel] = useState(
     (initial?.config?.fallback_model as string | undefined) ?? "",
@@ -435,7 +437,7 @@ function OpenRouterSection({
       });
       const json = (await res.json()) as { ok?: boolean; error?: string };
       if (json.ok) {
-        toast.success("Configuración de OpenRouter guardada");
+        toast.success("Configuración de modelos guardada");
         onSaved();
       } else {
         toast.error(json.error ?? "Error al guardar");
@@ -449,11 +451,15 @@ function OpenRouterSection({
 
   return (
     <Section
-      title="OpenRouter"
-      description="Gateway de modelos de lenguaje. Requerido para el agente de IA."
+      title={custom ? "Modelos de IA" : "OpenRouter"}
+      description={
+        custom
+          ? "La IA sale de FreeLLMAPI, configurado en el servidor: no hace falta ninguna clave acá. Elegí el modelo y el tope diario."
+          : "Proveedor de modelos de IA. Necesario para que responda el agente."
+      }
     >
       <div className="grid gap-4">
-        <div className="space-y-2">
+        <div className={custom ? "hidden" : "space-y-2"}>
           <Label htmlFor="or-api-key">API Key</Label>
           <Input
             id="or-api-key"
@@ -466,7 +472,7 @@ function OpenRouterSection({
         </div>
 
         <div className="space-y-2">
-          <Label>Modelo por defecto (fallback del workspace)</Label>
+          <Label>Modelo por defecto del cliente</Label>
           <ModelPicker
             value={model}
             onChange={setModel}
@@ -484,7 +490,7 @@ function OpenRouterSection({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="or-budget">Budget diario (tokens)</Label>
+          <Label htmlFor="or-budget">Tope diario (tokens)</Label>
           <Input
             id="or-budget"
             type="number"
@@ -494,7 +500,7 @@ function OpenRouterSection({
             onChange={(e) => setDailyBudget(Number(e.target.value))}
           />
           <p className="text-xs text-muted-foreground">
-            El agente se detendrá cuando alcance este límite diario de tokens.
+            Cuando llega a este tope en el día, el agente deja de responder.
           </p>
         </div>
 
@@ -659,7 +665,7 @@ function HighLevelSection({
   return (
     <Section
       title="HighLevel"
-      description="Conecta tu CRM con un Private Integration Token (PIT). Requerido para sincronizar contactos y agendar en el calendario."
+      description="Conectá tu CRM con un Private Integration Token (PIT). Requerido para sincronizar contactos y agendar en el calendario."
     >
       <div className="grid gap-4">
         <div className="space-y-2">
@@ -735,7 +741,7 @@ function HighLevelSection({
           ) : pipelines.length === 0 ? (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Guarda tu PIT y Location ID, luego carga los pipelines de tu
+                Guardá tu PIT y Location ID, después cargá los pipelines de tu
                 cuenta de HighLevel.
               </p>
               <Button
@@ -757,7 +763,7 @@ function HighLevelSection({
                   onChange={(e) => handlePipelineChange(e.target.value)}
                   className={SELECT_CLASS}
                 >
-                  <option value="">— Selecciona un pipeline —</option>
+                  <option value="">— Elegí un pipeline —</option>
                   {pipelines.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -775,7 +781,7 @@ function HighLevelSection({
                   disabled={!selectedPipeline}
                   className={SELECT_CLASS}
                 >
-                  <option value="">— Selecciona una etapa —</option>
+                  <option value="">— Elegí una etapa —</option>
                   {stages.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}

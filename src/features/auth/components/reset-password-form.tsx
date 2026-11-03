@@ -41,7 +41,7 @@ export function ResetPasswordForm() {
           Nueva contraseña
         </h1>
         <p className="text-sm text-muted-foreground">
-          Ingresa tu nueva contraseña para continuar
+          Ingresá tu nueva contraseña para seguir
         </p>
       </div>
 

@@ -146,7 +146,7 @@ function TeamEmpty({ onInvite }: { onInvite: () => void }) {
           Solo tú en el equipo
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Invita a colaboradores para que accedan al inbox y gestionen
+          Invitá a colaboradores para que entren a la bandeja y gestionen
           conversaciones.
         </p>
       </div>
@@ -360,7 +360,7 @@ export function TeamTab({ workspaceId }: Props) {
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          Gestiona los miembros que tienen acceso a este workspace.
+          Gestioná quiénes tienen acceso a este cliente.
         </p>
       </div>
 
@@ -513,7 +513,7 @@ export function TeamTab({ workspaceId }: Props) {
           {createdCreds ? (
             <div className="space-y-4 pt-2">
               <p className="text-sm text-muted-foreground">
-                Comparte estas credenciales con el usuario. No se vuelven a
+                Compartí estas credenciales con el usuario. No se vuelven a
                 mostrar.
               </p>
               <div className="space-y-1 rounded-lg border border-warning/30 bg-warning/5 p-3 font-mono text-xs">
@@ -638,7 +638,7 @@ export function TeamTab({ workspaceId }: Props) {
                   type="text"
                   value={invitePassword}
                   onChange={(e) => setInvitePassword(e.target.value)}
-                  placeholder="Se genera una segura si lo dejas vacío"
+                  placeholder="Si la dejás vacía, se genera una segura"
                   className="font-mono text-sm"
                   autoComplete="off"
                 />

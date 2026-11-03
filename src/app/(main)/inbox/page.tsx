@@ -103,10 +103,10 @@ export default async function InboxPage() {
     <InboxLayout conversations={enriched} workspaceId={membership.workspace_id}>
       <div className="flex flex-col items-center justify-center h-full text-center px-8">
         <p className="text-sm font-medium text-foreground">
-          Selecciona una conversación
+          Elegí una conversación
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Elige un contacto de la lista para ver el historial
+          Tocá un contacto de la lista para ver el historial
         </p>
       </div>
     </InboxLayout>

@@ -20,7 +20,7 @@ export async function GET(
     return NextResponse.json({
       ok: false,
       error:
-        "No se pudieron cargar los pipelines. Revisa el PIT y el Location ID.",
+        "No se pudieron cargar los pipelines. Revisá el PIT y el Location ID.",
     });
   }
 

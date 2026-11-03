@@ -42,6 +42,19 @@ const TOOL_ICONS: Record<string, React.ElementType> = {
   echo: FlaskConical,
 };
 
+// What each tool does, for the business owner. The catalog row in the DB keeps
+// its English description; this is only what the screen shows.
+const TOOL_DESCRIPTIONS: Record<string, string> = {
+  schedule_link: "Le pasa al cliente un link para que saque turno solo.",
+  schedule_highlevel: "Agenda el turno directo en el calendario de HighLevel.",
+  check_availability: "Consulta los horarios libres reales del calendario de HighLevel.",
+  remember_fact: "Guarda lo que el cliente cuenta (necesidad, objeción, compromiso, dato) citando su mensaje.",
+  custom_webhook: "Manda los datos a una URL tuya (HTTPS) para conectar otro sistema.",
+};
+
+// Internal test tools: never offered to a business.
+const HIDDEN_TOOLS = new Set(["echo"]);
+
 // Escalating treatment: read (blue) → write (amber) → sensitive (orange + lock).
 // Orange (not destructive red) reads as "caution", not "error" (annotation #3).
 const sensitivityConfig: Record<
@@ -64,7 +77,9 @@ const sensitivityConfig: Record<
 };
 
 export function ToolsCatalog({ workspaceId, initialTools }: Props) {
-  const [tools, setTools] = useState<ToolItem[]>(initialTools);
+  const [tools, setTools] = useState<ToolItem[]>(() =>
+    initialTools.filter((t) => !HIDDEN_TOOLS.has(t.key)),
+  );
   const [pending, setPending] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -90,7 +105,7 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
 
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Error al actualizar tool");
+        throw new Error(data.error ?? "No se pudo actualizar la herramienta");
       }
 
       toast.success(
@@ -104,7 +119,7 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
         ),
       );
       toast.error(
-        err instanceof Error ? err.message : "Error al actualizar tool",
+        err instanceof Error ? err.message : "No se pudo actualizar la herramienta",
       );
     } finally {
       setPending((prev) => {
@@ -119,7 +134,7 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
     return (
       <div className="py-10 text-center">
         <p className="text-sm text-muted-foreground">
-          No hay tools disponibles en el catálogo.
+          No hay herramientas disponibles.
         </p>
       </div>
     );
@@ -129,10 +144,10 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-lg font-semibold text-foreground">
-          Catálogo de Tools
+          Herramientas del agente
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Activa o desactiva las capacidades del agente para este workspace.
+          Activá o desactivá lo que puede hacer el agente en este cliente.
         </p>
       </div>
 
@@ -178,9 +193,9 @@ export function ToolsCatalog({ workspaceId, initialTools }: Props) {
                       {config.label}
                     </Badge>
                   </div>
-                  {tool.description && (
+                  {(TOOL_DESCRIPTIONS[tool.key] ?? tool.description) && (
                     <p className="text-xs text-muted-foreground line-clamp-2">
-                      {tool.description}
+                      {TOOL_DESCRIPTIONS[tool.key] ?? tool.description}
                     </p>
                   )}
                   {configurable && (
