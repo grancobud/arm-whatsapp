@@ -143,6 +143,12 @@ export async function getOpenRouterApiKey(
 // Pair it with OPENROUTER_DEFAULT_MODEL / OPENROUTER_FALLBACK_MODELS set to
 // model ids that endpoint knows (FreeLLMAPI: "auto").
 // ──────────────────────────────────────────────────────────────────────────────
+// Some reasoning models (Gemini behind an OpenAI-compatible endpoint) return a
+// thought_signature on each tool call and reject the next step (400) unless it
+// is sent back. Kept per warm instance and capped so it cannot grow forever.
+const thoughtSignatures = new Map<string, string>();
+const MAX_THOUGHT_SIGNATURES = 500;
+
 async function createChatProvider(workspaceId?: string) {
   const customBaseUrl = process.env.LLM_BASE_URL?.trim();
   return createOpenAI({
@@ -154,6 +160,63 @@ async function createChatProvider(workspaceId?: string) {
       "HTTP-Referer":
         process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
       "X-Title": "ARM WhatsApp",
+    },
+    fetch: async (url, init) => {
+      if (init?.body && typeof init.body === "string") {
+        try {
+          const parsed = JSON.parse(init.body);
+          if (Array.isArray(parsed.messages)) {
+            let modified = false;
+            for (const msg of parsed.messages) {
+              if (Array.isArray(msg.tool_calls)) {
+                for (const tc of msg.tool_calls) {
+                  const sig = thoughtSignatures.get(tc.id);
+                  if (sig && !tc.extra_content) {
+                    tc.extra_content = { google: { thought_signature: sig } };
+                    modified = true;
+                  }
+                }
+              }
+            }
+            if (modified) {
+              init = { ...init, body: JSON.stringify(parsed) };
+            }
+          }
+        } catch {
+          // non-fatal
+        }
+      }
+
+      const res = await fetch(url, init);
+      const text = await res.text();
+
+      try {
+        const data = JSON.parse(text);
+        if (Array.isArray(data.choices)) {
+          for (const choice of data.choices) {
+            if (Array.isArray(choice.message?.tool_calls)) {
+              for (const tc of choice.message.tool_calls) {
+                const sig = tc.extra_content?.google?.thought_signature;
+                if (tc.id && sig) {
+                  thoughtSignatures.set(tc.id, sig);
+                  if (thoughtSignatures.size > MAX_THOUGHT_SIGNATURES) {
+                    const oldest = thoughtSignatures.keys().next().value;
+                    if (oldest !== undefined) thoughtSignatures.delete(oldest);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch {
+        // non-fatal
+      }
+
+      return new Response(text, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: res.headers,
+      });
     },
   });
 }
