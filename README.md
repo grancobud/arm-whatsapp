@@ -103,8 +103,8 @@ flowchart LR
 > pero apuntan al endpoint que configures. Los embeddings de la Knowledge Base
 > también salen de ahí (`gemini-embedding-001`, fijo; `KB_EMBEDDING_MODEL` lo
 > cambia, pero hay que volver a cargar los documentos). Las imágenes también (`MEDIA_IMAGE_MODEL`,
-> por defecto `mistral-medium-3.5`). La transcripción de audios todavía usa su
-> propia clave de proveedor.
+> por defecto `mistral-medium-3.5`) y las notas de voz (`MEDIA_AUDIO_MODEL`, por
+> defecto `whisper-large-v3`, por `/audio/transcriptions`).
 
 > [!WARNING]
 > **Antes de usarlo con clientes reales:** el agente responde solo mientras tu PC
@@ -238,7 +238,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | ✍️ Prompts | ✅ | Prompts de arranque nuevos para los 4 tipos de agente: reglas claras con su porqué, etiquetas XML y ejemplos para los casos difíciles. En la evaluación pasó de 9.1 a 9.6: respeta la baja, usa la memoria del cliente y no revela sus instrucciones. |
 | 🔧 Herramientas | ✅ | Prueba con la función real y herramientas simuladas (`npm run eval:herramientas`): de 14/20 a 40/42 chequeos. Ahora consulta la agenda antes de ofrecer turnos, no tapa un error del calendario, guarda la memoria del cliente desde la primera charla, siempre responde con texto después de usar una herramienta, no reintenta acciones que podrían reservar dos veces y cuenta bien los tokens de los turnos con herramientas. |
 | 📚 Base de conocimiento | ✅ | Embeddings gratis por FreeLLMAPI con un modelo fijo, corte de documentos por secciones (sin partir palabras ni precios) y fragmentos marcados como datos para que una página importada no pueda dar órdenes. Medido con `npm run eval:conocimiento`: el fragmento correcto queda primero en 15 de 17 preguntas (antes 11). Se quitó una búsqueda de respaldo que armaba SQL pegando texto. |
-| 🖼️ Imágenes, documentos y caché | ✅ | Imágenes por FreeLLMAPI con modelo fijo, que copian exactos importes y números de operación de un comprobante. PDFs leídos del lado del servidor: antes el agente decía «no puedo leer su contenido», ahora responde el total y la seña exactos. Imágenes y documentos entran marcados como datos (un cartel con una orden no la hace cumplir). El prompt pone primero lo fijo de cada cliente: el comienzo reutilizable entre mensajes pasó del 1% al 72% y un proveedor con caché ya lee el 83% desde caché (`npm run eval:multimedia`, `npm run eval:cache`). |
+| 🎙️ Audios, imágenes, documentos y caché | ✅ | Notas de voz transcriptas por FreeLLMAPI, sin clave aparte: el chat del router descartaba el audio, así que van por el endpoint de transcripción con un modelo fijo y salen palabra por palabra, números incluidos. Imágenes por FreeLLMAPI con modelo fijo, que copian exactos importes y números de operación de un comprobante. PDFs leídos del lado del servidor: antes el agente decía «no puedo leer su contenido», ahora responde el total y la seña exactos. Imágenes y documentos entran marcados como datos (un cartel con una orden no la hace cumplir). El prompt pone primero lo fijo de cada cliente: el comienzo reutilizable entre mensajes pasó del 1% al 72% y un proveedor con caché ya lee el 83% desde caché (`npm run eval:multimedia`, `npm run eval:cache`). |
 | 📌 Citas y razonamiento | ✅ | Cada respuesta que usa la base de conocimiento deja rastro del fragmento que la respalda: el agente lo marca, la marca se saca antes de llegar al cliente y el inbox muestra «Fuentes» con el texto citado. En la evaluación citó bien 8 de 8 (incluido no citar cuando el fragmento no servía). El razonamiento extendido no se activa: el agente ya saca 9.6 y la guardia descarta el razonamiento que algunos modelos mezclan en la respuesta. |
 | 🔌 MCP | ✅ | **Servidor:** el MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce, 4 recursos, 3 prompts probados y las funciones del ARM: 28/28 con un cliente MCP real. **Cliente:** cada negocio conecta el servidor MCP de su stock, agenda o CRM y el agente lo usa, con aprobación humana por defecto, resultados marcados como datos y aviso honesto si el sistema no responde: 28/28 en `npm run eval:mcp`. Encontró que el agente decía «no tenemos» sin consultar sus herramientas: corregido sin bajar la evaluación (agente 9.6, herramientas 40/42). |
 
@@ -339,18 +339,21 @@ flowchart LR
     classDef x fill:#64748B,color:#fff
 ```
 
-**🖼️ Imágenes, documentos y caché**
+**🎙️ Audios, imágenes, documentos y caché**
 
 ```mermaid
 flowchart LR
-    P[🔍 Comprobantes,<br/>fotos y PDFs]:::p --> F1[❌ No podía<br/>leer el PDF]:::f
+    P[🔍 Notas de voz,<br/>fotos y PDFs]:::p --> F0[❌ El audio no<br/>llegaba al modelo]:::f
+    F0 --> M0[🔧 Endpoint de<br/>transcripción]:::m
+    M0 --> R0[✅ Palabra por<br/>palabra]:::r
+    P --> F1[❌ No podía<br/>leer el PDF]:::f
     P --> F2[⚠️ Imagen con una<br/>orden escrita]:::f
     P --> F3[❌ Solo 1% del<br/>prompt reutilizable]:::f
     F1 --> M1[🔧 PDF leído<br/>en el servidor]:::m
     F2 --> M2[🔧 Marcada<br/>como dato]:::m
     F3 --> M3[🔧 Lo fijo<br/>va primero]:::m
     M1 --> R1[✅ Total y seña<br/>exactos]:::r
-    M2 --> R2[✅ 24/24]:::r
+    M2 --> R2[✅ 32/32]:::r
     M3 --> R3[✅ 72% reutilizable<br/>83% de caché]:::r
     classDef p fill:#0EA5E9,color:#fff
     classDef f fill:#E5484D,color:#fff
@@ -442,6 +445,23 @@ Un job de **pg_cron + pg_net** llama cada minuto a `/api/cron/buffer-flush`
 (autenticado con `CRON_SECRET`). Drena los mensajes agrupados y envía la
 siguiente tanda de las campañas aprobadas. Ver
 [`supabase/cron/schedule-buffer-flush.sql`](supabase/cron/schedule-buffer-flush.sql).
+
+## 🚨 Alertas por mail
+
+Cada 5 minutos el cron revisa si hubo problemas nuevos y, si los hay, manda
+**un solo mail** con el resumen por cliente: mensajes que quedaron sin
+responder, herramientas que fallaron, sistemas MCP caídos o el umbral diario de
+costo. Después espera 30 minutos antes del próximo aviso. Lo normal del negocio
+(un lead descartado, una acción esperando aprobación) no avisa, y el mail nunca
+lleva mensajes de clientes.
+
+| Variable | Valor |
+| --- | --- |
+| `RESEND_API_KEY` | clave de [Resend](https://resend.com) (el plan gratis alcanza) |
+| `ALERT_EMAIL_TO` | a quién avisar (varios, separados por coma) |
+| `ALERT_EMAIL_FROM` | opcional; sin dominio propio en Resend, dejala vacía y solo se puede avisar al mail de la cuenta de Resend |
+
+Sin `RESEND_API_KEY` o `ALERT_EMAIL_TO`, las alertas quedan apagadas.
 
 ## 🗂️ Estructura
 
