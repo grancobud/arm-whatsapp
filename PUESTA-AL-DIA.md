@@ -25,7 +25,7 @@ El README tiene los diagramas de cómo viaja un mensaje: [`README.md` → Las pi
 
 ## 2. Lo que se hizo hasta ahora
 
-Partimos de un fork (MIT) y lo fuimos auditando **área por área**: primero se
+La app se fue auditando **área por área**: primero se
 prueba de verdad con modelos reales, se mide, se corrige lo que falla y se
 vuelve a medir. Nada se mergea sin números.
 
@@ -54,7 +54,7 @@ flowchart TB
 
 | # | Área | PR | Qué se encontró | Qué quedó |
 | --- | --- | --- | --- | --- |
-| 0 | 🔐 Seguridad base | migraciones `20260618*` | Dos funciones de la cola se podían llamar con la clave pública: cualquiera leía mensajes de cualquier cliente. | Cerradas. El arreglo se mandó también al repo original y lo mergearon. |
+| 0 | 🔐 Seguridad base | migraciones `20260618*` | Dos funciones de la cola se podían llamar con la clave pública: cualquiera leía mensajes de cualquier cliente. | Cerradas: solo las usa el servidor. |
 | 1 | 💬 Respuestas de la IA | #6 | Los modelos gratis a veces cortan la respuesta, la mandan vacía o mezclan su razonamiento. | **Guardia** (`reply-guard.ts`) + cadena de modelos de respaldo + temperatura 0.3. |
 | 2 | 📊 Evaluación | #10 | No había forma de medir. Al medir apareció que una nota en la memoria del cliente hacía que el agente ofreciera descuentos inexistentes. | `npm run eval:agente`: charlas de WhatsApp con nota por código y por un juez. |
 | 3 | ✍️ Prompts | #12 | Los prompts de arranque eran genéricos. | Prompts v3 con reglas + su porqué, etiquetas XML y ejemplos difíciles. **9.1 → 9.6**. |
