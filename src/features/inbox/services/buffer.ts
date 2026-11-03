@@ -308,27 +308,24 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
       ? Math.min(50, Math.max(5, rawWindow))
       : 10;
 
-    // ── 6c. Load prior conversation turns (WS1: memory injection) ────────────
-    const history = await getConversationHistory(batch.conversation_id, {
-      limit: historyWindow,
-      excludeBatchId: batch.id,
-    });
-
-    // ── 7. Build system prompt: KB > custom prompt > business info (F7) ──────
-    // The active agent (if any) selects its mode-scoped published prompt; the
-    // resolver falls back to the global prompt when there is no active agent.
-    const activeAgent = await getActiveAgent(batch.workspace_id);
-    const [resolvedPrompt, businessInfo, kbResults, kbLinks, claims] =
+    // ── 6c + 7. Carga concurrente (Paralelización): memoria, agente, negocio y KB ──
+    const [history, activeAgent, businessInfo, kbResults, kbLinks, claims] =
       await Promise.all([
-        resolveSystemPrompt(
-          batch.workspace_id,
-          activeAgent ? { mode: activeAgent.type } : {},
-        ),
+        getConversationHistory(batch.conversation_id, {
+          limit: historyWindow,
+          excludeBatchId: batch.id,
+        }),
+        getActiveAgent(batch.workspace_id),
         getBusinessInfo(batch.workspace_id),
         searchKb(batch.workspace_id, mergedText, 3),
         listKbSourceLinks(batch.workspace_id),
         getActiveClaims(batch.workspace_id, conversation.contact_id as string),
       ]);
+
+    const resolvedPrompt = await resolveSystemPrompt(
+      batch.workspace_id,
+      activeAgent ? { mode: activeAgent.type } : {},
+    );
 
     const kbContext = [
       formatKbContext(kbResults),
@@ -444,22 +441,41 @@ export async function processNextBatch(): Promise<ProcessBatchResult> {
 
     if (!dispatchResult.ok) {
       console.error("[buffer] dispatchText failed:", dispatchResult.error);
+      await supabase.from("events").insert({
+        type: "dispatch_failure",
+        level: "error",
+        workspace_id: batch.workspace_id,
+        conversation_id: batch.conversation_id,
+        payload: {
+          error: dispatchResult.error,
+          channel: "whatsapp",
+        },
+      });
     }
 
     // ── 10b. Mark batch as processed ────────────────────────────────────────
     await markBatchProcessed(batch.id, mergedText, supabase);
 
-    // ── 10c. v1.5 opt-in: AI auto-tagging + summary (fire-and-forget) ────────
+    // ── 10c. v1.5 opt-in: AI auto-tagging + summary (encadenamiento protegido) ──
+    // Await it so serverless runtimes don't terminate the process before
+    // summary/tags persist. Isolated in try/catch so it never breaks the turn.
     if (
       activeAgent &&
       (activeAgent.config.autoTag || activeAgent.config.summarize)
     ) {
-      void maybeAutoProcess({
-        workspaceId: batch.workspace_id,
-        conversationId: batch.conversation_id,
-        contactId: conversation.contact_id as string,
-        config: activeAgent.config,
-      });
+      try {
+        await maybeAutoProcess({
+          workspaceId: batch.workspace_id,
+          conversationId: batch.conversation_id,
+          contactId: conversation.contact_id as string,
+          config: activeAgent.config,
+        });
+      } catch (err) {
+        console.error(
+          "[buffer] auto-tagging/summary error:",
+          err instanceof Error ? err.message : err,
+        );
+      }
     }
 
     // ── 10d. F1: Setter qualification (only when the active agent is a setter) ─
