@@ -136,7 +136,7 @@ En el README se dice "auditado y mejorado". **No se nombra el curso ni sus capí
 ### 🎯 Tarea A · #20 RAG: reranking y recuperación contextual
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph Q [Al responder]
         direction LR
         Q1([❓ Pregunta]) --> S[(📚 pgvector<br/>top 10)] --> RR[🎯 Reranking<br/>NUEVO]:::n --> A{{🤖 Agente}}:::a
