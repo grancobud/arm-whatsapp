@@ -71,7 +71,7 @@ flowchart TB
 | `npm run eval:agente -- --versiones=v3 --reps=2` | **9.6** (10/10 en los chequeos por código) |
 | `npm run eval:herramientas -- --reps=2` | **40/42** |
 | `npm run eval:conocimiento` | fragmento correcto **primero en 15 de 17** |
-| `npm run eval:multimedia` | **24/24** |
+| `npm run eval:multimedia` | **32/32** (audio, imágenes y PDFs) |
 | `npm run eval:mcp -- --reps=2` | **28/28** |
 | `npm run test:unit` | **30/30** (no necesita modelos) |
 

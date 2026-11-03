@@ -1,11 +1,11 @@
-// Eval de imágenes y documentos: corre el camino REAL de un archivo del cliente
-// (describeImageBytes / extractPdfText → inboundMessageText → respuesta del agente)
+// Eval de audios, imágenes y documentos: corre el camino REAL de un archivo del cliente
+// (transcribeAudioBytes / describeImageBytes / extractPdfText → inboundMessageText → respuesta del agente)
 // con archivos ficticios de evals/multimedia/archivos.
 //
 // Uso: npm run eval:multimedia -- [--reps=2]
 
 import { readFileSync } from "node:fs";
-import { describeImageBytes, extractPdfText } from "../../src/features/inbox/services/media-understanding.ts";
+import { describeImageBytes, extractPdfText, transcribeAudioBytes } from "../../src/features/inbox/services/media-understanding.ts";
 import { inboundMessageText } from "../../src/features/inbox/services/inbound-text.ts";
 import { generateWithTools } from "../../src/features/inbox/services/openrouter.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
@@ -23,7 +23,7 @@ const plano = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
 
 interface Caso {
   id: string;
-  tipo: "image" | "document";
+  tipo: "audio" | "image" | "document";
   archivo: string;
   caption?: string;
   chequearEntrada: (texto: string) => { nombre: string; ok: boolean }[];
@@ -31,6 +31,21 @@ interface Caso {
 }
 
 const CASOS: Caso[] = [
+  {
+    // Nota de voz ficticia (ogg/opus, como las manda WhatsApp): pide turno el
+    // jueves 17:30 y dicta un número. Lo dice todo en voz, sin texto.
+    id: "nota_de_voz",
+    tipo: "audio",
+    archivo: "nota-de-voz.ogg",
+    chequearEntrada: (t) => [
+      { nombre: "transcribe_el_pedido", ok: /jueves/i.test(t) && /corte/i.test(t) },
+      { nombre: "transcribe_el_numero", ok: /4s?3s?2s?1|cuatro tres dos uno/i.test(t) },
+    ],
+    chequearRespuesta: (t) => [
+      { nombre: "responde_al_turno", ok: /jueves|turno|horario/i.test(t) },
+      { nombre: "no_dice_que_no_escucha", ok: !/no puedo (escuchar|oir|reproducir)|no (pude|puedo) (transcribir|entender el audio)/i.test(plano(t)) },
+    ],
+  },
   {
     id: "comprobante_imagen",
     tipo: "image",
@@ -79,12 +94,14 @@ const system = buildSystemPrompt({
   promptBase: starterPrompt("setter", "Barbería El Faro", "Martín"),
 });
 
-console.log(`Eval multimedia · imagen: ${process.env.MEDIA_IMAGE_MODEL || "mistral-medium-3.5"} · respuesta: ${GEN} · ${CASOS.length} casos × ${REPS} reps`);
+console.log(`Eval multimedia · audio: ${process.env.MEDIA_AUDIO_MODEL || "whisper-large-v3"} · imagen: ${process.env.MEDIA_IMAGE_MODEL || "mistral-medium-3.5"} · respuesta: ${GEN} · ${CASOS.length} casos × ${REPS} reps`);
 let ok = 0, total = 0;
 for (const c of CASOS) for (let rep = 1; rep <= REPS; rep++) {
   const bytes = archivo(c.archivo);
   const meta: Record<string, unknown> = { caption: c.caption, filename: c.archivo };
-  if (c.tipo === "image") {
+  if (c.tipo === "audio") {
+    meta.transcript = await transcribeAudioBytes({ bytes, mimeType: "audio/ogg", workspaceId: "eval" });
+  } else if (c.tipo === "image") {
     meta.description = await describeImageBytes({ bytes, mimeType: "image/png", caption: c.caption, workspaceId: "eval" });
   } else {
     const doc = await extractPdfText(bytes);

@@ -95,11 +95,11 @@ Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo.
 | `npm run eval:agente -- --versiones=v3 --reps=2` | 17 charlas de WhatsApp, nota por código y por un juez | sí |
 | `npm run eval:herramientas -- --reps=2` | uso de herramientas con la función real | sí |
 | `npm run eval:conocimiento` | si la búsqueda trae el fragmento correcto | sí |
-| `npm run eval:multimedia` | imágenes y PDFs | sí |
+| `npm run eval:multimedia` | notas de voz, imágenes y PDFs | sí |
 | `npm run eval:cache` | cuánto del prompt se reutiliza | sí |
 
 **Línea base actual:** agente **9.6** (10/10 en código), herramientas **40/42**,
-multimedia **24/24**. Si tu cambio baja alguno de estos números, no se mergea
+multimedia **32/32**. Si tu cambio baja alguno de estos números, no se mergea
 hasta entender por qué.
 
 Las evaluaciones de herramientas y multimedia necesitan estas variables (no
