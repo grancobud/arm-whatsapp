@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:unit": "node --import ./evals/registrar.mjs --test evals/agente/calificadores.test.ts evals/herramientas/cierre.test.ts evals/conocimiento/corte.test.ts evals/multimedia/entrada.test.ts evals/conocimiento/citas.test.ts evals/mcp/cliente.test.ts evals/herramientas/aprobacion.test.ts evals/conocimiento/rerank.test.ts evals/agente/enrutamiento.test.ts evals/agente/encadenamiento.test.ts evals/alertas/alertas.test.ts evals/automatizaciones/motor.test.ts",
+    "test:unit": "node --import ./evals/registrar.mjs --test evals/agente/calificadores.test.ts evals/herramientas/cierre.test.ts evals/conocimiento/corte.test.ts evals/multimedia/entrada.test.ts evals/conocimiento/citas.test.ts evals/mcp/cliente.test.ts evals/herramientas/aprobacion.test.ts evals/conocimiento/rerank.test.ts evals/agente/enrutamiento.test.ts evals/agente/encadenamiento.test.ts evals/alertas/alertas.test.ts evals/automatizaciones/motor.test.ts evals/consentimiento/baja.test.ts",
     "eval:agente": "node --import ./evals/registrar.mjs evals/agente/correr.ts",
     "eval:herramientas": "node --import ./evals/registrar.mjs evals/herramientas/correr.ts",
     "eval:conocimiento": "node --import ./evals/registrar.mjs evals/conocimiento/correr.ts",
