@@ -5,6 +5,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { embed, embedMany } from "ai";
 import { chunkDocument } from "./kb-chunking";
 import { fragmentId } from "./kb-citations";
+import { rerankHybrid } from "./kb-rerank";
 
 function svc() {
   return createSbClient(
@@ -61,7 +62,7 @@ export interface IngestDocumentResult {
  * Ingests a document into the knowledge base.
  * Steps:
  *  1. INSERT into kb_documents
- *  2. Split content into overlapping chunks
+ *  2. Split content into sections with Contextual Retrieval metadata
  *  3. Embed all chunks via OpenRouter (skipped when key is placeholder)
  *  4. INSERT into kb_chunks with embeddings
  */
@@ -100,8 +101,11 @@ export async function ingestDocument(opts: {
 
   const documentId = doc.id as string;
 
-  // 2. Chunk the content (by section and paragraph, see kb-chunking.ts)
-  const chunks = chunkDocument(content);
+  // 2. Chunk the content with Contextual Retrieval (see kb-chunking.ts)
+  const chunks = chunkDocument(content, {
+    docTitle: title,
+    contextualPrefix: true,
+  });
   if (chunks.length === 0) {
     return { documentId, chunksCreated: 0 };
   }
@@ -155,15 +159,24 @@ export interface KbSearchResult {
   similarity: number;
 }
 
+export interface SearchKbOptions {
+  /** Number of candidate chunks to fetch before reranking (default: 10). */
+  candidateCount?: number;
+  /** Whether to apply hybrid reranking (default: true). */
+  rerank?: boolean;
+}
+
 /**
- * Semantic similarity search over the knowledge base.
- * Embeds the query, then uses pgvector cosine distance to find top-K chunks.
+ * Semantic similarity search over the knowledge base with optional reranking.
+ * Embeds the query, retrieves candidates via pgvector cosine distance, and
+ * applies hybrid reranking (BM25 + Dense RRF) to select the final top-K.
  * Falls back to an empty result set when embeddings are disabled.
  */
 export async function searchKb(
   workspaceId: string,
   query: string,
   topK = 3,
+  options?: SearchKbOptions,
 ): Promise<KbSearchResult[]> {
   if (isEmbeddingDisabled()) {
     console.warn(
@@ -173,6 +186,9 @@ export async function searchKb(
   }
 
   const supabase = svc();
+  const candidateCount =
+    options?.candidateCount ??
+    (options?.rerank !== false ? Math.max(10, topK) : topK);
 
   // Embed the query
   const { embedding: queryEmbedding } = await embed({
@@ -182,11 +198,10 @@ export async function searchKb(
   });
 
   // pgvector cosine distance search via RPC
-  // The function `match_kb_chunks` must exist in the DB (see migration notes).
   const { data, error } = await supabase.rpc("match_kb_chunks", {
     p_workspace_id: workspaceId,
     p_query_embedding: queryEmbedding,
-    p_match_count: topK,
+    p_match_count: candidateCount,
   });
 
   if (error) {
@@ -194,7 +209,7 @@ export async function searchKb(
     return [];
   }
 
-  return (data ?? []).map(
+  const candidates: KbSearchResult[] = (data ?? []).map(
     (row: {
       chunk_content: string;
       document_title: string;
@@ -207,6 +222,13 @@ export async function searchKb(
       similarity: row.similarity,
     }),
   );
+
+  if (options?.rerank === false || candidates.length <= topK) {
+    return candidates.slice(0, topK);
+  }
+
+  // Reranking via Hybrid BM25 + Semantic fusion (RRF)
+  return rerankHybrid(query, candidates, topK);
 }
 
 /**
