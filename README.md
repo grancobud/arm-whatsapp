@@ -210,6 +210,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 📚 Base de conocimiento | ✅ | Embeddings gratis por FreeLLMAPI con un modelo fijo, corte de documentos por secciones (sin partir palabras ni precios) y fragmentos marcados como datos para que una página importada no pueda dar órdenes. Medido con `npm run eval:conocimiento`: el fragmento correcto queda primero en 15 de 17 preguntas (antes 11). Se quitó una búsqueda de respaldo que armaba SQL pegando texto. |
 | 🖼️ Imágenes, documentos y caché | ✅ | Imágenes por FreeLLMAPI con modelo fijo, que copian exactos importes y números de operación de un comprobante. PDFs leídos del lado del servidor: antes el agente decía «no puedo leer su contenido», ahora responde el total y la seña exactos. Imágenes y documentos entran marcados como datos (un cartel con una orden no la hace cumplir). El prompt pone primero lo fijo de cada cliente: el comienzo reutilizable entre mensajes pasó del 1% al 72% y un proveedor con caché ya lee el 83% desde caché (`npm run eval:multimedia`, `npm run eval:cache`). |
 | 📌 Citas y razonamiento | ✅ | Cada respuesta que usa la base de conocimiento deja rastro del fragmento que la respalda: el agente lo marca, la marca se saca antes de llegar al cliente y el inbox muestra «Fuentes» con el texto citado. En la evaluación citó bien 8 de 8 (incluido no citar cuando el fragmento no servía). El razonamiento extendido no se activa: el agente ya saca 9.6 y la guardia descarta el razonamiento que algunos modelos mezclan en la respuesta. |
+| 🔌 MCP | 🔄 | **Servidor:** el servidor MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce como error, 4 recursos (`arm://…`), 3 prompts probados y las funciones del ARM (memoria, revisión, campañas): 28/28 chequeos con un cliente MCP real. **Cliente:** en curso. |
 
 ---
 
@@ -220,6 +221,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 - 👥 **CRM** con sincronización opcional a HighLevel.
 - 🕐 **Templates** y manejo de la ventana de 24 h de Meta.
 - 🏢 **Multi-tenant** con roles, RLS por workspace y super admin.
+- 🔌 **Servidor MCP de administración** ([`mcp/admin/`](mcp/admin/README.md)): operás la instalación desde Claude con 24 herramientas, 4 recursos y 3 prompts.
 
 ## 🛠️ Stack
 
@@ -272,6 +274,8 @@ supabase/
 └── cron/       # SQL post-deploy del cron
 deploy/
 └── freellmapi-tunnel/  # Túnel de Cloudflare en Docker
+mcp/
+└── admin/          # Servidor MCP de administración (herramientas, recursos, prompts)
 scripts/
 ├── setup.mjs       # Orquestador de instalación (secrets, env, db, cron)
 └── seed-admin.mjs  # Super admin + workspace demo
