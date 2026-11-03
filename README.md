@@ -463,6 +463,26 @@ lleva mensajes de clientes.
 
 Sin `RESEND_API_KEY` o `ALERT_EMAIL_TO`, las alertas quedan apagadas.
 
+## ⚙️ Automatizaciones
+
+En **Configuración → Automatizaciones** cada cliente arma reglas del tipo
+«cuando pase X, hacé Y». El cron las revisa cada minuto:
+
+| Cuando… | Se dispara |
+| --- | --- |
+| Primer mensaje | una vez por conversación nueva en la que el contacto escribió |
+| Palabra clave | una vez por mensaje que la contenga (sin importar tildes ni mayúsculas) |
+| Pide una persona | cada vez que la conversación pasa a esperar un asesor |
+| Lead calificado | una vez por contacto |
+| Sin respuesta | si hablamos último y el contacto no contesta en 24 h (configurable): un solo seguimiento por silencio, y solo de 9 a 21 en la hora del negocio |
+| Ventana por cerrar | cuando le quedan 2 h a la ventana de 24 h de WhatsApp |
+
+Las acciones son mandar una plantilla aprobada (respeta a quien pidió no recibir
+mensajes), poner una etiqueta, cerrar la conversación o pasarla a una persona.
+Una regla solo reacciona a lo que pasó **después** de guardarla, cada disparo
+queda en `automation_runs` y nunca se repite, y un pase a persona hecho por una
+automatización no dispara otra.
+
 ## 🗂️ Estructura
 
 ```

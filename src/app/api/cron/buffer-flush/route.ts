@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { processNextBatch } from "@/features/inbox/services/buffer";
 import { drainCampaignQueue } from "@/features/arm/services/campaigns";
 import { checkAlerts } from "@/features/alerts/alerts";
+import { runAutomations } from "@/features/automations/engine";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Vercel Cron: process buffer batches every minute
@@ -47,6 +48,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     console.error("[cron] drainCampaignQueue failed:", err);
   }
 
+  // Automation rules (Configuración → Automatizaciones). Never throws.
+  const automations = await runAutomations();
+
   // Email digest of new problems (every few minutes, with a cooldown). Never
   // throws, so it cannot break the reply loop either.
   const alerted = await checkAlerts();
@@ -55,6 +59,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     ok: true,
     processed: processedCount,
     campaign_sends: campaignSends,
+    automations,
     alerted,
   });
 }
