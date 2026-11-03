@@ -36,6 +36,12 @@ importante.
 | 🧾 | **Memoria con fuentes** | El agente guarda necesidades, objeciones, compromisos y datos citando el mensaje del cliente que los respalda. Lo que no tiene fuente queda como *corazonada*. En la próxima charla arranca sabiendo todo, y el equipo lo ve en «Lo que sabemos». |
 | ✋ | **El agente propone, una persona decide** | Las acciones sensibles quedan en **Revisión** hasta que un manager las aprueba. Recién ahí se ejecutan. |
 | 📣 | **Reactivación saliente** | **Campañas** a segmentos con opt-in, plantillas aprobadas por Meta, aprobación previa y envío por tandas. Cuando el cliente responde, el agente sigue la charla. |
+| 🤝 | **Cumple lo que promete** | Si el agente le dice a un cliente «te escribo el jueves», lo agenda y el jueves le escribe. Pasadas las 24 h de WhatsApp usa la plantilla aprobada que elijas en Automatizaciones; si no hay, le llega un mail al equipo para que escriba una persona. Las promesas se ven en la ficha del contacto. |
+| 🎚️ | **Autonomía que se gana** | Cada herramienta tiene su modo: «Lo hace solo» o «Lo propone y alguien aprueba». Con 10 aprobaciones seguidas sin un rechazo, la pantalla sugiere darle más autonomía en esa tarea. |
+| 🎓 | **Aprende de las correcciones** | «Corregir» en una respuesta de la IA, o rechazar una propuesta en Revisión explicando por qué, deja una lección. El agente sigue las 15 más nuevas en cada charla, y el equipo las ve en «Lo que aprendió el agente». |
+| 🌡️ | **Sabe con quién hablar hoy** | Cada contacto tiene un puntaje de relación de 0 a 100 (cuándo escribió, cuánto escribe, si responde, su etapa y los riesgos abiertos) y un estado: activa, enfriándose, fría o perdida. El Panel sugiere «Para escribirle hoy». |
+| 🚫 | **Respeta la baja** | Si el cliente escribe «BAJA», se la confirma y nadie le vuelve a escribir: ni la IA, ni las campañas, ni las automatizaciones. Con «ALTA» vuelve. |
+| 📊 | **Mide resultados, no mensajes** | El Panel cuenta turnos agendados, leads calificados, el porcentaje que resolvió la IA sola, promesas cumplidas, bajas y respuestas a campañas, también por agente. |
 | 📦 | **Los datos son tuyos** | Configuración → Datos exporta todo en JSON o los contactos en CSV. Las credenciales nunca salen. |
 
 ```mermaid
@@ -49,11 +55,16 @@ flowchart LR
     R -->|manager aprueba| X[⚙️ Se ejecuta]
     A -->|dato nuevo| M
     CA[📣 Campañas] -->|plantilla con opt-in| C
+    A -->|«te escribo el jueves»| P[🤝 Promesa]
+    P -->|el jueves| C
+    E[🎓 Correcciones<br/>del equipo] --> A
 
     style A fill:#8A2BE2,color:#fff
     style R fill:#F38020,color:#fff
     style M fill:#3ECF8E,color:#000
     style CA fill:#25D366,color:#000
+    style P fill:#0EA5E9,color:#fff
+    style E fill:#E5484D,color:#fff
 ```
 
 ---
@@ -237,7 +248,9 @@ flowchart LR
 ## ✅ Auditado y mejorado
 
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
-FreeLLMAPI. Cada falla que aparece se corrige en el repo.
+FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
+(de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
+corre 105.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -251,6 +264,15 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 🔌 MCP | ✅ | **Servidor:** el MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce, 4 recursos, 3 prompts probados y las funciones del ARM: 28/28 con un cliente MCP real. **Cliente:** cada negocio conecta el servidor MCP de su stock, agenda o CRM y el agente lo usa, con aprobación humana por defecto, resultados marcados como datos y aviso honesto si el sistema no responde: 28/28 en `npm run eval:mcp`. Encontró que el agente decía «no tenemos» sin consultar sus herramientas: corregido sin bajar la evaluación (agente 9.6, herramientas 40/42). |
 | 🎯 RAG: Reranking y recuperación contextual | ✅ | **Recuperación contextual:** cada fragmento incorpora su jerarquía de documento y sección (`[Documento · Sección]`) para no perder contexto situacional al aislarse. **Reranking híbrido:** ampliación de candidatos iniciales a 10 y reordenamiento con BM25 y Reciprocal Rank Fusion (RRF) en memoria: prioriza términos específicos y códigos exactos (como `PROMO-DIC-05` o `ESTUDIANTE-15`) con cero costo de tokens y latencia imperceptible. En `npm run eval:conocimiento`: pasó de 15/17 a **17 de 17 aciertos (100%)** en el top 3, manteniendo el rechazo de consultas fuera de dominio. 6 tests unitarios nuevos. |
 | 🧭 Agentes y flujos de trabajo | ✅ | **Enrutamiento:** validación de máquina de estados (`ai_active`, `human_active`, `handoff_pending`, etc.) y detección normalizada de pedidos de operador humano sin falsos positivos en consultas de negocio (6 tests unitarios). **Encadenamiento protegido:** se eliminó el riesgo de terminación prematura en entornos serverless/Vercel esperando el auto-etiquetado y resumen (`maybeAutoProcess`) con captura de errores aislada; blindaje de la etapa `customer` contra degradaciones a `lost` y freno de costos en calificación (4 tests unitarios). **Paralelización:** carga concurrente de memoria, agente activo, datos de negocio y base de conocimiento en un único `Promise.all`, ahorrando 25–35 ms de latencia por turno. **Observabilidad:** registro estructurado del evento `dispatch_failure` en la tabla `events` ante fallos de entrega en WhatsApp. |
+| ⚙️ Automatizaciones | ✅ | Reglas «cuando pase X, hacé Y» que el cron revisa cada minuto. Cada disparo se reserva una sola vez en `automation_runs` (aunque el cron corra dos veces no se repite), solo reacciona a lo que pasó después de guardar la regla y los seguimientos salen de 9 a 21 en la hora del negocio. 9 tests en `evals/automatizaciones`. |
+| 🚫 Consentimiento | ✅ | «BAJA» y «ALTA» se reconocen antes de que conteste la IA, con palabras exactas o frases claras en mensajes cortos, para no dar de baja a quien solo menciona la palabra. A un contacto dado de baja no le contesta nadie, y un mensaje nuevo ya no lo vuelve a dar de alta solo. 5 tests en `evals/consentimiento`. |
+| 🤝 Promesas | ✅ | La herramienta «Cumplir lo prometido» agenda el seguimiento con la zona horaria obligatoria (una hora sin zona saldría corrida). Al vencer decide si escribir texto (ventana abierta), mandar la plantilla elegida, dejárselo a una persona (la charla la lleva un humano o pasaron 24 h sin plantilla) o cancelarlo (conversación cerrada o el cliente pidió la baja). 8 tests en `evals/compromisos`. |
+| 🎚️ Autonomía graduada | ✅ | Cada herramienta pasa de «propone» a «lo hace solo» según el historial de aprobaciones; un rechazo reinicia la cuenta y cada cambio queda registrado. 4 tests en `evals/autonomia`. |
+| 🎓 Aprender de las correcciones | ✅ | Las correcciones y los rechazos explicados entran al prompt como lecciones cortas, marcadas como reglas del equipo (no como mensajes del cliente) y con tope de 15. 4 tests en `evals/correcciones`. |
+| 🌡️ Puntaje de la relación | ✅ | Puntaje de 0 a 100 y estado por contacto, calculado con funciones puras y probado con casos de borde (contacto nuevo, dado de baja, con riesgos abiertos). 6 tests en `evals/relacion`. |
+| 📊 Resultados y métricas por agente | ✅ | El Panel mide resultados en vez de volumen, y cada resultado se cuenta para el agente que estaba activo en ese momento (cada activación queda registrada). 6 tests en `evals/metricas`. |
+| ⚖️ Jev gratis | ✅ | El juez de mensajes corre gratis por FreeLLMAPI cuando no hay clave de TypeSafe: lee el último JSON de la respuesta, acota los valores y no cuesta nada. En `npm run eval:jev`: 12 de 12, incluido un intento de manipular al agente. 5 tests más en `evals/jev`. |
+| 🔁 Respaldo de la IA | ✅ | Si FreeLLMAPI no responde (PC apagada, túnel caído, sin cupo o más de 45 s), la misma charla sigue por OpenRouter con un modelo gratis, salta al siguiente si ese no está, deja de probar el principal por un minuto y avisa por mail. 8 tests en `evals/respaldo`. |
 
 ### 🔎 Cómo se auditó y se mejoró cada área
 
