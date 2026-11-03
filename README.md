@@ -241,7 +241,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 🎙️ Audios, imágenes, documentos y caché | ✅ | Notas de voz transcriptas por FreeLLMAPI, sin clave aparte: el chat del router descartaba el audio, así que van por el endpoint de transcripción con un modelo fijo y salen palabra por palabra, números incluidos. Imágenes por FreeLLMAPI con modelo fijo, que copian exactos importes y números de operación de un comprobante. PDFs leídos del lado del servidor: antes el agente decía «no puedo leer su contenido», ahora responde el total y la seña exactos. Imágenes y documentos entran marcados como datos (un cartel con una orden no la hace cumplir). El prompt pone primero lo fijo de cada cliente: el comienzo reutilizable entre mensajes pasó del 1% al 72% y un proveedor con caché ya lee el 83% desde caché (`npm run eval:multimedia`, `npm run eval:cache`). |
 | 📌 Citas y razonamiento | ✅ | Cada respuesta que usa la base de conocimiento deja rastro del fragmento que la respalda: el agente lo marca, la marca se saca antes de llegar al cliente y el inbox muestra «Fuentes» con el texto citado. En la evaluación citó bien 8 de 8 (incluido no citar cuando el fragmento no servía). El razonamiento extendido no se activa: el agente ya saca 9.6 y la guardia descarta el razonamiento que algunos modelos mezclan en la respuesta. |
 | 🔌 MCP | ✅ | **Servidor:** el MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce, 4 recursos, 3 prompts probados y las funciones del ARM: 28/28 con un cliente MCP real. **Cliente:** cada negocio conecta el servidor MCP de su stock, agenda o CRM y el agente lo usa, con aprobación humana por defecto, resultados marcados como datos y aviso honesto si el sistema no responde: 28/28 en `npm run eval:mcp`. Encontró que el agente decía «no tenemos» sin consultar sus herramientas: corregido sin bajar la evaluación (agente 9.6, herramientas 40/42). |
-| 🎯 RAG: Reranking y recuperación contextual | ✅ | **Recuperación contextual:** cada fragmento incorpora su jerarquía de documento y sección (`[Documento · Sección]`) para no perder contexto situacional al aislarse. **Reranking híbrido:** ampliación de candidatos iniciales a 10 y reordenamiento con BM25 y Reciprocal Rank Fusion (RRF) en memoria: prioriza términos específicos y códigos exactos (como `PROMO-DIC-05` o `ESTUDIANTE-15`) con cero costo de tokens y latencia imperceptible. En `npm run eval:conocimiento`: pasó de 15/17 a **17 de 17 aciertos (100%)** en el top 3, manteniendo el rechazo de consultas fuera de dominio. 6 tests unitarios nuevos (36/36). |
+| 🎯 RAG: Reranking y recuperación contextual | ✅ | **Recuperación contextual:** cada fragmento incorpora su jerarquía de documento y sección (`[Documento · Sección]`) para no perder contexto situacional al aislarse. **Reranking híbrido:** ampliación de candidatos iniciales a 10 y reordenamiento con BM25 y Reciprocal Rank Fusion (RRF) en memoria: prioriza términos específicos y códigos exactos (como `PROMO-DIC-05` o `ESTUDIANTE-15`) con cero costo de tokens y latencia imperceptible. En `npm run eval:conocimiento`: pasó de 15/17 a **17 de 17 aciertos (100%)** en el top 3, manteniendo el rechazo de consultas fuera de dominio. 6 tests unitarios nuevos. |
 
 ### 🔎 Cómo se auditó y se mejoró cada área
 
@@ -332,7 +332,7 @@ flowchart LR
     F2 --> M2[🔧 Respaldo<br/>quitado]:::m
     F3 --> M3[🔧 Marcados<br/>como datos]:::m
     M1 & M2 & M3 --> R[✅ Primero en<br/>11 → 15 de 17]:::r
-    P -.-> X[🧪 Búsqueda híbrida<br/>probada: no aportó]:::x
+    P -.-> X[🧪 Búsqueda híbrida:<br/>ver Reranking]:::x
     classDef p fill:#0EA5E9,color:#fff
     classDef f fill:#E5484D,color:#fff
     classDef m fill:#8A2BE2,color:#fff
@@ -390,6 +390,38 @@ flowchart LR
     F2 --> M2[🔧 Aviso de<br/>no disponible]:::m
     F3 --> M3[🔧 Sin propuesta<br/>no promete]:::m
     M1 & M2 & M3 --> R[✅ 28/28<br/>y en vivo]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**🎯 RAG: reranking y recuperación contextual** · por [Tomas Skarp](https://github.com/thomasskarp)
+
+```mermaid
+flowchart LR
+    P[🔍 Las 2 preguntas<br/>que fallaban]:::p --> F1[❌ Fragmento sin<br/>su documento]:::f
+    P --> F2[❌ Códigos exactos<br/>PROMO-DIC-05]:::f
+    F1 --> M1[🔧 Prefijo<br/>Documento · Sección]:::m
+    F2 --> M2[🔧 10 candidatos<br/>BM25 + RRF]:::m
+    M1 & M2 --> R[✅ 15 → 17 de 17<br/>0 tokens extra]:::r
+    classDef p fill:#0EA5E9,color:#fff
+    classDef f fill:#E5484D,color:#fff
+    classDef m fill:#8A2BE2,color:#fff
+    classDef r fill:#25D366,color:#000
+```
+
+**🧭 Agentes y flujos** · por [Tomas Skarp](https://github.com/thomasskarp)
+
+```mermaid
+flowchart LR
+    P[🔍 Enrutamiento,<br/>cadena, paralelo<br/>y depuración]:::p --> F1[❌ Resumen cortado<br/>por Vercel]:::f
+    P --> F2[❌ Consultas<br/>una tras otra]:::f
+    P --> F3[❌ Envío fallido<br/>sin registro]:::f
+    F1 --> M1[🔧 await con<br/>try/catch]:::m
+    F2 --> M2[🔧 Promise.all]:::m
+    F3 --> M3[🔧 Evento<br/>dispatch_failure]:::m
+    M1 & M2 & M3 --> R[✅ Sin pases falsos<br/>~30 ms menos]:::r
     classDef p fill:#0EA5E9,color:#fff
     classDef f fill:#E5484D,color:#fff
     classDef m fill:#8A2BE2,color:#fff
