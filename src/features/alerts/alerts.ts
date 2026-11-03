@@ -26,7 +26,8 @@ const FIRST_LOOKBACK_MINUTES = 60;
 const MAX_DETAIL_CHARS = 160;
 
 // follow_up_due: a promise to a customer that only a person can keep now.
-const ALERT_WARN_TYPES = new Set(["mcp_server_error", "cost_alert", "follow_up_due"]);
+// llm_failover: the AI on the PC is down and replies come from OpenRouter.
+const ALERT_WARN_TYPES = new Set(["mcp_server_error", "cost_alert", "follow_up_due", "llm_failover"]);
 
 export interface AlertEvent {
   workspace_id: string;

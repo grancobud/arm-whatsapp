@@ -53,6 +53,7 @@ import {
   UnusableReplyError,
   DEFAULT_FALLBACK_CHAIN,
 } from "./model-chain";
+import { backupModelsFromEnv, createFailoverFetch } from "./llm-failover";
 
 function logFallback(where: string) {
   return (a: { model: string; error: string }, next: string) =>
@@ -151,6 +152,17 @@ const MAX_THOUGHT_SIGNATURES = 500;
 
 async function createChatProvider(workspaceId?: string) {
   const customBaseUrl = process.env.LLM_BASE_URL?.trim();
+  // With our own endpoint (FreeLLMAPI on a PC behind a tunnel), OpenRouter is
+  // the backup if it goes down (llm-failover.ts). Without an OpenRouter key
+  // there is no backup and this is a plain fetch.
+  const send = customBaseUrl
+    ? createFailoverFetch({
+        primaryBase: customBaseUrl,
+        backupKey: await getOpenRouterApiKey(workspaceId),
+        backupModels: backupModelsFromEnv(process.env.LLM_BACKUP_MODELS),
+        onFailover: (reason) => logFailover(workspaceId, customBaseUrl, reason),
+      })
+    : fetch;
   return createOpenAI({
     baseURL: customBaseUrl || "https://openrouter.ai/api/v1",
     apiKey: customBaseUrl
@@ -187,7 +199,7 @@ async function createChatProvider(workspaceId?: string) {
         }
       }
 
-      const res = await fetch(url, init);
+      const res = await send(url, init);
       const text = await res.text();
 
       try {
@@ -219,6 +231,21 @@ async function createChatProvider(workspaceId?: string) {
       });
     },
   });
+}
+
+/** Records the switch to the backup; the alert email picks it up. */
+function logFailover(workspaceId: string | undefined, primary: string, reason: string): void {
+  console.warn(`[openrouter] ${primary} no responde (${reason}); uso OpenRouter de respaldo`);
+  if (!workspaceId) return;
+  void svcClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    .from("events")
+    .insert({
+      workspace_id: workspaceId,
+      type: "llm_failover",
+      level: "warn",
+      payload: { reason: reason.slice(0, 200) },
+    })
+    .then(() => undefined, () => undefined);
 }
 
 /** External (MCP) tools bring their own JSON Schema; ours are Zod. */
