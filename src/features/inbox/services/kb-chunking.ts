@@ -5,7 +5,7 @@
 // the middle of a word), carries one sentence of overlap, and drops chunks that
 // are only a title.
 //
-// Contextual Retrieval (Claude Academy / Anthropic):
+// Contextual retrieval:
 // When contextualPrefix is enabled, each chunk is prefixed with contextual metadata
 // linking it to its document and section so embeddings and search do not lose
 // context when chunks are evaluated in isolation.

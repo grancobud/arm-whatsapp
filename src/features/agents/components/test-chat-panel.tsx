@@ -74,16 +74,16 @@ export function TestChatPanel({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
-        Prueba a{" "}
+        Probá a{" "}
         <span className="font-medium text-foreground">{agent.name}</span> con el
         modelo <span className="font-medium text-foreground">{modelLabel}</span>
-        . Usa el prompt publicado. No se envía nada por WhatsApp.
+        . Usa el prompt publicado. No se manda nada por WhatsApp.
       </p>
 
       <div className="h-72 space-y-2 overflow-y-auto rounded-md border border-border/60 bg-muted/20 p-3">
         {messages.length === 0 ? (
           <p className="py-8 text-center text-xs text-muted-foreground">
-            Escribe un mensaje para empezar la prueba.
+            Escribí un mensaje para empezar la prueba.
           </p>
         ) : (
           messages.map((m, i) => (
@@ -114,7 +114,7 @@ export function TestChatPanel({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           rows={1}
-          placeholder="Escribe un mensaje de prueba..."
+          placeholder="Escribí un mensaje de prueba..."
           className="min-h-0 resize-none"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

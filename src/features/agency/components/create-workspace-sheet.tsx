@@ -112,7 +112,7 @@ export function CreateWorkspaceSheet({ open, onClose, onCreated }: Props) {
 
       setWebhookUrl(result.webhookUrl ?? null);
       setCredentials(result.clientCredentials ?? null);
-      toast.success("Workspace creado correctamente");
+      toast.success("Cliente creado");
       onCreated();
     });
   }
@@ -179,10 +179,10 @@ export function CreateWorkspaceSheet({ open, onClose, onCreated }: Props) {
 
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
               <p className="text-sm font-medium text-foreground">
-                Workspace creado
+                Cliente creado
               </p>
               <p className="text-xs text-muted-foreground">
-                Comparte esta URL de webhook con tu cliente para conectar
+                Compartí esta URL de webhook con tu cliente para conectar
                 YCloud:
               </p>
               <div className="flex items-center gap-2 mt-1">
@@ -276,7 +276,7 @@ export function CreateWorkspaceSheet({ open, onClose, onCreated }: Props) {
                 type="text"
                 value={clientPassword}
                 onChange={(e) => setClientPassword(e.target.value)}
-                placeholder="Se genera una segura si lo dejas vacío"
+                placeholder="Si la dejás vacía, se genera una segura"
                 disabled={saving}
                 autoComplete="off"
               />

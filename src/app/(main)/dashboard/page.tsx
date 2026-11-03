@@ -24,7 +24,7 @@ export default async function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <p className="text-muted-foreground text-sm">
-          No tienes un workspace activo.
+          No tenés un cliente activo.
         </p>
       </div>
     );

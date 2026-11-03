@@ -11,32 +11,47 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
+  CUSTOM_ENDPOINT_MODELS,
   MODEL_CATALOG,
   findCatalogModel,
+  findCustomEndpointModel,
   TIER_LABEL,
 } from "@/features/agents/lib/model-catalog";
+import { useLlmProvider } from "@/features/agents/lib/llm-provider";
 import { PROVIDER_LOGOS } from "./provider-logos";
 
 export function ModelPicker({
   value,
   onChange,
-  emptyHint = "Si no eliges modelo, se usa el del workspace.",
+  emptyHint = "Si no elegís un modelo, se usa el del cliente.",
 }: {
   value: string | null;
   onChange: (id: string) => void;
   /** Hint shown when no model is selected. */
   emptyHint?: string;
 }) {
-  const selected = findCatalogModel(value);
+  const { custom } = useLlmProvider();
+  const selected = custom
+    ? (() => {
+        const m = findCustomEndpointModel(value);
+        return m ? { model: m } : undefined;
+      })()
+    : findCatalogModel(value);
 
   return (
     <div className="space-y-2">
       <Select value={value ?? undefined} onValueChange={onChange}>
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Elige un modelo" />
+          <SelectValue placeholder="Elegí un modelo" />
         </SelectTrigger>
         <SelectContent>
-          {MODEL_CATALOG.map((p) => {
+          {custom &&
+            CUSTOM_ENDPOINT_MODELS.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.label}
+              </SelectItem>
+            ))}
+          {!custom && MODEL_CATALOG.map((p) => {
             const Logo = PROVIDER_LOGOS[p.provider];
             return (
               <SelectGroup key={p.provider}>

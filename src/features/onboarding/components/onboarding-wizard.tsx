@@ -383,7 +383,7 @@ function Step4({
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        Puedes ajustar todo esto en Configuración → Integraciones y
+        Podés ajustar todo esto en Configuración → Integraciones y
         Configuración → Prompt.
       </p>
     </div>

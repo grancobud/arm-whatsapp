@@ -88,11 +88,11 @@ export function WorkspacesTable({ workspaces }: Props) {
       {/* Toolbar */}
       <div className="mb-4 flex items-center justify-between gap-3">
         <Input
-          placeholder="Buscar workspace..."
+          placeholder="Buscar cliente..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
-          aria-label="Buscar workspace por nombre o slug"
+          aria-label="Buscar cliente por nombre o slug"
         />
         <Button
           size="sm"
@@ -115,7 +115,7 @@ export function WorkspacesTable({ workspaces }: Props) {
           )}
         >
           {[
-            "Workspace",
+            "Cliente",
             "Miembros",
             "Conversaciones",
             "YCloud",
@@ -137,11 +137,11 @@ export function WorkspacesTable({ workspaces }: Props) {
             <Building2 className="h-8 w-8 opacity-40" strokeWidth={1.5} />
             <div className="text-center">
               <p className="text-sm font-medium text-foreground">
-                {search ? "Sin resultados" : "Sin workspaces aún"}
+                {search ? "Sin resultados" : "Todavía no hay clientes"}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {search
-                  ? "Prueba con otro término de búsqueda"
+                  ? "Probá con otra búsqueda"
                   : "Da de alta tu primer cliente"}
               </p>
             </div>

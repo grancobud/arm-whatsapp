@@ -17,10 +17,10 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const COUNTRY_CODES: { code: string; label: string }[] = [
+  { code: "54", label: "Argentina (+54)" },
   { code: "52", label: "México (+52)" },
   { code: "34", label: "España (+34)" },
   { code: "57", label: "Colombia (+57)" },
-  { code: "54", label: "Argentina (+54)" },
   { code: "51", label: "Perú (+51)" },
   { code: "56", label: "Chile (+56)" },
   { code: "593", label: "Ecuador (+593)" },
@@ -28,9 +28,10 @@ const COUNTRY_CODES: { code: string; label: string }[] = [
   { code: "1", label: "EE. UU. / Canadá (+1)" },
 ];
 
-// Used for the agent's date/time context (agendamiento). Cancún is UTC-5 and
-// CDMX is UTC-6 — picking the right one matters for booking.
+// Used for the agent's date/time context (agendamiento): picking the right one
+// matters for booking.
 const TIMEZONES: { value: string; label: string }[] = [
+  { value: "America/Argentina/Buenos_Aires", label: "Argentina (UTC-3)" },
   { value: "America/Mexico_City", label: "CDMX / centro de México (UTC-6)" },
   { value: "America/Cancun", label: "Cancún / Quintana Roo (UTC-5)" },
   { value: "America/Tijuana", label: "Tijuana / Baja California (UTC-8)" },
@@ -38,7 +39,6 @@ const TIMEZONES: { value: string; label: string }[] = [
   { value: "America/Bogota", label: "Colombia (UTC-5)" },
   { value: "America/Lima", label: "Perú (UTC-5)" },
   { value: "America/Santiago", label: "Chile (UTC-3/-4)" },
-  { value: "America/Argentina/Buenos_Aires", label: "Argentina (UTC-3)" },
   { value: "America/Guatemala", label: "Guatemala (UTC-6)" },
   { value: "America/New_York", label: "EE. UU. Este (UTC-5/-4)" },
   { value: "Europe/Madrid", label: "España (UTC+1/+2)" },
@@ -64,10 +64,10 @@ export function BusinessInfoForm({ workspaceId, initial }: Props) {
     (structured.industria as string) ?? "",
   );
   const [countryCode, setCountryCode] = useState(
-    (structured.default_country_code as string) ?? "52",
+    (structured.default_country_code as string) ?? "54",
   );
   const [timezone, setTimezone] = useState(
-    (structured.timezone as string) ?? "America/Mexico_City",
+    (structured.timezone as string) ?? "America/Argentina/Buenos_Aires",
   );
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -166,7 +166,7 @@ export function BusinessInfoForm({ workspaceId, initial }: Props) {
         </Label>
         <Select value={countryCode} onValueChange={setCountryCode}>
           <SelectTrigger id="bi-country">
-            <SelectValue placeholder="Elige un país" />
+            <SelectValue placeholder="Elegí un país" />
           </SelectTrigger>
           <SelectContent>
             {COUNTRY_CODES.map((c) => (
@@ -187,7 +187,7 @@ export function BusinessInfoForm({ workspaceId, initial }: Props) {
         </Label>
         <Select value={timezone} onValueChange={setTimezone}>
           <SelectTrigger id="bi-timezone">
-            <SelectValue placeholder="Elige zona horaria" />
+            <SelectValue placeholder="Elegí la zona horaria" />
           </SelectTrigger>
           <SelectContent>
             {TIMEZONES.map((tz) => (
@@ -199,7 +199,7 @@ export function BusinessInfoForm({ workspaceId, initial }: Props) {
         </Select>
         <p className="text-[11px] text-muted-foreground">
           El agente la usa para interpretar &ldquo;hoy/mañana&rdquo; y agendar a
-          la hora correcta. Cancún es UTC-5; CDMX es UTC-6.
+          la hora correcta.
         </p>
       </div>
 

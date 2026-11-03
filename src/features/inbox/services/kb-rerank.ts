@@ -2,14 +2,11 @@
  * kb-rerank.ts — Reranking service for Knowledge Base retrieval.
  *
  * Implements:
- * 1. Hybrid BM25 + Dense fusion using Reciprocal Rank Fusion (RRF)
- *    (Claude Academy Lessons 37 & 38).
- * 2. LLM-based relevance reranking (Model-based rescoring).
- * 3. Graceful fallback to original vector similarity ranking on error.
+ * Hybrid BM25 + dense fusion using Reciprocal Rank Fusion (RRF), in memory:
+ * no model call, so no extra tokens and no customer text leaves the server.
+ * Falls back to the original vector ranking when no query term matches.
  */
 
-import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 
 export interface CandidateChunk {
   chunk: string;
@@ -175,105 +172,4 @@ export function rerankHybrid<T extends CandidateChunk>(
   );
 
   return fused.slice(0, topK).map((f) => f.item);
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Model-based Reranking (LLM cross-scoring)
-// ──────────────────────────────────────────────────────────────────────────────
-
-export interface ModelRerankOptions {
-  baseURL?: string;
-  apiKey?: string;
-  model?: string;
-  timeoutMs?: number;
-}
-
-/**
- * Re-scores candidate chunks against the user query using an LLM prompt.
- * Falls back to dense ranking on timeout, error, or missing credentials.
- */
-export async function rerankWithModel<T extends CandidateChunk>(
-  query: string,
-  candidates: T[],
-  topK = 3,
-  options?: ModelRerankOptions,
-): Promise<T[]> {
-  if (candidates.length <= topK) return candidates.slice(0, topK);
-
-  const baseURL =
-    options?.baseURL ||
-    process.env.LLM_BASE_URL ||
-    process.env.EVAL_BASE_URL ||
-    "http://localhost:31415/v1";
-  const apiKey =
-    options?.apiKey ||
-    process.env.LLM_API_KEY ||
-    process.env.EVAL_API_KEY ||
-    process.env.OPENROUTER_API_KEY;
-
-  if (!apiKey || apiKey === "placeholder") {
-    return rerankHybrid(query, candidates, topK);
-  }
-
-  try {
-    const provider = createOpenAI({ baseURL, apiKey });
-    const model = provider(options?.model || "auto:fast");
-
-    const candidatePrompt = candidates
-      .map(
-        (c, idx) =>
-          `[ID: ${idx + 1}]\n${c.chunk.slice(0, 350).trim()}`,
-      )
-      .join("\n\n");
-
-    const prompt = [
-      "Eres un reranker de información para un sistema RAG de atención a clientes.",
-      "Tu tarea es ordenar los fragmentos por relevancia DIRECTA para responder la consulta.",
-      "",
-      `<consulta>${query}</consulta>`,
-      "",
-      "<fragmentos>",
-      candidatePrompt,
-      "</fragmentos>",
-      "",
-      `Devuelve ÚNICAMENTE los números de ID de los ${topK} fragmentos más relevantes, en orden de mayor a menor relevancia, separados por comas (por ejemplo: 3, 1, 5). No agregues explicaciones.`,
-    ].join("\n");
-
-    const result = await generateText({
-      model,
-      prompt,
-      temperature: 0,
-    });
-
-    const parsedIds = (result.text.match(/\d+/g) ?? [])
-      .map((n) => parseInt(n, 10) - 1)
-      .filter((idx) => idx >= 0 && idx < candidates.length);
-
-    if (parsedIds.length === 0) {
-      return rerankHybrid(query, candidates, topK);
-    }
-
-    const seen = new Set<number>();
-    const reordered: T[] = [];
-    for (const idx of parsedIds) {
-      if (!seen.has(idx)) {
-        seen.add(idx);
-        reordered.push(candidates[idx]);
-        if (reordered.length >= topK) break;
-      }
-    }
-
-    // Fill remaining spots if model returned fewer than topK
-    for (const c of candidates) {
-      if (reordered.length >= topK) break;
-      if (!reordered.includes(c)) {
-        reordered.push(c);
-      }
-    }
-
-    return reordered;
-  } catch (err) {
-    console.warn("[kb-rerank] model reranking fallback to hybrid:", err);
-    return rerankHybrid(query, candidates, topK);
-  }
 }

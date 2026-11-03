@@ -2,7 +2,7 @@
 // Compara:
 // 1. Corte viejo (500 caracteres)
 // 2. Corte por secciones (línea base Gastón: 15/17)
-// 3. Corte con Recuperación Contextual (Contextual Retrieval de Anthropic)
+// 3. Corte con Recuperación Contextual (recuperación contextual)
 // 4. Búsqueda semántica vs. Reranking Híbrido (BM25 + Dense RRF)
 //
 // Uso: npm run eval:conocimiento
