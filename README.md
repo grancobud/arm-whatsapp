@@ -168,6 +168,36 @@ flowchart LR
 | 📝 | **Generador de plantillas** | Redacta plantillas listas para la aprobación de Meta. |
 | 🧪 | **Playground** | Probás cada agente y su prompt antes de publicarlo. |
 
+### 🔌 Los sistemas del negocio, por MCP
+
+En **Configuración → Sistemas (MCP)** cada negocio conecta el servidor MCP de su
+stock, su agenda o su CRM. El agente usa esas herramientas en la charla sin que
+haya que programar la integración, y un manager decide cuáles quedan libres y
+cuáles piden aprobación.
+
+```mermaid
+flowchart LR
+    C([📱 Cliente]) --> A{{🤖 Agente}}
+    A -->|consulta libre| S1[(📦 Stock<br/>servidor MCP)]
+    A -->|acción| R[✋ Revisión]
+    R -->|un manager aprueba| S1
+    A -->|consulta| S2[(📅 Agenda / CRM<br/>servidor MCP)]
+    S1 -->|datos, no órdenes| A
+    S2 -->|datos, no órdenes| A
+    A -->|respuesta| C
+
+    style A fill:#8A2BE2,color:#fff
+    style R fill:#F38020,color:#fff
+    style S1 fill:#3ECF8E,color:#000
+    style S2 fill:#3ECF8E,color:#000
+    style C fill:#25D366,color:#000
+```
+
+- 🔐 La clave de cada sistema se guarda cifrada y nunca llega al navegador.
+- ✋ Toda acción de un sistema externo pide aprobación, salvo las que un manager marque como libres.
+- 🧾 Lo que devuelve un sistema es dato: una orden escondida en la respuesta no se cumple.
+- 📴 Si un sistema no responde, el agente avisa que ahora no lo puede consultar en vez de inventar.
+
 ### 🛡️ Que la conversación nunca se corte ni se rompa
 
 ```mermaid
@@ -210,6 +240,7 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 | 📚 Base de conocimiento | ✅ | Embeddings gratis por FreeLLMAPI con un modelo fijo, corte de documentos por secciones (sin partir palabras ni precios) y fragmentos marcados como datos para que una página importada no pueda dar órdenes. Medido con `npm run eval:conocimiento`: el fragmento correcto queda primero en 15 de 17 preguntas (antes 11). Se quitó una búsqueda de respaldo que armaba SQL pegando texto. |
 | 🖼️ Imágenes, documentos y caché | ✅ | Imágenes por FreeLLMAPI con modelo fijo, que copian exactos importes y números de operación de un comprobante. PDFs leídos del lado del servidor: antes el agente decía «no puedo leer su contenido», ahora responde el total y la seña exactos. Imágenes y documentos entran marcados como datos (un cartel con una orden no la hace cumplir). El prompt pone primero lo fijo de cada cliente: el comienzo reutilizable entre mensajes pasó del 1% al 72% y un proveedor con caché ya lee el 83% desde caché (`npm run eval:multimedia`, `npm run eval:cache`). |
 | 📌 Citas y razonamiento | ✅ | Cada respuesta que usa la base de conocimiento deja rastro del fragmento que la respalda: el agente lo marca, la marca se saca antes de llegar al cliente y el inbox muestra «Fuentes» con el texto citado. En la evaluación citó bien 8 de 8 (incluido no citar cuando el fragmento no servía). El razonamiento extendido no se activa: el agente ya saca 9.6 y la guardia descarta el razonamiento que algunos modelos mezclan en la respuesta. |
+| 🔌 MCP | ✅ | **Servidor:** el MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce, 4 recursos, 3 prompts probados y las funciones del ARM: 28/28 con un cliente MCP real. **Cliente:** cada negocio conecta el servidor MCP de su stock, agenda o CRM y el agente lo usa, con aprobación humana por defecto, resultados marcados como datos y aviso honesto si el sistema no responde: 28/28 en `npm run eval:mcp`. Encontró que el agente decía «no tenemos» sin consultar sus herramientas: corregido sin bajar la evaluación (agente 9.6, herramientas 40/42). |
 
 ---
 
@@ -220,6 +251,8 @@ FreeLLMAPI. Cada falla que aparece se corrige en el repo.
 - 👥 **CRM** con sincronización opcional a HighLevel.
 - 🕐 **Templates** y manejo de la ventana de 24 h de Meta.
 - 🏢 **Multi-tenant** con roles, RLS por workspace y super admin.
+- 🔌 **Cliente MCP**: los sistemas del negocio (stock, agenda, CRM) conectados por MCP, con permisos por herramienta.
+- 🔌 **Servidor MCP de administración** ([`mcp/admin/`](mcp/admin/README.md)): operás la instalación desde Claude con 24 herramientas, 4 recursos y 3 prompts.
 
 ## 🛠️ Stack
 
@@ -272,6 +305,8 @@ supabase/
 └── cron/       # SQL post-deploy del cron
 deploy/
 └── freellmapi-tunnel/  # Túnel de Cloudflare en Docker
+mcp/
+└── admin/          # Servidor MCP de administración (herramientas, recursos, prompts)
 scripts/
 ├── setup.mjs       # Orquestador de instalación (secrets, env, db, cron)
 └── seed-admin.mjs  # Super admin + workspace demo

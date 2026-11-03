@@ -14,6 +14,8 @@ import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
 import { registry } from "@/features/tools";
+import { isMcpToolName } from "@/features/tools/mcp/mcp-tools";
+import { resolveMcpTool } from "@/features/tools/mcp/mcp-servers";
 import { createCampaign, resolveSegment } from "./campaigns";
 import type { ClaimRow } from "../types";
 
@@ -95,16 +97,23 @@ export async function decideProposal(
   if (approve) {
     // Same write path as the agent: zod validation, timeout and logging live
     // in the registry; approvedProposalId lets the sensitive tool run.
-    const result = await registry.run(
-      proposal.tool_name as string,
-      proposal.args,
-      {
-        workspaceId: proposal.workspace_id as string,
-        conversationId: proposal.conversation_id as string,
-        contactId: proposal.contact_id as string,
-      },
-      { approvedProposalId: proposalId },
-    );
+    const ctx = {
+      workspaceId: proposal.workspace_id as string,
+      conversationId: proposal.conversation_id as string,
+      contactId: proposal.contact_id as string,
+    };
+    const toolName = proposal.tool_name as string;
+    // A workspace's MCP tool is rebuilt from THAT workspace's server; the
+    // shared registry only holds the built-in tools.
+    let result;
+    if (isMcpToolName(toolName)) {
+      const mcpTool = await resolveMcpTool(ctx.workspaceId, toolName).catch(() => null);
+      result = mcpTool
+        ? await registry.runTool(mcpTool, proposal.args, ctx, { approvedProposalId: proposalId })
+        : { ok: false, output: null, error: "El sistema externo ya no ofrece esta acción o no responde" };
+    } else {
+      result = await registry.run(toolName, proposal.args, ctx, { approvedProposalId: proposalId });
+    }
     await supabase
       .from("agent_proposals")
       .update({

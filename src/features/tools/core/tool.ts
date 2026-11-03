@@ -28,6 +28,12 @@ export interface Tool<TArgs = unknown> {
   description: string;
   sensitivity: ToolSensitivity;
   schema: ZodSchema<TArgs>;
+  /**
+   * JSON Schema sent to the model instead of one derived from `schema`. Set by
+   * tools whose schema comes from outside (MCP servers); `schema` then only
+   * checks that the args are an object, and the remote server validates them.
+   */
+  jsonSchema?: Record<string, unknown>;
   enabledFor(workspaceId: string): boolean | Promise<boolean>;
   run(
     args: TArgs,

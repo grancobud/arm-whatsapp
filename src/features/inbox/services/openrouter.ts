@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateText, tool, zodSchema, stepCountIs, APICallError } from "ai";
+import { generateText, tool, zodSchema, jsonSchema, stepCountIs, APICallError } from "ai";
 import type { ModelMessage, ToolSet } from "ai";
 import { checkReply, stripThinking } from "./reply-guard";
 import { splitCitations } from "./kb-citations";
@@ -158,6 +158,11 @@ async function createChatProvider(workspaceId?: string) {
   });
 }
 
+/** External (MCP) tools bring their own JSON Schema; ours are Zod. */
+function toolInputSchema(t: ForgeTool) {
+  return t.jsonSchema ? jsonSchema(t.jsonSchema as Parameters<typeof jsonSchema>[0]) : zodSchema(t.schema);
+}
+
 /**
  * Never send a truncated, empty or leaked-reasoning reply: throw so the chain
  * tries the next model. After a tool ran an empty text is fine (the tool was
@@ -288,10 +293,10 @@ export async function generateChatReply(params: {
     for (const forgeTool of params.tools) {
       aiTools[forgeTool.name] = tool({
         description: forgeTool.description,
-        inputSchema: zodSchema(forgeTool.schema),
+        inputSchema: toolInputSchema(forgeTool),
         execute: async (args: unknown): Promise<unknown> => {
-          toolsRan = true;
-          return registry.run(forgeTool.name, args, ctx);
+          if (forgeTool.sensitivity !== "read") toolsRan = true;
+          return registry.runTool(forgeTool, args, ctx);
         },
       });
     }
@@ -390,7 +395,8 @@ export async function generateWithTools(
       execute: async (args: unknown): Promise<unknown> => {
         // A read (e.g. check_availability) is safe to repeat with another model.
         if (forgeTool.sensitivity !== "read") toolsRan = true;
-        return registry.run(forgeTool.name, args, ctx);
+        // runTool, not run(name): a workspace's MCP tools are not in the shared registry.
+        return registry.runTool(forgeTool, args, ctx);
       },
     });
   }

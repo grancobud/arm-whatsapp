@@ -1,6 +1,7 @@
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { registry } from "../registry";
 import type { Tool } from "../core/tool";
+import { getWorkspaceMcpTools } from "../mcp/mcp-servers";
 
 function svc() {
   return createSbClient(
@@ -34,5 +35,8 @@ export async function getEnabledTools(workspaceId: string): Promise<Tool[]> {
       .filter((k): k is string => typeof k === "string"),
   );
 
-  return registry.list().filter((t) => enabledKeys.has(t.name));
+  const builtIn = registry.list().filter((t) => enabledKeys.has(t.name));
+  // Plus the tools of the workspace's own MCP servers (never throws).
+  const external = await getWorkspaceMcpTools(workspaceId);
+  return [...builtIn, ...external];
 }
