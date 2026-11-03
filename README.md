@@ -250,7 +250,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 105.
+corre 116.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -273,6 +273,7 @@ corre 105.
 | 📊 Resultados y métricas por agente | ✅ | El Panel mide resultados en vez de volumen, y cada resultado se cuenta para el agente que estaba activo en ese momento (cada activación queda registrada). 6 tests en `evals/metricas`. |
 | ⚖️ Jev gratis | ✅ | El juez de mensajes corre gratis por FreeLLMAPI cuando no hay clave de TypeSafe: lee el último JSON de la respuesta, acota los valores y no cuesta nada. En `npm run eval:jev`: 12 de 12, incluido un intento de manipular al agente. 5 tests más en `evals/jev`. |
 | 🔁 Respaldo de la IA | ✅ | Si FreeLLMAPI no responde (PC apagada, túnel caído, sin cupo o más de 45 s), la misma charla sigue por OpenRouter con un modelo gratis, salta al siguiente si ese no está, deja de probar el principal por un minuto y avisa por mail. 8 tests en `evals/respaldo`. |
+| 🧐 Revisor de respuestas (evaluador-optimizador) | ✅ | Antes de mandar cada respuesta, un segundo modelo la compara con todo lo que sabía el agente (negocio, base de conocimiento, memoria del cliente y lo que devolvieron las herramientas en ese turno). Si encuentra un dato inventado o una acción que no se hizo ("te agendé" sin reserva, una reserva que falló o quedó pendiente), la reescribe sin volver a usar herramientas y revisa la corrección, con tope de 2 vueltas. Si el revisor falla, sale el borrador: nunca deja al cliente sin respuesta. En `npm run eval:revisor` (borradores fijos con trampas y respuestas correctas): con "auto" corregía bien 3 de 8 trampas (los modelos que razonan se cortaban o tardaban de más); con mistral-small y ejemplos en el prompt, **16/16 trampas corregidas y 16/16 respuestas correctas sin tocar**. El chat de prueba muestra qué se corrigió. 11 tests en `evals/revisor`. |
 
 ### 🔎 Cómo se auditó y se mejoró cada área
 
