@@ -446,6 +446,23 @@ Un job de **pg_cron + pg_net** llama cada minuto a `/api/cron/buffer-flush`
 siguiente tanda de las campañas aprobadas. Ver
 [`supabase/cron/schedule-buffer-flush.sql`](supabase/cron/schedule-buffer-flush.sql).
 
+## 🚨 Alertas por mail
+
+Cada 5 minutos el cron revisa si hubo problemas nuevos y, si los hay, manda
+**un solo mail** con el resumen por cliente: mensajes que quedaron sin
+responder, herramientas que fallaron, sistemas MCP caídos o el umbral diario de
+costo. Después espera 30 minutos antes del próximo aviso. Lo normal del negocio
+(un lead descartado, una acción esperando aprobación) no avisa, y el mail nunca
+lleva mensajes de clientes.
+
+| Variable | Valor |
+| --- | --- |
+| `RESEND_API_KEY` | clave de [Resend](https://resend.com) (el plan gratis alcanza) |
+| `ALERT_EMAIL_TO` | a quién avisar (varios, separados por coma) |
+| `ALERT_EMAIL_FROM` | opcional; sin dominio propio en Resend, dejala vacía y solo se puede avisar al mail de la cuenta de Resend |
+
+Sin `RESEND_API_KEY` o `ALERT_EMAIL_TO`, las alertas quedan apagadas.
+
 ## 🗂️ Estructura
 
 ```
