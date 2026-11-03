@@ -73,7 +73,7 @@ flowchart TB
 | `npm run eval:conocimiento` | fragmento correcto **primero en 15 de 17** |
 | `npm run eval:multimedia` | **32/32** (audio, imágenes y PDFs) |
 | `npm run eval:mcp -- --reps=2` | **28/28** |
-| `npm run test:unit` | **30/30** (no necesita modelos) |
+| `npm run test:unit` | **34/34** (no necesita modelos) |
 
 ---
 
@@ -217,7 +217,7 @@ flowchart TB
 - [ ] Tu propio proyecto de Supabase (gratis) con las migraciones de `supabase/migrations/` ([`INSTALAR.md`](INSTALAR.md)).
 - [ ] `cp .env.local.example .env.local` con **tus** claves.
 - [ ] Tu FreeLLMAPI corriendo (`LLM_BASE_URL=http://localhost:31415/v1`).
-- [ ] `npm run typecheck && npm run lint && npm run test:unit` → 30/30.
+- [ ] `npm run typecheck && npm run lint && npm run test:unit` → 34/34.
 - [ ] Una corrida de `npm run eval:conocimiento` para ver tu línea base.
 - [ ] Si usás Claude Code, pegale el mensaje de la sección 7 de [`COLABORAR.md`](COLABORAR.md).
 
