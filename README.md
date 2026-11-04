@@ -250,7 +250,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 150.
+corre 159.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -467,6 +467,7 @@ flowchart LR
 
 - 📥 **Inbox** tipo WhatsApp Web con buffer inteligente.
 - 📖 **Manual de uso** dentro de la app (`/ayuda`): primeros pasos que se marcan solos según lo que ya está configurado, el día a día, cada pantalla y preguntas comunes.
+- 🔁 **Turnos que no repiten acciones**: si un turno se corta después de usar una herramienta, pasa a una persona en vez de reservar dos veces; una respuesta ya enviada no se reenvía, y cada conversación corre de a un turno por vez.
 - 📏 **Reglas de WhatsApp**: campañas con tope de 250 personas por día (`CAMPAIGN_DAILY_LIMIT` para cambiarlo), freno solo si fallan muchos envíos o Meta pausa la plantilla, y plantillas que dicen cómo darse de baja. El agente no pide tarjetas, cuentas ni documentos.
 - 🔀 **Motor de agente** con state machine, handoff humano, prompts personalizables y herramientas activables.
 - 👥 **CRM** con sincronización opcional a HighLevel.

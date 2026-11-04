@@ -126,8 +126,8 @@ export const DAILY_TASKS: HelpStep[] = [
     title: "Resolvé lo pendiente en Revisión",
     why: "Lo sensible no sale sin tu visto bueno: acciones que propone el agente y campañas por aprobar.",
     how: [
-      "Aprobá para que se ejecute.",
-      "Si rechazás, escribí qué tendría que haber hecho: el agente lo aprende.",
+      "Aprobá para que se ejecute. Si la conversación está con la IA, el cliente recibe un aviso de que quedó confirmado.",
+      "Si rechazás, escribí qué tendría que haber hecho: el agente lo aprende, y la conversación pasa a una persona para que le responda al cliente.",
     ],
     link: { label: "Ir a Revisión", href: "/revision" },
   },

@@ -13,6 +13,9 @@ import { revalidatePath } from "next/cache";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
+import { dispatchText } from "@/features/inbox/services/dispatch";
+import { applyTransition } from "@/features/inbox/services/decision-engine";
+import { approvalFollowUp } from "@/features/inbox/services/turn-recovery";
 import { registry } from "@/features/tools";
 import { isMcpToolName } from "@/features/tools/mcp/mcp-tools";
 import { resolveMcpTool } from "@/features/tools/mcp/mcp-servers";
@@ -187,6 +190,35 @@ export async function cancelFollowUp(followUpId: string): Promise<Result> {
 // Review queue: agent proposals
 // ──────────────────────────────────────────────────────────────────────────────
 
+/** The agent told the customer a person would confirm: this is that answer. */
+async function closeWithCustomer(
+  conversationId: string | null,
+  workspaceId: string,
+  outcome: "done" | "failed" | "rejected",
+  userId: string,
+): Promise<void> {
+  if (!conversationId) return;
+  try {
+    const { data: conv } = await svc()
+      .from("conversations")
+      .select("state")
+      .eq("id", conversationId)
+      .maybeSingle();
+    const next = approvalFollowUp(outcome, conv?.state as string | undefined);
+    if (next.message) {
+      const sent = await dispatchText({ workspaceId, conversationId, body: next.message });
+      // Past the 24 h window it can't go out: a person has to pick it up.
+      if (!sent.ok) await applyTransition(conversationId, "handoff_pending", { userId, trigger: "proposal_decided" });
+    }
+    if (next.handoff) {
+      await applyTransition(conversationId, "handoff_pending", { userId, trigger: "proposal_decided" });
+    }
+  } catch (err) {
+    // The decision already stands; this only logs.
+    console.error("[arm] closing with the customer failed:", err);
+  }
+}
+
 export async function decideProposal(
   proposalId: string,
   approve: boolean,
@@ -261,9 +293,13 @@ export async function decideProposal(
       })
       .eq("id", proposalId);
     if (!result.ok) {
+      await closeWithCustomer(proposal.conversation_id as string | null, proposal.workspace_id as string, "failed", auth.userId);
       revalidatePath("/revision");
       return { ok: false, error: result.error ?? "La acción falló" };
     }
+    await closeWithCustomer(proposal.conversation_id as string | null, proposal.workspace_id as string, "done", auth.userId);
+  } else {
+    await closeWithCustomer(proposal.conversation_id as string | null, proposal.workspace_id as string, "rejected", auth.userId);
   }
 
   revalidatePath("/revision");
