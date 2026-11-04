@@ -54,6 +54,7 @@ import {
   DEFAULT_FALLBACK_CHAIN,
 } from "./model-chain";
 import { backupModelsFromEnv, createFailoverFetch } from "./llm-failover";
+import { blocksRetry } from "./turn-recovery";
 import { toolOutcome, type Complete, type ToolOutcome, reviewModel, withBackup } from "./reply-review";
 
 function logFallback(where: string) {
@@ -438,6 +439,8 @@ export async function generateChatReply(params: {
 // ──────────────────────────────────────────────────────────────────────────────
 
 export interface GenerateWithToolsParams {
+  /** Runs before a tool that can't be repeated, so a retry knows it started. */
+  onSideEffect?: () => Promise<void>;
   model?: string;
   systemPrompt: string;
   userMessage: string;
@@ -500,6 +503,7 @@ export async function generateWithTools(
       execute: async (args: unknown): Promise<unknown> => {
         // A read (e.g. check_availability) is safe to repeat with another model.
         if (forgeTool.sensitivity !== "read") toolsRan = true;
+        if (blocksRetry(forgeTool)) await params.onSideEffect?.();
         // runTool, not run(name): a workspace's MCP tools are not in the shared registry.
         const res = await registry.runTool(forgeTool, args, ctx);
         toolResults.push(toolOutcome(forgeTool.name, res));

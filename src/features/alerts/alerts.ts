@@ -91,6 +91,8 @@ export function buildDigest(events: AlertEvent[], workspaceNames: Record<string,
 
 const TYPE_LABELS: Record<string, string> = {
   batch_dead_letter: "Mensajes sin responder (se agotaron los reintentos)",
+
+  turn_incomplete: "Un turno se cortó después de usar una herramienta: revisá la conversación",
   tool_call: "Herramienta que falló",
   setter_evaluation: "Falló la calificación del lead",
   mcp_server_error: "Sistema externo (MCP) que no responde",
