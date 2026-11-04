@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { applyTransition } from "@/features/inbox/services/decision-engine";
+import { isReadOnlyMember, readJsonBody } from "@/lib/auth/workspace-access";
 
 const bodySchema = z.object({
   action: z.enum(["request", "cancel"]),
@@ -23,8 +24,9 @@ export async function POST(
   }
 
   // 2. Validate body
-  const body = await req.json();
-  const parsed = bodySchema.safeParse(body);
+  const parsedBody = await readJsonBody(req);
+  if (!parsedBody.ok) return parsedBody.response;
+  const parsed = bodySchema.safeParse(parsedBody.body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.flatten() },
@@ -34,6 +36,20 @@ export async function POST(
 
   const { id: conversationId } = await params;
   const { action } = parsed.data;
+
+  // applyTransition writes with the service role, so the access check is here:
+  // RLS hides conversations from other workspaces.
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("workspace_id")
+    .eq("id", conversationId)
+    .maybeSingle();
+  if (!conv) {
+    return NextResponse.json({ error: "Conversación no encontrada" }, { status: 404 });
+  }
+  if (await isReadOnlyMember(supabase, conv.workspace_id, user.id)) {
+    return NextResponse.json({ error: "Permisos insuficientes" }, { status: 403 });
+  }
 
   try {
     // 3. Determine target state

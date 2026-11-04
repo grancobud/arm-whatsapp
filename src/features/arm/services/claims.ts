@@ -7,6 +7,7 @@
 
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import type { ClaimKind, ClaimRow } from "../types";
+import { stripBlockTags } from "@/features/inbox/services/untrusted-text";
 
 function svc() {
   return createSbClient(
@@ -110,7 +111,7 @@ export function formatClaimsContext(claims: ClaimRow[]): string {
   if (claims.length === 0) return "";
   const lines = claims.map((c) => {
     const tag = c.source_message_id ? "con fuente" : "corazonada";
-    const text = c.text.replace(/\s+/g, " ").slice(0, 200);
+    const text = stripBlockTags(c.text).replace(/\s+/g, " ").slice(0, 200);
     // Quoted so an imperative claim reads as something noted, not an order.
     return `- [${c.kind}, ${tag}] «${text}»`;
   });

@@ -21,6 +21,7 @@ import {
   readDocument,
 } from "@/features/inbox/services/media-understanding";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
+import { isMarketingOptOutError, messageErrorCode } from "@/features/arm/services/campaign-rules";
 
 // Keep the function alive long enough for the best-effort fast path below
 // (sleep through the buffer window + AI generation). The cron is the fallback.
@@ -38,14 +39,38 @@ const STATUS_ORDER = ["queued", "sent", "delivered", "read"] as const;
 type OrderedStatus = (typeof STATUS_ORDER)[number];
 type MessageStatus = OrderedStatus | "failed";
 
+/** A campaign counts what really arrived, and "stop promotions" is respected. */
+async function handleDeliveryFailure(
+  supabase: ReturnType<typeof svc>,
+  conversationId: string,
+  errorCode: string,
+): Promise<void> {
+  await supabase
+    .from("campaign_recipients")
+    .update({ status: "failed", error: `Meta ${errorCode}` })
+    .eq("conversation_id", conversationId)
+    .eq("status", "sent");
+
+  if (!isMarketingOptOutError(errorCode)) return;
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("contact_id")
+    .eq("id", conversationId)
+    .maybeSingle();
+  if (conv?.contact_id) {
+    await supabase.from("contacts").update({ marketing_opt_in: false }).eq("id", conv.contact_id);
+  }
+}
+
 async function handleStatusUpdate(
   supabase: ReturnType<typeof svc>,
   wamid: string,
   newStatus: string,
+  errorCode: string | null = null,
 ): Promise<void> {
   const { data: msg } = await supabase
     .from("messages")
-    .select("id, status")
+    .select("id, status, type, conversation_id")
     .eq("wamid", wamid)
     .single();
 
@@ -60,6 +85,10 @@ async function handleStatusUpdate(
       .from("messages")
       .update({ status: "failed" })
       .eq("id", msg.id);
+    // Only templates: a failed free-text reply says nothing about a campaign.
+    if (errorCode && msg.type === "template") {
+      await handleDeliveryFailure(supabase, msg.conversation_id, errorCode);
+    }
     return;
   }
 
@@ -185,10 +214,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // WH-02: monotonic status updates — only reached after signature verification.
     if (isStatusUpdate) {
       const statusData = (
-        body as { whatsappMessage?: { wamid?: string; status?: string } }
+        body as {
+          whatsappMessage?: { wamid?: string; status?: string } & Parameters<typeof messageErrorCode>[0];
+        }
       ).whatsappMessage;
       if (statusData?.wamid && statusData?.status) {
-        await handleStatusUpdate(supabase, statusData.wamid, statusData.status);
+        await handleStatusUpdate(
+          supabase,
+          statusData.wamid,
+          statusData.status,
+          messageErrorCode(statusData),
+        );
       }
       return NextResponse.json({ received: true });
     }

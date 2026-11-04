@@ -29,6 +29,8 @@ export const FIRST_STEPS: HelpStep[] = [
       "En YCloud, conseguí tu API Key y tu Webhook Signing Secret.",
       "En Integraciones, completá la API Key, el número con código de país (por ejemplo +5491123456789) y el Signing Secret.",
       "Copiá la Webhook URL que te muestra esta pantalla y pegala en la configuración de webhooks de YCloud.",
+      "En el perfil del número, cargá un mail, una web o un teléfono de atención: WhatsApp lo pide.",
+      "Revisá que tu rubro esté permitido: WhatsApp no admite, entre otros, drogas, alcohol, tabaco, armas ni productos médicos.",
     ],
     link: { label: "Ir a Integraciones", href: "/settings?tab=integraciones" },
     setupKey: "whatsapp",
@@ -116,7 +118,7 @@ export const DAILY_TASKS: HelpStep[] = [
       "Tomar: agarrás la conversación y la IA deja de contestar.",
       "Devolver a IA: cuando terminás, el agente sigue la charla.",
       "Nota interna: un comentario para tu equipo que el cliente no ve.",
-      "Ver contacto: la etapa, las etiquetas y el consentimiento de esa persona.",
+      "Ver contacto: la etapa, las etiquetas y si aceptó recibir promociones.",
     ],
     link: { label: "Ir a la Bandeja", href: "/inbox" },
   },
@@ -149,7 +151,7 @@ export const DAILY_TASKS: HelpStep[] = [
   },
   {
     title: "Lanzá una campaña para reactivar clientes",
-    why: "Sirve para volver a hablar con contactos que dieron su consentimiento. Cuando responden, el agente sigue la charla.",
+    why: "Sirve para volver a hablar con contactos que aceptaron recibir promociones. Cuando responden, el agente sigue la charla.",
     how: [
       "En Campañas, ponele un nombre y elegí una plantilla aprobada.",
       "Definí a quién le llega por etiquetas o por días sin mensajes, y tocá Ver a quiénes llega.",
@@ -212,7 +214,7 @@ export const FAQ: { question: string; answer: string[]; link?: HelpLink }[] = [
     question: "Mi campaña no sale.",
     answer: [
       "Tiene que estar aprobada en Revisión, y usar una plantilla aprobada por Meta.",
-      "Solo llega a contactos con consentimiento. Podés cargarlo en Ver contacto, junto con cómo lo dio.",
+      "Solo llega a contactos que aceptaron promociones. Que alguien le escriba al negocio no alcanza: activá Aceptó promociones en Ver contacto y anotá cómo aceptó.",
     ],
     link: { label: "Ir a Revisión", href: "/revision" },
   },
@@ -222,6 +224,20 @@ export const FAQ: { question: string; answer: string[]; link?: HelpLink }[] = [
       "Usa la plantilla que elijas en Automatizaciones, en Promesas del agente. Si no hay ninguna, le avisa a tu equipo para que lo haga una persona.",
     ],
     link: { label: "Ir a Automatizaciones", href: "/settings?tab=automatizaciones" },
+  },
+  {
+    question: "¿Por qué se frenó mi campaña o sale de a poco?",
+    answer: [
+      "Un número nuevo llega a 250 personas por día: lo demás sale en los días siguientes.",
+      "Se frena sola si fallan muchos envíos o si Meta pausa la plantilla. Revisá la plantilla y creá una campaña nueva para los que faltaron.",
+    ],
+    link: { label: "Ir a Campañas", href: "/campanas" },
+  },
+  {
+    question: "Un cliente me mandó su tarjeta o su documento.",
+    answer: [
+      "WhatsApp no permite pedir ni compartir tarjetas, cuentas bancarias ni documentos. El agente no los pide ni los guarda en su memoria, pero el mensaje queda en la conversación.",
+    ],
   },
   {
     question: "¿Cómo pruebo un cambio sin molestar a mis clientes?",

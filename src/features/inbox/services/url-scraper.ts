@@ -6,25 +6,10 @@
  * entities. Good enough for most marketing/info pages; can be upgraded later.
  */
 
+import { fetchPublicUrl } from "@/features/tools/services/ssrf-guard";
+
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_TEXT_LENGTH = 200_000;
-
-/** Basic SSRF guard: refuse localhost / private network hosts. */
-function isBlockedHost(hostname: string): boolean {
-  const host = hostname.toLowerCase();
-  return (
-    host === "localhost" ||
-    host === "0.0.0.0" ||
-    host === "::1" ||
-    host.endsWith(".local") ||
-    host.endsWith(".internal") ||
-    /^127\./.test(host) ||
-    /^10\./.test(host) ||
-    /^192\.168\./.test(host) ||
-    /^169\.254\./.test(host) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
-  );
-}
 
 function decodeEntities(s: string): string {
   return s
@@ -86,22 +71,21 @@ export async function fetchUrlText(rawUrl: string): Promise<string> {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new Error("Solo se permiten URLs http(s)");
   }
-  if (isBlockedHost(url.hostname)) {
-    throw new Error("URL no permitida");
-  }
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   let html: string;
   try {
-    const res = await fetch(url.toString(), {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; AgenteWA-KB/1.0)",
-        Accept: "text/html,application/xhtml+xml,text/plain",
+    const res = await fetchPublicUrl(
+      url.toString(),
+      {
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; AgenteWA-KB/1.0)",
+          Accept: "text/html,application/xhtml+xml,text/plain",
+        },
       },
-    });
+      { allowHttp: true },
+    );
     if (!res.ok) {
       throw new Error(`La página respondió ${res.status}`);
     }

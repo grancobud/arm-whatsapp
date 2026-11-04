@@ -10,16 +10,19 @@ import { APICallError } from "ai";
 // then walks down this list, best to worst, with the SAME messages — so the
 // thread of the conversation is preserved whatever model ends up answering.
 //
-// Measured on 2026-09-25 with a Spanish WhatsApp prompt (tool-calling capable,
-// followed instructions, no leaked reasoning):
-//   nemotron-3-super   best answer, concise, correct hours
-//   nex-n2.5-pro/mini  correct and short
-//   dots-3-note        correct
-//   qwen3.8-27b, gemma-4-31b  good models but often 429 (shared pool saturated)
-//   openrouter/free    OpenRouter's own free router (picked nemotron-super)
-// Excluded: inkling (403, only for registered agentic apps), nemotron-3.5-
-// lightning (leaks its English reasoning into the reply), nemotron-3-ultra
-// (spends the whole budget reasoning), stealth/* (logs prompts).
+// Measured on 2026-11-04 with a Spanish WhatsApp prompt (one run each, listed by
+// OpenRouter as tool-calling capable; the tool call itself wasn't exercised):
+//   dots-3-note        correct, says what it doesn't know, fastest to answer
+//   nemotron-3-nano    correct, says what it doesn't know
+//   nemotron-3.5-super correct, but about 500 tokens of reasoning first
+//   north-mini-code    correct, skipped the question it had no data for
+//   gemma-4-31b        good model, 429 in both tests (shared pool saturated)
+//   openrouter/free    OpenRouter's own free router (picked nemotron-3-nano)
+// Excluded: inkling and inkling-small (403, only for registered agentic apps),
+// nemotron-3.5-lightning and xing4.0 (leak English reasoning into the reply),
+// nemotron-3-ultra and flint (spend the budget reasoning), lfm-2.5 (made up a
+// fact), stealth/* (logs prompts). No longer free: nemotron-3-super, nex-n2.5-pro,
+// nex-n2.5-mini, qwen3.8-27b.
 //
 // NOTE: the 1,000 free requests/day are PER ACCOUNT across all ":free" models,
 // not per model. The chain protects against saturated/failing models; once the
@@ -30,12 +33,11 @@ import { APICallError } from "ai";
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const DEFAULT_FALLBACK_CHAIN: readonly string[] = [
-  "nvidia/nemotron-3-super-120b-a12b:free",
-  "nex-agi/nex-n2.5-pro:free",
   "dots-studio/dots-3-note-preview:free",
-  "qwen/qwen3.8-27b:free",
+  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+  "nvidia/nemotron-3.5-super-vl:free",
+  "cohere/north-mini-code:free",
   "google/gemma-4-31b-it:free",
-  "nex-agi/nex-n2.5-mini:free",
   "openrouter/free",
   // Paid tail: only answers when there is OpenRouter credit.
   "openai/gpt-4o-mini",

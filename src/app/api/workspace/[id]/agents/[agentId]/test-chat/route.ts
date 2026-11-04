@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { reviewEnabled, reviewModel, reviewReply, type ReviewOutcome } from "@/features/inbox/services/reply-review";
-import { createCompleter } from "@/features/inbox/services/openrouter";
+import { reviewEnabled, reviewReply, type ReviewOutcome } from "@/features/inbox/services/reply-review";
+import { createReviewCompleter } from "@/features/inbox/services/openrouter";
 import { getLessonsContext } from "@/features/arm/services/lessons";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -207,7 +207,7 @@ export async function POST(
             toolResults: reply.toolResults,
             toolNames: tools.map((t) => t.name),
           },
-          complete: await createCompleter(workspaceId, reviewModel(model)),
+          complete: await createReviewCompleter(workspaceId, model),
         });
         text = r.text;
         review = { outcome: r.outcome, problems: r.problems };

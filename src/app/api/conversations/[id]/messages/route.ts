@@ -6,7 +6,7 @@ import { z } from "zod";
 import { dispatchText } from "@/features/inbox/services/dispatch";
 import { applyTransition } from "@/features/inbox/services/decision-engine";
 import { getActiveAgent } from "@/features/agents/services/active-agent";
-import { readJsonBody } from "@/lib/auth/workspace-access";
+import { isReadOnlyMember, readJsonBody } from "@/lib/auth/workspace-access";
 
 const BodySchema = z.object({
   body: z.string().min(1).max(4096),
@@ -44,6 +44,10 @@ export async function POST(
 
   if (!conv) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (await isReadOnlyMember(supabase, conv.workspace_id, user.id)) {
+    return NextResponse.json({ error: "Permisos insuficientes" }, { status: 403 });
   }
 
   // 4. Dispatch via the single exit point

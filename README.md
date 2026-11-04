@@ -35,7 +35,7 @@ importante.
 | :---: | --- | --- |
 | 🧾 | **Memoria con fuentes** | El agente guarda necesidades, objeciones, compromisos y datos citando el mensaje del cliente que los respalda. Lo que no tiene fuente queda como *corazonada*. En la próxima charla arranca sabiendo todo, y el equipo lo ve en «Lo que sabemos». |
 | ✋ | **El agente propone, una persona decide** | Las acciones sensibles quedan en **Revisión** hasta que un manager las aprueba. Recién ahí se ejecutan. |
-| 📣 | **Reactivación saliente** | **Campañas** a segmentos con opt-in, plantillas aprobadas por Meta, aprobación previa y envío por tandas. Cuando el cliente responde, el agente sigue la charla. |
+| 📣 | **Reactivación saliente** | **Campañas** a contactos que aceptaron promociones (escribirle al negocio no alcanza: una persona lo registra con su fuente), plantillas aprobadas por Meta, aprobación previa y envío por tandas. Cuando el cliente responde, el agente sigue la charla. |
 | 🤝 | **Cumple lo que promete** | Si el agente le dice a un cliente «te escribo el jueves», lo agenda y el jueves le escribe. Pasadas las 24 h de WhatsApp usa la plantilla aprobada que elijas en Automatizaciones; si no hay, le llega un mail al equipo para que escriba una persona. Las promesas se ven en la ficha del contacto. |
 | 🎚️ | **Autonomía que se gana** | Cada herramienta tiene su modo: «Lo hace solo» o «Lo propone y alguien aprueba». Con 10 aprobaciones seguidas sin un rechazo, la pantalla sugiere darle más autonomía en esa tarea. |
 | 🎓 | **Aprende de las correcciones** | «Corregir» en una respuesta de la IA, o rechazar una propuesta en Revisión explicando por qué, deja una lección. El agente sigue las 15 más nuevas en cada charla, y el equipo las ve en «Lo que aprendió el agente». |
@@ -250,7 +250,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 125.
+corre 150.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -467,6 +467,7 @@ flowchart LR
 
 - 📥 **Inbox** tipo WhatsApp Web con buffer inteligente.
 - 📖 **Manual de uso** dentro de la app (`/ayuda`): primeros pasos que se marcan solos según lo que ya está configurado, el día a día, cada pantalla y preguntas comunes.
+- 📏 **Reglas de WhatsApp**: campañas con tope de 250 personas por día (`CAMPAIGN_DAILY_LIMIT` para cambiarlo), freno solo si fallan muchos envíos o Meta pausa la plantilla, y plantillas que dicen cómo darse de baja. El agente no pide tarjetas, cuentas ni documentos.
 - 🔀 **Motor de agente** con state machine, handoff humano, prompts personalizables y herramientas activables.
 - 👥 **CRM** con sincronización opcional a HighLevel.
 - 🕐 **Templates** y manejo de la ventana de 24 h de Meta.

@@ -215,6 +215,21 @@ function Step2({
             Esta descripción enriquece el prompt base del agente.
           </p>
         </div>
+
+        <p className="rounded-md border border-border/60 p-3 text-xs text-muted-foreground">
+          WhatsApp no permite algunos rubros, entre ellos drogas, alcohol, tabaco,
+          armas, productos médicos, préstamos de día de pago y marketing multinivel,
+          y puede bloquear el número. Revisá la{" "}
+          <a
+            href="https://whatsappbusiness.com/es-la/policy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2"
+          >
+            política de WhatsApp
+          </a>{" "}
+          antes de conectar uno.
+        </p>
       </div>
     </div>
   );

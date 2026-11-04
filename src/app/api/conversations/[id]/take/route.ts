@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { applyTransition } from "@/features/inbox/services/decision-engine";
+import { isReadOnlyMember } from "@/lib/auth/workspace-access";
 
 export async function POST(
   _req: NextRequest,
@@ -22,7 +23,7 @@ export async function POST(
   // 2. Validate current state is handoff_pending
   const { data: conv, error: convError } = await supabase
     .from("conversations")
-    .select("state")
+    .select("state, workspace_id")
     .eq("id", conversationId)
     .single();
 
@@ -31,6 +32,10 @@ export async function POST(
       { error: "Conversación no encontrada" },
       { status: 404 },
     );
+  }
+
+  if (await isReadOnlyMember(supabase, conv.workspace_id, user.id)) {
+    return NextResponse.json({ error: "Permisos insuficientes" }, { status: 403 });
   }
 
   if (conv.state !== "handoff_pending") {

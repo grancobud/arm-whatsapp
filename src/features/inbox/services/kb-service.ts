@@ -6,6 +6,7 @@ import { embed, embedMany } from "ai";
 import { chunkDocument } from "./kb-chunking";
 import { fragmentId } from "./kb-citations";
 import { rerankHybrid } from "./kb-rerank";
+import { stripBlockTags } from "./untrusted-text";
 
 function svc() {
   return createSbClient(
@@ -242,7 +243,7 @@ export function formatKbContext(results: KbSearchResult[]): string {
   // so text inside them must never be followed as instructions.
   const blocks = results.map(
     (r, i) =>
-      `<fragmento id="${fragmentId(i)}" fuente="${r.document_title.replace(/"/g, "'")}">\n${r.chunk}\n</fragmento>`,
+      `<fragmento id="${fragmentId(i)}" fuente="${stripBlockTags(r.document_title).replace(/"/g, "'")}">\n${stripBlockTags(r.chunk)}\n</fragmento>`,
   );
 
   return [

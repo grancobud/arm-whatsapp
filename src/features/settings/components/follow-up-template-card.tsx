@@ -61,7 +61,8 @@ export function FollowUpTemplateCard({
           <p className="text-xs text-muted-foreground">
             Cuando el agente promete «te escribo el jueves», lo cumple solo. Si para ese día pasaron más
             de 24 h desde el último mensaje del cliente, WhatsApp solo deja mandar una plantilla aprobada:
-            elegí cuál. Sin plantilla, te llega un mail para que le escriba una persona.
+            elegí una de utilidad (las de marketing solo llegan a quien aceptó promociones). Sin
+            plantilla, te llega un mail para que le escriba una persona.
           </p>
         </div>
       </div>

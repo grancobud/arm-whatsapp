@@ -86,6 +86,26 @@ export async function requireWorkspaceMember(
   return { ok: true, userId: user.id, role };
 }
 
+/**
+ * True when the user is a viewer of this workspace. For conversation routes that
+ * load the row through RLS (membership is already proven) and then write with
+ * the service role, which would otherwise let a read-only member act.
+ */
+export async function isReadOnlyMember(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  workspaceId: string,
+  userId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("memberships")
+    .select("role")
+    .eq("workspace_id", workspaceId)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  return data?.role === "viewer";
+}
+
 type JsonOk<T> = { ok: true; body: T };
 type JsonFail = { ok: false; response: NextResponse };
 
