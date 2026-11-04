@@ -26,7 +26,7 @@ export async function POST(
   const parsed = BenchTextSchema.safeParse(parsedBody.body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Escribe un mensaje de hasta 2000 caracteres." },
+      { error: "Escribí un mensaje de hasta 2000 caracteres." },
       { status: 400 },
     );
   }
@@ -38,7 +38,7 @@ export async function POST(
       {
         without,
         with: null,
-        error: `Demasiadas pruebas. Vuelve a comparar en ${limit.retryAfterSeconds} segundos.`,
+        error: `Demasiadas pruebas. Volvé a comparar en ${limit.retryAfterSeconds} segundos.`,
       },
       { status: 429 },
     );

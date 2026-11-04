@@ -230,7 +230,7 @@ export function reviewEnabled(): boolean {
 /**
  * Model for the review. "auto" on FreeLLMAPI lands on reasoning models that
  * time out or get cut mid-rewrite. In `npm run eval:revisor` llama-3.3-70b
- * fixed 13 of 14 traps and left all 11 correct replies alone (mistral-small
+ * fixed 12 of 13 traps and left all 11 correct replies alone (mistral-small
  * fixed every trap but rewrote correct replies that relied on a tool). Without our own endpoint (OpenRouter
  * directly) the reply's model is used. REPLY_REVIEW_MODEL overrides both.
  */
