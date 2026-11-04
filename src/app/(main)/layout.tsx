@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   Building2,
+  CircleHelp,
   ClipboardCheck,
   LayoutDashboard,
   LogOut,
@@ -165,6 +166,17 @@ export default async function MainLayout({
             </Button>
           </Link>
 
+          <Link href="/ayuda" className="hidden md:inline-flex">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <CircleHelp className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only sm:not-sr-only sm:ml-2">Ayuda</span>
+            </Button>
+          </Link>
+
           <form action={logout}>
             <Button
               type="submit"
@@ -228,6 +240,14 @@ export default async function MainLayout({
         >
           <Settings className="h-5 w-5" aria-hidden="true" />
           <span>Ajustes</span>
+        </Link>
+
+        <Link
+          href="/ayuda"
+          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          <CircleHelp className="h-5 w-5" aria-hidden="true" />
+          <span>Ayuda</span>
         </Link>
 
         {isSuperAdmin && (

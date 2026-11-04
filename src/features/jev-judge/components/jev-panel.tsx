@@ -302,8 +302,8 @@ function WithoutBody({ result }: { result: WithoutJevPreview }) {
       <p className="text-sm font-medium">{DECISION_LABEL[result.decision]}</p>
       <p className="text-xs text-muted-foreground">
         {result.reason === "keyword"
-          ? "Una frase de humano dispara el handoff antes de cualquier modelo."
-          : "No hay keyword. El redactor contestaría."}
+          ? "Pidió hablar con una persona: pasa directo, sin consultar a la IA."
+          : "No hay palabras clave. Contestaría la IA."}
       </p>
     </>
   );
@@ -315,10 +315,10 @@ function WithBody({ result }: { result: JudgeView }) {
       <p className="text-sm font-medium">{DECISION_LABEL[result.decision]}</p>
       <p className="text-xs text-muted-foreground">{ruleCopy(result.rule)}</p>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-        <Stat label="Choice" value={`${result.action} · ${pct(result.actionConfidence)}`} />
-        <Stat label="Score" value={result.intentScore.toFixed(2)} />
-        <Stat label="Auto-reply" value={pct(result.autoReplyProbability)} />
-        <Stat label="Opt-out" value={pct(result.optOutProbability)} />
+        <Stat label="Decisión" value={`${DECISION_LABEL[result.action]} · ${pct(result.actionConfidence)}`} />
+        <Stat label="Intención" value={result.intentScore.toFixed(2)} />
+        <Stat label="La IA puede contestar" value={pct(result.autoReplyProbability)} />
+        <Stat label="Pide la baja" value={pct(result.optOutProbability)} />
       </dl>
       <p className="text-[11px] text-muted-foreground">Modelo {result.model}</p>
     </>

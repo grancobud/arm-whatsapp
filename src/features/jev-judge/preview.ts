@@ -14,19 +14,19 @@ export function previewWithoutJev(text: string): WithoutJevPreview {
 }
 
 const RULE_COPY: Record<string, string> = {
-  "opt-out": "No contesta. La etapa pasaría a lost.",
+  "opt-out": "No contesta. La etapa pasaría a perdido.",
   confianza: "Confianza baja. No contesta y la etapa no se mueve.",
   handoff: "Pasa a una persona. La etapa no se mueve.",
   abstain: "No contesta. La etapa no se mueve.",
-  "respond-sin-redactor": "No redacta solo. Pasa a una persona.",
-  "respond-caliente": "Contesta el redactor. La etapa pasaría a qualified.",
-  "respond-curioso": "Contesta el redactor. La etapa pasaría a engaged.",
-  "respond-frio": "Contesta el redactor. La etapa no se mueve.",
-  "respond-sin-etapa": "Contesta el redactor. La etapa no se mueve.",
-  "etapa-caliente": "El redactor contesta. La etapa pasaría a qualified.",
-  "etapa-curioso": "El redactor contesta. La etapa pasaría a engaged.",
-  "etapa-perdido": "El redactor contesta. La etapa pasaría a lost.",
-  "redactor-sigue": "El redactor contesta. La etapa no se mueve.",
+  "respond-sin-redactor": "La IA no contesta sola. Pasa a una persona.",
+  "respond-caliente": "Contesta la IA. La etapa pasaría a calificado.",
+  "respond-curioso": "Contesta la IA. La etapa pasaría a interesado.",
+  "respond-frio": "Contesta la IA. La etapa no se mueve.",
+  "respond-sin-etapa": "Contesta la IA. La etapa no se mueve.",
+  "etapa-caliente": "Contesta la IA. La etapa pasaría a calificado.",
+  "etapa-curioso": "Contesta la IA. La etapa pasaría a interesado.",
+  "etapa-perdido": "Contesta la IA. La etapa pasaría a perdido.",
+  "redactor-sigue": "Contesta la IA. La etapa no se mueve.",
 };
 
 export function ruleCopy(rule: string): string {

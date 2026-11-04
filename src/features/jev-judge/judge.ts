@@ -78,7 +78,7 @@ export function jevFailureCode(error: unknown): string {
 export function publicJevError(code: string): string {
   if (code === "missing_api_key") return "Jev no está disponible: falta TYPESAFE_API_KEY o LLM_BASE_URL en el servidor.";
   if (code === "unparseable") return "El modelo gratis no devolvió una respuesta válida. Probá de nuevo.";
-  if (code === "rate_limit") return "Jev limitó las llamadas. Espera un momento.";
+  if (code === "rate_limit") return "Jev limitó las llamadas. Esperá un momento.";
   if (code === "auth") return "La key del servidor fue rechazada.";
   if (code === "timeout") return "Jev no respondió a tiempo.";
   return "Jev no respondió.";

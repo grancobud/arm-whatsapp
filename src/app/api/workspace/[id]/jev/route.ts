@@ -35,7 +35,7 @@ export async function PATCH(
 
   if (!existing) {
     return NextResponse.json(
-      { error: "Conecta YCloud en Integraciones antes de prender Jev." },
+      { error: "Conectá YCloud en Integraciones antes de prender Jev." },
       { status: 409 },
     );
   }
