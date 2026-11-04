@@ -18,7 +18,7 @@ import { formatClaimsContext } from "../../src/features/arm/services/claims.ts";
 import { formatKbContext } from "../../src/features/inbox/services/kb-service.ts";
 import { checkReply } from "../../src/features/inbox/services/reply-guard.ts";
 import { inboundMessageText } from "../../src/features/inbox/services/inbound-text.ts";
-import { reviewModel, reviewReply, toolOutcome, type Complete } from "../../src/features/inbox/services/reply-review.ts";
+import { reviewModel, reviewReply, toolOutcome, withBackup, type Complete } from "../../src/features/inbox/services/reply-review.ts";
 import { frameResult } from "../../src/features/tools/mcp/mcp-tools.ts";
 import { foreignLinks } from "../../src/features/inbox/services/untrusted-text.ts";
 import type { ClaimRow } from "../../src/features/arm/types/index.ts";
@@ -80,9 +80,9 @@ if (!apiKey) throw new Error("Falta EVAL_API_KEY (o LLM_API_KEY / FREELLMAPI_KEY
 const proveedor = createOpenAI({ baseURL, apiKey });
 process.env.LLM_BASE_URL = baseURL;
 
-const complete: Complete = async (req) => {
+const completarCon = (modelo: string): Complete => async (req) => {
   const r = await generateText({
-    model: proveedor.chat(reviewModel(GEN)),
+    model: proveedor.chat(modelo),
     system: req.system,
     prompt: req.prompt,
     temperature: req.temperature,
@@ -97,6 +97,9 @@ const complete: Complete = async (req) => {
     outputTokens: r.usage?.outputTokens ?? 0,
   };
 };
+
+// Igual que producción: el modelo del revisor, con el de la respuesta de respaldo.
+const complete = withBackup(completarCon(reviewModel(GEN)), completarCon(GEN));
 
 const bizContext = buildBusinessInfoContext(NEGOCIO);
 
