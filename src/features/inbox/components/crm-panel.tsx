@@ -87,7 +87,8 @@ export function CrmPanel({
   const [tags, setTags] = useState<string[]>(contact.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [optIn, setOptIn] = useState(contact.opt_in);
-  const [optInSource, setOptInSource] = useState(contact.opt_in_source ?? "");
+  const [marketingOptIn, setMarketingOptIn] = useState(contact.marketing_opt_in ?? false);
+  const [marketingSource, setMarketingSource] = useState(contact.marketing_opt_in_source ?? "");
 
   // Section collapse
   const [contactOpen, setContactOpen] = useState(true);
@@ -124,7 +125,13 @@ export function CrmPanel({
         stage,
         tags,
         opt_in: optIn,
-        opt_in_source: optInSource.trim() || undefined,
+        // Only when it changed: saving other fields must not rewrite the date.
+        ...(marketingOptIn !== (contact.marketing_opt_in ?? false)
+          ? {
+              marketing_opt_in: marketingOptIn,
+              marketing_opt_in_source: marketingSource.trim() || undefined,
+            }
+          : {}),
       });
 
       if (result.ok) {
@@ -212,24 +219,40 @@ export function CrmPanel({
             {/* Opt-in switch */}
             <div className="flex items-center justify-between">
               <Label className="text-[10px] text-[hsl(var(--electric-lime))] uppercase tracking-wider">
-                WhatsApp Opt-in
+                Puede recibir mensajes
               </Label>
               <Switch
                 checked={optIn}
-                onCheckedChange={setOptIn}
-                aria-label="WhatsApp Opt-in"
+                onCheckedChange={(on) => {
+                  setOptIn(on);
+                  if (!on) setMarketingOptIn(false);
+                }}
+                aria-label="Puede recibir mensajes"
+              />
+            </div>
+
+            {/* Writing to the business isn't accepting promotions: a person records it. */}
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] text-[hsl(var(--electric-lime))] uppercase tracking-wider">
+                Aceptó promociones
+              </Label>
+              <Switch
+                checked={marketingOptIn}
+                disabled={!optIn}
+                onCheckedChange={setMarketingOptIn}
+                aria-label="Aceptó recibir campañas y promociones"
               />
             </div>
 
             {/* Consent evidence — required to send campaigns lawfully */}
-            {optIn && (
+            {marketingOptIn && (
               <div className="space-y-1">
                 <Label className="text-[10px] text-[hsl(var(--electric-lime))] uppercase tracking-wider">
-                  Cómo dio el consentimiento
+                  Cómo aceptó (obligatorio)
                 </Label>
                 <Input
-                  value={optInSource}
-                  onChange={(e) => setOptInSource(e.target.value)}
+                  value={marketingSource}
+                  onChange={(e) => setMarketingSource(e.target.value)}
                   placeholder="Ej: formulario web, en el local…"
                   className="h-7 text-xs"
                 />

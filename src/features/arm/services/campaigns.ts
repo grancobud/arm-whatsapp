@@ -8,6 +8,7 @@
 
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { dispatchTemplate } from "@/features/inbox/services/dispatch";
+import { canReceiveMarketing } from "@/features/inbox/services/marketing-consent";
 import type {
   CampaignMetrics,
   CampaignRow,
@@ -36,7 +37,7 @@ interface ContactLite {
   phone: string;
 }
 
-/** Contacts that match the segment. opt_in = true is not optional. */
+/** Contacts that match the segment. Accepting promotions is not optional. */
 export async function resolveSegment(
   workspaceId: string,
   segment: CampaignSegment,
@@ -48,6 +49,7 @@ export async function resolveSegment(
     .select("id, name, phone")
     .eq("workspace_id", workspaceId)
     .eq("opt_in", true)
+    .eq("marketing_opt_in", true)
     .limit(MAX_RECIPIENTS_PER_CAMPAIGN * 4);
 
   if (segment.stages && segment.stages.length > 0) {
@@ -214,10 +216,10 @@ export async function drainCampaignQueue(): Promise<number> {
       // Consent can be withdrawn between approval and sending.
       const { data: contact } = await supabase
         .from("contacts")
-        .select("opt_in")
+        .select("opt_in, marketing_opt_in")
         .eq("id", row.contact_id)
         .single();
-      if (!(contact as { opt_in: boolean } | null)?.opt_in) {
+      if (!canReceiveMarketing((contact ?? {}) as { opt_in?: boolean; marketing_opt_in?: boolean })) {
         await supabase
           .from("campaign_recipients")
           .update({ status: "skipped", error: "sin consentimiento" })

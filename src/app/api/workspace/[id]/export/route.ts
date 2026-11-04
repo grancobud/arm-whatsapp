@@ -25,7 +25,7 @@ const MAX_ROWS_PER_TABLE = 50_000;
 // Explicit column lists: a new sensitive column must be opted in, not out.
 const TABLES = {
   contacts:
-    "id, phone, name, email, source, stage, tags, custom_fields, opt_in, opt_in_at, opt_in_source, opt_out_at, created_at, updated_at",
+    "id, phone, name, email, source, stage, tags, custom_fields, opt_in, opt_in_at, opt_in_source, opt_out_at, marketing_opt_in, marketing_opt_in_at, marketing_opt_in_source, created_at, updated_at",
   contact_claims:
     "id, contact_id, kind, text, source_message_id, quote, author, status, created_at",
   conversations:
