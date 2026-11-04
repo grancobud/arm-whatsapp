@@ -250,7 +250,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 120.
+corre 125.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -466,6 +466,7 @@ flowchart LR
 ## 📦 Qué más incluye
 
 - 📥 **Inbox** tipo WhatsApp Web con buffer inteligente.
+- 📖 **Manual de uso** dentro de la app (`/ayuda`): primeros pasos que se marcan solos según lo que ya está configurado, el día a día, cada pantalla y preguntas comunes.
 - 🔀 **Motor de agente** con state machine, handoff humano, prompts personalizables y herramientas activables.
 - 👥 **CRM** con sincronización opcional a HighLevel.
 - 🕐 **Templates** y manejo de la ventana de 24 h de Meta.
