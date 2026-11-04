@@ -141,14 +141,17 @@ export function CampaignsView({
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Solo llegan a contactos con consentimiento (opt-in), con una
-          plantilla aprobada por Meta que diga cómo darse de baja. Un número nuevo llega a 250
-          personas por día: el resto sale en los días siguientes. Si fallan muchos
-          envíos o Meta pausa la plantilla, la campaña se frena sola. Cada campaña pasa por{" "}
+          plantilla aprobada por Meta. Cada campaña pasa por{" "}
           <Link href="/revision" className="underline underline-offset-2">
             Revisión
           </Link>{" "}
           antes de enviarse. Cuando el cliente responde, el agente sigue la
           charla.
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          La plantilla tiene que decir cómo darse de baja. Un número nuevo llega a
+          250 personas por día: el resto sale en los días siguientes. Si fallan
+          muchos envíos o Meta pausa la plantilla, la campaña se frena sola.
         </p>
       </div>
 
