@@ -7,8 +7,14 @@ import { listAgents } from "@/features/agents/services/agent-queries";
 import { SettingsShell } from "@/features/settings/components/settings-shell";
 import { countJudgmentsToday } from "@/features/jev-judge/usage";
 import { readJevUses } from "@/features/jev-judge/uses";
+import { readSettingsTab } from "@/features/settings/settings-tabs";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -124,6 +130,7 @@ export default async function SettingsPage() {
     <SettingsShell
       workspaceId={workspaceId}
       role={membership.role as string}
+      initialTab={readSettingsTab(tab)}
       initialBusinessInfo={biData ?? null}
       initialTools={toolsWithEnabled}
       initialIntegrations={maskedIntegrations}

@@ -12,6 +12,7 @@ import { DataExportTab } from "./data-export-tab";
 import { McpTab } from "@/features/tools/mcp/mcp-tab";
 import { AgentsTab } from "@/features/agents/components/agents-tab";
 import type { AgentDto } from "@/features/agents/types";
+import type { SettingsTab } from "../settings-tabs";
 import type { JevSettings } from "@/features/jev-judge/components/jev-panel";
 import { LlmProviderProvider } from "@/features/agents/lib/llm-provider";
 
@@ -28,6 +29,7 @@ interface ToolItem {
 interface Props {
   workspaceId: string;
   role: string;
+  initialTab: SettingsTab;
   initialBusinessInfo: Record<string, unknown> | null;
   initialTools: ToolItem[];
   initialIntegrations: unknown[];
@@ -41,6 +43,7 @@ interface Props {
 export function SettingsShell({
   workspaceId,
   role,
+  initialTab,
   initialBusinessInfo,
   initialTools,
   initialIntegrations,
@@ -61,7 +64,7 @@ export function SettingsShell({
       </h1>
 
       <LlmProviderProvider custom={llmCustom}>
-      <Tabs defaultValue="agentes">
+      <Tabs defaultValue={initialTab}>
         {/* Scroll the tab strip within its own track instead of letting 11 tabs
             push horizontal overflow onto the whole page. */}
         <div className="mb-6 -mx-1 overflow-x-auto px-1 pb-1">
