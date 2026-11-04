@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Tool, ToolContext, ToolResult } from "../core/tool";
+import { hasCardOrBankNumber } from "@/features/inbox/services/sensitive-data";
 
 const schema = z.object({
   kind: z
@@ -24,6 +25,9 @@ const schema = z.object({
 type Args = z.infer<typeof schema>;
 
 async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
+  if (hasCardOrBankNumber(`${args.text} ${args.quote ?? ""}`)) {
+    return { ok: false, output: null, error: "No se guardan números de tarjeta ni de cuenta en la memoria." };
+  }
   const { saveClaim } = await import("@/features/arm/services/claims");
   const saved = await saveClaim({
     workspaceId: ctx.workspaceId,

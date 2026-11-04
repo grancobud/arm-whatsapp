@@ -1,5 +1,6 @@
 "use client";
 
+import { hasOptOutInstruction, OPT_OUT_LINE } from "@/features/arm/services/campaign-rules";
 import { useState, useCallback, useEffect } from "react";
 import {
   RefreshCw,
@@ -102,7 +103,11 @@ function libraryToPrefill(item: LibraryItem): TemplatePrefill {
     body_variables: Array.isArray(item.variables)
       ? (item.variables as TemplateVariable[])
       : [],
-    footer_text: item.footer_text ?? "",
+    // Marketing has to say how to opt out, or a campaign can't use it.
+    footer_text:
+      item.category === "marketing" && !hasOptOutInstruction(`${item.body_template} ${item.footer_text ?? ""}`)
+        ? OPT_OUT_LINE
+        : (item.footer_text ?? ""),
     buttons: Array.isArray(item.buttons)
       ? (item.buttons as TemplateButton[])
       : [],

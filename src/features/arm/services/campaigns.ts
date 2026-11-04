@@ -7,6 +7,7 @@
 // single request runs into the Vercel timeout.
 
 import { createClient as createSbClient } from "@supabase/supabase-js";
+import { dailyRoom, hasOptOutInstruction, OPT_OUT_LINE, shouldStopCampaign } from "./campaign-rules";
 import { dispatchTemplate } from "@/features/inbox/services/dispatch";
 import { canReceiveMarketing } from "@/features/inbox/services/marketing-consent";
 import type {
@@ -100,6 +101,21 @@ export async function createCampaign(params: {
   variables: string[];
 }): Promise<{ id: string; recipientCount: number }> {
   const supabase = svc();
+  const { data: template } = await supabase
+    .from("templates")
+    .select("status, body_template, components")
+    .eq("workspace_id", params.workspaceId)
+    .eq("name", params.templateName)
+    .eq("language", params.templateLanguage)
+    .maybeSingle();
+  const row = template as { status: string; body_template: string; components: unknown } | null;
+  if (row?.status !== "approved") {
+    throw new Error("La plantilla tiene que estar aprobada por Meta");
+  }
+  if (!hasOptOutInstruction(`${row.body_template} ${JSON.stringify(row.components ?? {})}`)) {
+    throw new Error(`La plantilla tiene que decir cómo darse de baja. Creá una que incluya: «${OPT_OUT_LINE}»`);
+  }
+
   const recipients = await resolveSegment(params.workspaceId, params.segment);
   if (recipients.length === 0) {
     throw new Error("El segmento no tiene contactos con consentimiento");
@@ -164,6 +180,58 @@ async function ensureConversation(
   return (data as { id: string }).id;
 }
 
+/** Why a running campaign has to stop, if it does. */
+async function campaignStopReason(campaign: CampaignRow): Promise<string | null> {
+  const supabase = svc();
+  const { data: template } = await supabase
+    .from("templates")
+    .select("status")
+    .eq("workspace_id", campaign.workspace_id)
+    .eq("name", campaign.template_name)
+    .eq("language", campaign.template_language)
+    .maybeSingle();
+  // Meta pauses templates with low quality, and a paused one can't be sent.
+  const status = (template as { status: string } | null)?.status;
+  if (status !== "approved") return `La plantilla dejó de estar aprobada (${status ?? "no existe"})`;
+
+  const { data: rows } = await supabase
+    .from("campaign_recipients")
+    .select("status")
+    .eq("campaign_id", campaign.id)
+    .in("status", ["sent", "failed"])
+    .limit(MAX_RECIPIENTS_PER_CAMPAIGN);
+  const statuses = ((rows ?? []) as { status: string }[]).map((r) => r.status);
+  const failed = statuses.filter((s) => s === "failed").length;
+  return shouldStopCampaign(statuses.length - failed, failed)
+    ? `Frenada por fallas: ${failed} de ${statuses.length} envíos`
+    : null;
+}
+
+async function stopCampaign(campaign: CampaignRow, reason: string): Promise<void> {
+  const supabase = svc();
+  await supabase
+    .from("campaigns")
+    .update({ status: "cancelled" })
+    .eq("id", campaign.id)
+    .eq("status", "sending");
+  await supabase.from("events").insert({
+    type: "campaign_stopped",
+    workspace_id: campaign.workspace_id,
+    payload: { campaign_id: campaign.id, reason },
+  });
+}
+
+/** Campaign messages sent by this workspace in the last 24 hours. */
+async function sentLast24h(workspaceId: string): Promise<number> {
+  const supabase = svc();
+  const { count } = await supabase
+    .from("campaign_recipients")
+    .select("id, campaigns!inner(workspace_id)", { count: "exact", head: true })
+    .eq("campaigns.workspace_id", workspaceId)
+    .gte("sent_at", new Date(Date.now() - 86_400_000).toISOString());
+  return count ?? 0;
+}
+
 /**
  * Sends the next small batch of pending recipients of approved campaigns.
  * Called from the buffer-flush cron every minute. Returns how many it handled.
@@ -180,13 +248,23 @@ export async function drainCampaignQueue(): Promise<number> {
 
   let handled = 0;
   for (const campaign of (sending ?? []) as CampaignRow[]) {
+    const stopReason = await campaignStopReason(campaign);
+    if (stopReason) {
+      await stopCampaign(campaign, stopReason);
+      continue;
+    }
+
+    // Past the daily limit the campaign stays in "sending" and resumes by itself.
+    const room = dailyRoom(await sentLast24h(campaign.workspace_id));
+    if (room === 0) continue;
+
     const { data: batch } = await supabase
       .from("campaign_recipients")
       .select("id, contact_id")
       .eq("campaign_id", campaign.id)
       .eq("status", "pending")
       .order("created_at", { ascending: true })
-      .limit(SEND_BATCH_SIZE - handled);
+      .limit(Math.min(SEND_BATCH_SIZE - handled, room));
 
     const rows = (batch ?? []) as { id: string; contact_id: string }[];
     if (rows.length === 0) {

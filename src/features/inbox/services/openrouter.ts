@@ -54,7 +54,7 @@ import {
   DEFAULT_FALLBACK_CHAIN,
 } from "./model-chain";
 import { backupModelsFromEnv, createFailoverFetch } from "./llm-failover";
-import { toolOutcome, type Complete, type ToolOutcome } from "./reply-review";
+import { toolOutcome, type Complete, type ToolOutcome, reviewModel, withBackup } from "./reply-review";
 
 function logFallback(where: string) {
   return (a: { model: string; error: string }, next: string) =>
@@ -583,6 +583,13 @@ export async function generateWithTools(
  * One plain call (no tools, no model chain) through the same provider as the
  * replies, so it also gets the OpenRouter backup. Used by the reply review.
  */
+/** The reviewer's model, backed by the reply's model if that one is out of quota. */
+export async function createReviewCompleter(workspaceId: string, replyModel: string): Promise<Complete> {
+  const model = reviewModel(replyModel);
+  const primary = await createCompleter(workspaceId, model);
+  return model === replyModel ? primary : withBackup(primary, await createCompleter(workspaceId, replyModel));
+}
+
 export async function createCompleter(workspaceId: string, model: string): Promise<Complete> {
   const provider = await createChatProvider(workspaceId);
   return async (req) => {

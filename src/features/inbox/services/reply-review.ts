@@ -187,6 +187,21 @@ export type Complete = (req: {
   timeoutMs: number;
 }) => Promise<{ text: string; finishReason?: string; inputTokens: number; outputTokens: number }>;
 
+/**
+ * Tries a second model when the first one errors. Found by evals/seguridad: with
+ * the reviewer's model out of quota the review failed open and attacks it
+ * normally stops went out.
+ */
+export function withBackup(primary: Complete, backup: Complete): Complete {
+  return async (req) => {
+    try {
+      return await primary(req);
+    } catch {
+      return backup(req);
+    }
+  };
+}
+
 export type ReviewOutcome =
   | "approved"
   | "rewritten"

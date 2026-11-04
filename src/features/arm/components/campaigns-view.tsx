@@ -149,6 +149,11 @@ export function CampaignsView({
           antes de enviarse. Cuando el cliente responde, el agente sigue la
           charla.
         </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          La plantilla tiene que decir cómo darse de baja. Un número nuevo llega a
+          250 personas por día: el resto sale en los días siguientes. Si fallan
+          muchos envíos o Meta pausa la plantilla, la campaña se frena sola.
+        </p>
       </div>
 
       {canManage && (
