@@ -116,7 +116,7 @@ export const DAILY_TASKS: HelpStep[] = [
       "Tomar: agarrás la conversación y la IA deja de contestar.",
       "Devolver a IA: cuando terminás, el agente sigue la charla.",
       "Nota interna: un comentario para tu equipo que el cliente no ve.",
-      "Ver contacto: la etapa, las etiquetas y el consentimiento de esa persona.",
+      "Ver contacto: la etapa, las etiquetas y si aceptó recibir promociones.",
     ],
     link: { label: "Ir a la Bandeja", href: "/inbox" },
   },
@@ -149,7 +149,7 @@ export const DAILY_TASKS: HelpStep[] = [
   },
   {
     title: "Lanzá una campaña para reactivar clientes",
-    why: "Sirve para volver a hablar con contactos que dieron su consentimiento. Cuando responden, el agente sigue la charla.",
+    why: "Sirve para volver a hablar con contactos que aceptaron recibir promociones. Cuando responden, el agente sigue la charla.",
     how: [
       "En Campañas, ponele un nombre y elegí una plantilla aprobada.",
       "Definí a quién le llega por etiquetas o por días sin mensajes, y tocá Ver a quiénes llega.",
@@ -212,7 +212,7 @@ export const FAQ: { question: string; answer: string[]; link?: HelpLink }[] = [
     question: "Mi campaña no sale.",
     answer: [
       "Tiene que estar aprobada en Revisión, y usar una plantilla aprobada por Meta.",
-      "Solo llega a contactos con consentimiento. Podés cargarlo en Ver contacto, junto con cómo lo dio.",
+      "Solo llega a contactos que aceptaron promociones. Que alguien le escriba al negocio no alcanza: activá Aceptó promociones en Ver contacto y anotá cómo aceptó.",
     ],
     link: { label: "Ir a Revisión", href: "/revision" },
   },

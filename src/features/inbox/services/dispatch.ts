@@ -10,6 +10,7 @@ import { sendText, sendTemplate } from "./ycloud-client";
 import type { TemplateParams } from "./ycloud-client";
 import { formatWhatsAppMarkdown } from "./text-formatter";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
+import { canReceiveMarketing, isMarketingTemplate, NO_MARKETING_CONSENT } from "./marketing-consent";
 
 function svc() {
   return createSbClient(
@@ -298,7 +299,7 @@ export async function dispatchTemplate(
   if (tplConvRow) {
     const { data: tplOptData } = await supabase
       .from("contacts")
-      .select("opt_in")
+      .select("opt_in, marketing_opt_in")
       .eq("id", (tplConvRow as { contact_id: string }).contact_id)
       .single();
 
@@ -307,6 +308,23 @@ export async function dispatchTemplate(
         ok: false,
         error: "OPT_OUT: contact has opted out of WhatsApp messages",
       };
+    }
+
+    // Every send path ends here (campaigns, automations, the inbox), so this
+    // is where a marketing template can't reach someone who didn't accept it.
+    const { data: tpl } = await supabase
+      .from("templates")
+      .select("category")
+      .eq("workspace_id", workspaceId)
+      .eq("name", templateName)
+      .limit(1)
+      .maybeSingle();
+    if (
+      isMarketingTemplate((tpl as { category?: string } | null)?.category) &&
+      tplOptData &&
+      !canReceiveMarketing(tplOptData as { opt_in: boolean; marketing_opt_in: boolean })
+    ) {
+      return { ok: false, error: NO_MARKETING_CONSENT };
     }
   }
 

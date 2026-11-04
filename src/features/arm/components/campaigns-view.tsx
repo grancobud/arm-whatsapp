@@ -140,8 +140,9 @@ export function CampaignsView({
           Campañas de reactivación
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Solo llegan a contactos con consentimiento (opt-in), con una
-          plantilla aprobada por Meta. Cada campaña pasa por{" "}
+          Solo llegan a contactos que aceptaron recibir promociones (se carga en
+          Ver contacto; escribirle al negocio no alcanza), con una plantilla
+          aprobada por Meta. Cada campaña pasa por{" "}
           <Link href="/revision" className="underline underline-offset-2">
             Revisión
           </Link>{" "}
@@ -278,7 +279,7 @@ export function CampaignsView({
             </Button>
             {preview && (
               <span className="text-sm text-muted-foreground">
-                {preview.count} contactos con consentimiento
+                {preview.count} contactos que aceptaron promociones
                 {preview.sample.length > 0 &&
                   ` (ej: ${preview.sample.join(", ")})`}
               </span>

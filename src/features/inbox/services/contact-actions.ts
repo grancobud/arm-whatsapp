@@ -8,6 +8,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { syncContactToHL } from "./highlevel-client";
 import type { ContactRow } from "@/features/inbox/types";
+import { marketingConsentUpdate } from "./marketing-consent";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Schemas
@@ -20,6 +21,8 @@ const UpdateContactSchema = z.object({
   tags: z.array(z.string()).optional(),
   opt_in: z.boolean().optional(),
   opt_in_source: z.string().max(200).optional(),
+  marketing_opt_in: z.boolean().optional(),
+  marketing_opt_in_source: z.string().max(200).optional(),
 });
 
 export type UpdateContactInput = z.infer<typeof UpdateContactSchema>;
@@ -59,10 +62,18 @@ export async function updateContact(
     return { ok: false, error: "No se proporcionaron campos a actualizar" };
   }
 
+  const { marketing_opt_in, marketing_opt_in_source, ...fields } = parsed.data;
+  const consent = marketingConsentUpdate({
+    opt_in: fields.opt_in,
+    marketing_opt_in,
+    marketing_opt_in_source,
+  });
+  if ("error" in consent) return { ok: false, error: consent.error };
+
   // 3. Update contact (RLS ensures user can only update their workspace's contacts)
   const { data: updated, error: updateError } = await supabase
     .from("contacts")
-    .update({ ...parsed.data, updated_at: new Date().toISOString() })
+    .update({ ...fields, ...consent.update, updated_at: new Date().toISOString() })
     .eq("id", contactId)
     .select("id, workspace_id")
     .single();

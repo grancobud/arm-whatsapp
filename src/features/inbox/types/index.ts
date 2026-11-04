@@ -32,6 +32,10 @@ export interface ContactRow {
   opt_in: boolean;
   /** ARM: how consent was obtained (Ley 25.326). */
   opt_in_source?: string | null;
+  /** Accepted promotions: only a person records it, with its source. */
+  marketing_opt_in?: boolean;
+  marketing_opt_in_at?: string | null;
+  marketing_opt_in_source?: string | null;
   created_at: string;
   updated_at: string;
 }
