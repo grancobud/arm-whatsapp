@@ -35,6 +35,8 @@ export interface BuildSystemPromptParts {
   summary?: string | null;
   /** ARM: rules the team taught the agent (agent_lessons). */
   lessonsContext?: string | null;
+  /** Actions waiting for a person's approval (formatPendingActions). */
+  pendingActions?: string | null;
   /** ARM: claims about the contact, already fenced as data. */
   memoryContext?: string | null;
   kbContext?: string | null;
@@ -175,6 +177,7 @@ export function buildSystemPrompt(parts: BuildSystemPromptParts): string {
     // Changes every turn.
     parts.nowContext,
     summaryBlock,
+    parts.pendingActions ?? "",
     parts.memoryContext ?? "",
     parts.kbContext ?? "",
     parts.memoryContext ? MEMORY_IS_DATA_NOTE : "",

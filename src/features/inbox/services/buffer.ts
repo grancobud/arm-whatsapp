@@ -35,10 +35,17 @@ import {
   type ConversationTurn,
 } from "./conversation-history";
 import { getSetterConfig, evaluateLead } from "./setter";
+import {
+  BUSY_RETRY_MS,
+  capInbound,
+  formatPendingActions,
+  isRunningElsewhere,
+  turnRecovery,
+  type TurnProgress,
+} from "./turn-recovery";
 import { syncContactToHL, createHLOpportunity } from "./highlevel-client";
 
 const DEFAULT_SILENCE_MS = 30_000; // 30 seconds silence window
-const MAX_BATCH_RETRIES = 3;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Internal types
@@ -219,7 +226,8 @@ async function consolidateBatch(
 //   7. recordLlmUsage
 //   8. sendText via ycloud-client (or insert dev_mode outbound)
 //   9. Mark batch 'processed', persist merged_text
-//  10. On error: increment retry counter; if > MAX_BATCH_RETRIES → cancel_batch()
+//  10. On error: turnRecovery decides from what the turn already did (retry,
+//      finish, hand to a person or give up); see turn-recovery.ts
 // ──────────────────────────────────────────────────────────────────────────────
 export async function processNextBatch(opts?: {
   /** Epoch ms by which the turn must be done (the caller's function limit). */
@@ -243,11 +251,59 @@ export async function processNextBatch(opts?: {
     return { processed: false };
   }
 
+  // One turn at a time per conversation: a message that arrives while a reply is
+  // being written opens a new batch, and two replies at once would overlap.
+  const { data: running } = await supabase
+    .from("message_batches")
+    .select("updated_at")
+    .eq("conversation_id", batch.conversation_id)
+    .eq("status", "processing")
+    .neq("id", batch.id)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (running && isRunningElsewhere(running.updated_at as string)) {
+    await supabase
+      .from("message_batches")
+      .update({
+        status: "buffering",
+        flush_at: new Date(Date.now() + BUSY_RETRY_MS).toISOString(),
+      })
+      .eq("id", batch.id)
+      .eq("status", "processing");
+    return { processed: false, conversationId: batch.conversation_id };
+  }
+
   const retryCount = (batch.meta?.retry_count as number | undefined) ?? 0;
 
+  // Progress lives in the batch: if this function dies, the next run reads it.
+  let meta: Record<string, unknown> = {
+    ...batch.meta,
+    attempts: ((batch.meta?.attempts as number | undefined) ?? 0) + 1,
+  };
+  const saveProgress = async (patch: TurnProgress) => {
+    meta = { ...meta, ...patch };
+    await supabase.from("message_batches").update({ meta }).eq("id", batch.id);
+  };
+
   try {
+    await saveProgress({});
+
+    // A previous run already got this far: don't start over.
+    const previous = turnRecovery({ ...(batch.meta as TurnProgress), attempts: meta.attempts as number });
+    if (previous === "finish") {
+      await markBatchProcessed(batch.id, batch.merged_text ?? "", supabase);
+      return { processed: true, conversationId: batch.conversation_id };
+    }
+    if (previous === "hand_to_person") {
+      throw new Error("El turno anterior se cortó después de usar una herramienta");
+    }
+    if (previous === "give_up") {
+      throw new Error("El turno se cortó demasiadas veces");
+    }
+
     // ── 3. Consolidate messages into one string ──────────────────────────────
-    const mergedText = await consolidateBatch(batch.id, supabase);
+    const mergedText = capInbound(await consolidateBatch(batch.id, supabase));
 
     // ── 4. Load conversation record ─────────────────────────────────────────
     const { data: conversation, error: convError } = await supabase
@@ -329,6 +385,16 @@ export async function processNextBatch(opts?: {
         getLessonsContext(batch.workspace_id),
       ]);
 
+    const { data: pendingProposals } = await supabase
+      .from("agent_proposals")
+      .select("tool_name, args")
+      .eq("conversation_id", batch.conversation_id)
+      .eq("status", "pending")
+      .limit(5);
+    const pendingActions = formatPendingActions(
+      (pendingProposals ?? []) as { tool_name: string; args: unknown }[],
+    );
+
     const resolvedPrompt = await resolveSystemPrompt(
       batch.workspace_id,
       activeAgent ? { mode: activeAgent.type } : {},
@@ -364,6 +430,7 @@ export async function processNextBatch(opts?: {
       promptBase,
       summary,
       lessonsContext,
+      pendingActions,
       memoryContext,
       kbContext,
       responseStyle: activeAgent?.config.responseStyle ?? null,
@@ -409,6 +476,9 @@ export async function processNextBatch(opts?: {
       toolContext: toolCtx,
       history,
       temperature: activeAgent?.config.temperature,
+      onSideEffect: async () => {
+        if (!meta.side_effects) await saveProgress({ side_effects: true });
+      },
     });
 
     // ── 8b. Reply review (evaluador-optimizador, reply-review.ts) ───────────
@@ -501,7 +571,9 @@ export async function processNextBatch(opts?: {
       meta: kbSources.length ? { kb_sources: kbSources } : undefined,
     });
 
-    if (!dispatchResult.ok) {
+    if (dispatchResult.ok) {
+      await saveProgress({ reply_sent: true });
+    } else {
       console.error("[buffer] dispatchText failed:", dispatchResult.error);
       await supabase.from("events").insert({
         type: "dispatch_failure",
@@ -567,8 +639,32 @@ export async function processNextBatch(opts?: {
 
     // ── 10. Dead-letter: increment retry or cancel ───────────────────────────
     const newRetryCount = retryCount + 1;
+    const recovery = turnRecovery(meta as TurnProgress);
 
-    if (newRetryCount > MAX_BATCH_RETRIES) {
+    if (recovery === "finish") {
+      // The customer has the reply: running it again would send it twice.
+      await markBatchProcessed(batch.id, batch.merged_text ?? "", supabase);
+      return { processed: true, conversationId: batch.conversation_id };
+    }
+
+    if (recovery === "hand_to_person") {
+      // A tool ran (or may have) and there's no reply. Repeating could book the
+      // same slot twice, so a person takes over; they see what happened.
+      await supabase.rpc("cancel_batch", { p_batch_id: batch.id });
+      await supabase.from("events").insert({
+        type: "turn_incomplete",
+        level: "error",
+        workspace_id: batch.workspace_id,
+        conversation_id: batch.conversation_id,
+        payload: { batch_id: batch.id, error: errorMsg },
+      });
+      await applyTransition(batch.conversation_id, "handoff_pending", {
+        trigger: "turn_incomplete",
+      }).catch((e) => console.error("[buffer] handoff after cut turn failed:", e));
+      return { processed: false, conversationId: batch.conversation_id, error: errorMsg };
+    }
+
+    if (recovery === "give_up") {
       // Mark dead-letter via RPC
       await supabase.rpc("cancel_batch", { p_batch_id: batch.id });
 
@@ -588,7 +684,7 @@ export async function processNextBatch(opts?: {
       return {
         processed: false,
         conversationId: batch.conversation_id,
-        error: `Batch cancelled after ${MAX_BATCH_RETRIES} retries: ${errorMsg}`,
+        error: `Batch cancelled after ${meta.attempts} attempts: ${errorMsg}`,
       };
     }
 
@@ -602,7 +698,7 @@ export async function processNextBatch(opts?: {
         flush_at: new Date(Date.now() + backoffMs).toISOString(),
         updated_at: new Date().toISOString(),
         meta: {
-          ...batch.meta,
+          ...meta,
           retry_count: newRetryCount,
           last_error: errorMsg,
         },
