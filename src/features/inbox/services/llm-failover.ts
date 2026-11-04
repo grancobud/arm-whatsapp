@@ -15,11 +15,15 @@ export const PRIMARY_COOLDOWN_MS = 60_000;
 export const PRIMARY_TIMEOUT_MS = 45_000;
 /**
  * Backup models, tried in order. Free models come and go on OpenRouter (the
- * old default stopped being free), so there are two, and the last one is
- * OpenRouter's own router over whatever free models exist. LLM_BACKUP_MODELS
- * (comma-separated) overrides them.
+ * old default stopped being free) and gemma's shared pool is often saturated,
+ * so there are three, and the last one is OpenRouter's own router over whatever
+ * free models exist. LLM_BACKUP_MODELS (comma-separated) overrides them.
  */
-export const DEFAULT_BACKUP_MODELS = ["google/gemma-4-31b-it:free", "openrouter/free"];
+export const DEFAULT_BACKUP_MODELS = [
+  "dots-studio/dots-3-note-preview:free",
+  "google/gemma-4-31b-it:free",
+  "openrouter/free",
+];
 
 export function backupModelsFromEnv(value: string | undefined): string[] {
   const list = (value ?? "").split(",").map((m) => m.trim()).filter(Boolean);
