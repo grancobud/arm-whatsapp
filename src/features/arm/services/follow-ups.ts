@@ -16,6 +16,8 @@ import { createClient as createSbClient } from "@supabase/supabase-js";
 import { DEFAULT_TIMEZONE } from "@/features/inbox/services/business-info";
 import { withinSendingHours } from "@/features/automations/engine";
 import type { ConversationState } from "@/features/inbox/services/state-machine";
+import { listKbSourceLinks } from "@/features/inbox/services/kb-service";
+import { foreignLinks } from "@/features/inbox/services/untrusted-text";
 
 const MIN_LEAD_MINUTES = 10;
 const MAX_DAYS_AHEAD = 60;
@@ -105,6 +107,17 @@ export async function scheduleFollowUp(params: {
   if ("error" in checked) return { ok: false, error: checked.error };
 
   const supabase = svc();
+  if (/https?:\/\/|www\./i.test(params.message)) {
+    const [{ data: business }, kbLinks] = await Promise.all([
+      supabase.from("business_info").select("structured, free_text").eq("workspace_id", params.workspaceId).maybeSingle(),
+      listKbSourceLinks(params.workspaceId),
+    ]);
+    const known = [JSON.stringify(business ?? {}), ...kbLinks.map((l) => l.url)].join(" ");
+    if (foreignLinks(params.message, known).length > 0) {
+      return { ok: false, error: "No se puede agendar un mensaje con un link que el negocio no cargó." };
+    }
+  }
+
   const { count } = await supabase
     .from("follow_ups")
     .select("id", { count: "exact", head: true })

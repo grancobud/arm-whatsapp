@@ -16,6 +16,7 @@
     "eval:herramientas": "node --import ./evals/registrar.mjs evals/herramientas/correr.ts",
     "eval:jev": "node --import ./evals/registrar.mjs evals/jev/correr.ts",
     "eval:revisor": "node --import ./evals/registrar.mjs evals/revisor/correr.ts",
+    "eval:seguridad": "node --import ./evals/registrar.mjs evals/seguridad/correr.ts",
     "eval:conocimiento": "node --import ./evals/registrar.mjs evals/conocimiento/correr.ts",
     "eval:multimedia": "node --import ./evals/registrar.mjs evals/multimedia/correr.ts",
     "eval:cache": "node --import ./evals/registrar.mjs evals/cache/medir.ts",
