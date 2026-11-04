@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:unit": "node --import ./evals/registrar.mjs --test evals/ayuda/manual.test.ts evals/agente/calificadores.test.ts evals/herramientas/cierre.test.ts evals/conocimiento/corte.test.ts evals/multimedia/entrada.test.ts evals/conocimiento/citas.test.ts evals/mcp/cliente.test.ts evals/herramientas/aprobacion.test.ts evals/conocimiento/rerank.test.ts evals/agente/enrutamiento.test.ts evals/agente/encadenamiento.test.ts evals/alertas/alertas.test.ts evals/automatizaciones/motor.test.ts evals/metricas/resultados.test.ts evals/compromisos/seguimientos.test.ts evals/consentimiento/baja.test.ts evals/relacion/puntaje.test.ts evals/autonomia/autonomia.test.ts evals/correcciones/lecciones.test.ts evals/jev/lectura.test.ts evals/respaldo/respaldo.test.ts evals/revisor/revisor.test.ts evals/herramientas/resultado-reserva.test.ts",
+    "test:unit": "node --import ./evals/registrar.mjs --test evals/seguridad/*.test.ts evals/ayuda/manual.test.ts evals/agente/calificadores.test.ts evals/herramientas/cierre.test.ts evals/conocimiento/corte.test.ts evals/multimedia/entrada.test.ts evals/conocimiento/citas.test.ts evals/mcp/cliente.test.ts evals/herramientas/aprobacion.test.ts evals/conocimiento/rerank.test.ts evals/agente/enrutamiento.test.ts evals/agente/encadenamiento.test.ts evals/alertas/alertas.test.ts evals/automatizaciones/motor.test.ts evals/metricas/resultados.test.ts evals/compromisos/seguimientos.test.ts evals/consentimiento/baja.test.ts evals/relacion/puntaje.test.ts evals/autonomia/autonomia.test.ts evals/correcciones/lecciones.test.ts evals/jev/lectura.test.ts evals/respaldo/respaldo.test.ts evals/revisor/revisor.test.ts evals/herramientas/resultado-reserva.test.ts",
     "eval:agente": "node --import ./evals/registrar.mjs evals/agente/correr.ts",
     "eval:herramientas": "node --import ./evals/registrar.mjs evals/herramientas/correr.ts",
     "eval:jev": "node --import ./evals/registrar.mjs evals/jev/correr.ts",
@@ -48,7 +48,7 @@
     "cmdk": "^1.1.1",
     "geist": "^1.7.2",
     "lucide-react": "^1.17.0",
-    "next": "^16.0.0",
+    "next": "^16.4.5",
     "next-themes": "^0.4.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -56,7 +56,7 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
     "unpdf": "1.9.0",
-    "zod": "^4.4.3",
+    "zod": "^4.6.7",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
@@ -66,7 +66,7 @@
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^16.0.0",
+    "eslint-config-next": "^16.4.5",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.7.0"

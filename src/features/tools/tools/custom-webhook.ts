@@ -134,6 +134,8 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ workspace_id: ctx.workspaceId, payload }),
+    // A redirect could point at an internal address the guard never saw.
+    redirect: "error",
     signal: AbortSignal.timeout(8_000),
   });
 
