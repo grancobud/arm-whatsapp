@@ -1,8 +1,8 @@
 import { inboundMessageText } from "./inbound-text";
 import { resolveCitations } from "./kb-citations";
 import { createClient as createSbClient } from "@supabase/supabase-js";
-import { createCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
-import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewModel, reviewReply } from "./reply-review";
+import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
+import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
 import { recordLlmUsage } from "./cost-tracker";
 import { dispatchText, dispatchTemplate } from "./dispatch";
 import { decide, applyTransition } from "./decision-engine";
@@ -437,7 +437,7 @@ export async function processNextBatch(opts?: {
             toolResults: reply.toolResults,
             toolNames: (decisionResult.availableTools ?? []).map((t) => t.name),
           },
-          complete: await createCompleter(batch.workspace_id, reviewModel(model)),
+          complete: await createReviewCompleter(batch.workspace_id, model),
         });
         replyText = review.text;
         // The rewrite's own citations: the draft's may no longer apply.

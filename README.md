@@ -467,6 +467,7 @@ flowchart LR
 
 - 📥 **Inbox** tipo WhatsApp Web con buffer inteligente.
 - 📖 **Manual de uso** dentro de la app (`/ayuda`): primeros pasos que se marcan solos según lo que ya está configurado, el día a día, cada pantalla y preguntas comunes.
+- 📏 **Reglas de WhatsApp**: campañas con tope de 250 personas por día (`CAMPAIGN_DAILY_LIMIT` para cambiarlo), freno solo si fallan muchos envíos o Meta pausa la plantilla, y plantillas que dicen cómo darse de baja. El agente no pide tarjetas, cuentas ni documentos.
 - 🔀 **Motor de agente** con state machine, handoff humano, prompts personalizables y herramientas activables.
 - 👥 **CRM** con sincronización opcional a HighLevel.
 - 🕐 **Templates** y manejo de la ventana de 24 h de Meta.
