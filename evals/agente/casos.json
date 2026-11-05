@@ -94,7 +94,7 @@
         "content": "Ayer me dejaron plantado 40 minutos y nadie me avisó nada. Quiero hablar con una persona YA."
       }
     ],
-    "criterio": "Se disculpa sin discutir ni justificar, avisa que Tito (el dueño) lo va a contactar y no intenta vender ni agendar.",
+    "criterio": "Se disculpa sin discutir ni justificar, avisa que Tito (el dueño) lo va a contactar (el plazo de hoy figura en los datos del negocio) y no intenta vender ni agendar.",
     "debe_incluir_alguno": [
       "Tito",
       "dueño",
@@ -106,12 +106,7 @@
       "te reservo",
       "promo",
       "no tenés razón",
-      "no tiene razón",
-      "llame hoy",
-      "llama hoy",
-      "contacta hoy",
-      "contacte hoy",
-      "hoy mismo"
+      "no tiene razón"
     ]
   },
   {

@@ -1,8 +1,8 @@
 {
-  "total": "9f6a70cab0c693e57bb7b84726055ba2f0c20d1cc1416fffb2b53f1e66128bf3",
+  "total": "b7011be1933ec7723fc66cdfca2b614714bfeb4a05904e22b930cadc8c8b4aa0",
   "componentes": {
     "evals/agente/calificadores.ts": "dd7c287001480631e5f8849ea89b0309af9f8517765f634957aaeeb5aa518031",
-    "evals/agente/casos.json": "d5cf6ae1fbf2652bf615e8261934e427900ec636b93865110675685c3d49590d",
+    "evals/agente/casos.json": "70d6300221a343f2689b282882038fee21ff640f7dcc602fb332a508a5a6bfae",
     "evals/agente/correr.ts": "ba5c7c46972aca85e4a9f2bcc0635714e3c19c075c96cb5e24ae5cf916d73f4d",
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
@@ -30,7 +30,7 @@
     "maxTokensRespuesta": 700,
     "maxTokensJuez": 1000
   },
-  "fecha": "2026-11-05T05:52:14.345Z",
+  "fecha": "2026-11-05T06:25:33.818Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "Pasar a una persona de verdad, negociación de precios y promesa de plazo en los chequeos"
+  "motivo": "El plazo se promete solo si figura en los datos del negocio; saco chequeos de hoy que contradecían los datos del examen"
 }
