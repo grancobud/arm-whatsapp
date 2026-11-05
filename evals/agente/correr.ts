@@ -208,6 +208,8 @@ async function correrUno(version: string, caso: Caso, rep: number): Promise<Resu
         messages: caso.mensajes,
         temperature: TEMPERATURA,
         maxOutputTokens: MAX_TOKENS_RESPUESTA,
+        // El proveedor cachea pedidos idénticos: sin un seed por repetición, las 3 reps son la misma respuesta.
+        seed: rep,
       }),
     );
     // Como en producción: la línea "FUENTES: F1" se saca antes de que la vea el cliente.
@@ -224,7 +226,7 @@ async function correrUno(version: string, caso: Caso, rep: number): Promise<Resu
     let modelo: number | null = null;
     let juez: Resultado["juez"];
     try {
-      const j = await calificarPorModelo(caso, citas.text);
+      const j = await conReintentos(() => calificarPorModelo(caso, citas.text));
       modelo = j.score;
       juez = { strengths: j.strengths, weaknesses: j.weaknesses, reasoning: j.reasoning, modelo: j.modelo };
     } catch (err) {
@@ -334,3 +336,7 @@ writeFileSync(
   ),
 );
 console.log(`\nDetalle completo: ${archivo.pathname}`);
+const sinJuez = resultados.filter((r) => !r.error && r.modelo === null).length;
+if (sinJuez > 0) {
+  console.log(`Ojo: ${sinJuez} de ${resultados.length} respuestas quedaron sin juez. Esta nota no sirve como línea base: repetila con --paralelo=1.`);
+}

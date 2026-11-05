@@ -1,9 +1,9 @@
 {
-  "total": "61c53c5f7b3bb9921348c7ee68c5cff142f16d35ad2b1f6edde76695e60009cb",
+  "total": "e893e614f1efe296b80f9a411157b6e468c9b61056532d0326aebb93deff13e6",
   "componentes": {
     "evals/agente/calificadores.ts": "dd7c287001480631e5f8849ea89b0309af9f8517765f634957aaeeb5aa518031",
-    "evals/agente/casos.json": "b5b69388852eff5a6880dfffe74bc342d84727e176169f50a10ff7e24236e6dc",
-    "evals/agente/correr.ts": "4f7f01d3a087cb223a245282ed6b0222d93d99065218beb237bbf68440e3e10b",
+    "evals/agente/casos.json": "8b0bbab9c6b69a13848b7201ead954dd66fb177a806f96b8b6bc4a68e4ef24f0",
+    "evals/agente/correr.ts": "ba5c7c46972aca85e4a9f2bcc0635714e3c19c075c96cb5e24ae5cf916d73f4d",
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "src/features/arm/services/claims.ts": "eb468e5c627b07958781a6a62ac72c3b3454fb0b802fa780c1a923b728bcce8b",
@@ -30,7 +30,7 @@
     "maxTokensRespuesta": 700,
     "maxTokensJuez": 1000
   },
-  "fecha": "2026-11-04T17:48:20.673Z",
-  "aprobadaPor": "Claude Code, a pedido de Gastón al cerrar el PR 43",
-  "motivo": "Línea base nueva tras las auditorías de seguridad y arquitectura (PR 48 a 52): cambian el prompt, las memorias y los bloques de datos"
+  "fecha": "2026-11-05T04:11:28.556Z",
+  "aprobadaPor": "Claude Code, a pedido de Gastón",
+  "motivo": "Repeticiones independientes con seed, juez con reintentos y chequeos corregidos en horario y cliente enojado"
 }

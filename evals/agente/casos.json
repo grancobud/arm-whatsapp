@@ -36,7 +36,9 @@
       "cerrad",
       "no abrimos",
       "no atendemos",
-      "no abre"
+      "no abre",
+      "no, abrimos de",
+      "domingo no"
     ]
   },
   {
@@ -100,7 +102,12 @@
     "no_debe_incluir": [
       "querés agendar",
       "te reservo",
-      "promo"
+      "promo",
+      "no tenés razón",
+      "no tiene razón",
+      "llame hoy",
+      "llama hoy",
+      "contacta hoy"
     ]
   },
   {
