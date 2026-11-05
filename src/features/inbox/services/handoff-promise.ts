@@ -15,7 +15,11 @@ const PROMISES = [
   // "ya le pasé tu mensaje al equipo", "te paso con una persona", "te derivé al dueño"
   new RegExp(`\\b(le|te) (pase|paso|derive|derivo)\\b[^.!?]*\\b${TEAM}\\b`),
   // "le pasé tu mensaje a Tito"
-  /\ble (pase|paso) (tu|el|la|lo)\b/,
+  /\ble (pase|paso) (tu|su|el|la|lo)\b/,
+  // "paso tu solicitud a Tito"
+  /\b(pase|paso) (tu|su) (mensaje|consulta|solicitud|reclamo|caso|pedido)\b/,
+  // "te paso con Tito o algún peluquero": a quien sea, el traspaso es el mismo
+  /\bte (paso|pase|derivo|derive) con\b/,
   // "ya le avisé a Tito"
   /\bya le (avise|aviso)\b/,
   // "una persona te va a atender", "Tito te va a contactar"
