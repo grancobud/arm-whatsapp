@@ -1,5 +1,5 @@
 {
-  "total": "e4363c45d66daf722fe547e2fcebbe13605e53332573c25596a1bb61cf488fc5",
+  "total": "9235c138d25bb810a67537884503ac7cfb4b521118dbe1d5678873fda9d861a7",
   "componentes": {
     "evals/agente/calificadores.ts": "dd7c287001480631e5f8849ea89b0309af9f8517765f634957aaeeb5aa518031",
     "evals/agente/casos.json": "70d6300221a343f2689b282882038fee21ff640f7dcc602fb332a508a5a6bfae",
@@ -12,7 +12,7 @@
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/kb-rerank.ts": "a1a7607ad4dcafbf7806f5804a65c95876809ccbb69e53edbe377bd411d48f91",
     "src/features/inbox/services/kb-service.ts": "964d51bd93857536d280abf7034a129148d5604b82d68e1eacd400b7d6e7a4b0",
-    "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
+    "src/features/inbox/services/prompt-builder.ts": "c291b1db7e0b20d322f1ffa65c59eeacc0c545fb0e075ebec79d5f35956a230e",
     "src/features/inbox/services/reply-guard.ts": "330480e45c8df979f5590f92fd5fa3256cff441e40962f18162df833f30703e8",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "config": "32f44f92ec27b7d5366ab2153af49b15a6b48e990f340b1eef15876fd9afb188"
@@ -30,7 +30,7 @@
     "maxTokensRespuesta": 700,
     "maxTokensJuez": 1000
   },
-  "fecha": "2026-11-05T14:09:44.379Z",
+  "fecha": "2026-11-05T19:37:13.005Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "reglas de Martín, semana calculada y más inglés en el filtro"
+  "motivo": "nombre de la ficha en el prompt, seguimientos reemplazables y retoques finales; no cambian los casos"
 }

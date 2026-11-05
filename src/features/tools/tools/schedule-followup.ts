@@ -19,6 +19,10 @@ const schema = z.object({
     .max(300)
     .optional()
     .describe("Qué se le prometió, en una frase, para que el equipo lo entienda"),
+  replaces_pending: z
+    .boolean()
+    .optional()
+    .describe("true si el cliente cambió el día de algo que ya le prometiste: el anterior se cancela y no le llegan dos mensajes"),
 });
 
 type Args = z.infer<typeof schema>;
@@ -32,6 +36,7 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
     dueAt: args.due_at,
     message: args.message,
     reason: args.reason,
+    replacesPending: args.replaces_pending,
   });
   if (!r.ok) return { ok: false, output: null, error: r.error };
   return {

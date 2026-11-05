@@ -252,7 +252,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 233.
+corre 238.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -287,6 +287,7 @@ corre 233.
 | 📱 Uso y celular | ✅ | En celular la Bandeja se rompía: ahora muestra la lista o la conversación, con botón para volver. El Panel y la Bandeja vacía dicen cuál es el siguiente paso, cada agente tiene su botón Probar y hay menos jerga. |
 | 🧪 Examen de producción | ✅ | Un 9.7 en `eval:agente` no detectaba estas fallas porque usa otro modelo y no tiene herramientas. `npm run eval:produccion` recorre los mismos pasos que un mensaje real, con el modelo que responde de verdad y las herramientas simuladas. Última medición, del 05/11: 457 de 460 chequeos, con 1 turno cortado por tiempo y 9 de 51 respuestas sin revisar, así que no cuenta como línea base. Leer las respuestas encontró fallas que la nota no mostraba. También se corrigió que las repeticiones de `eval:agente` eran la misma respuesta cacheada. |
 | 📲 Recorrido de WhatsApp simulado | ✅ | Un webhook firmado como los de YCloud entra por la ruta real y se sigue hasta el envío, con YCloud y el modelo falsos (`npm run eval:recorrido`). Encontró que una falla en la búsqueda de la base de conocimiento cortaba el turno entero, que sin cupo o con YCloud caído el cliente quedaba sin respuesta y sin que nadie lo viera en la Bandeja, y que un webhook sin `wsid` perdía los mensajes de los clientes más allá del décimo. Prueba también firmas, duplicados, ráfagas y bajas. Sin número real: no reemplaza probar contra Meta. |
+| 💭 Conversaciones largas | ✅ | `npm run eval:charlas`: 12 charlas de hasta 9 mensajes, turno por turno y con la misma ventana de historial que producción. Encontró que, pasados 10 mensajes, el agente negaba que le hubieran dicho el nombre aunque estuviera en la ficha, que cambiar el día de un seguimiento dejaba vivo el anterior y el cliente recibía dos mensajes, y que ofrecer una persona en cada precio terminaba en traspasos que nadie pidió. No cedió ante un falso dueño ni ante la insistencia. |
 | 📦 Dependencias | ✅ | `npm audit` pasó de 8 avisos moderados a 0, sin bajar de versión `eslint-config-next`. |
 
 Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la **falla**, se **corrige** y se **vuelve a medir**.

@@ -63,7 +63,11 @@ export function removeBookingOffer(
   });
   if (kept.length === sentences.length && (!wantsBooking || alreadyHandsOver)) return { text, changed: false };
 
-  // Si lo que queda ya ofrece el pase a una persona, no se repite.
+  // Ofrecer una persona en cada precio cansa y el modelo lo copia del historial hasta
+  // que "te paso con una persona" dispara un traspaso que nadie pidió (examen de charlas).
+  // Va solo si el cliente pidió un turno o si no quedó nada que decir.
   const handsOver = kept.some((sentence) => HANDS_OVER.test(plain(sentence)));
-  return { text: (handsOver ? kept : [...kept, BOOKING_FALLBACK]).join(" ").trim(), changed: true };
+  const keptText = kept.join(" ").trim();
+  const needsFallback = !handsOver && (wantsBooking || keptText.length < 15);
+  return { text: (needsFallback ? [...kept, BOOKING_FALLBACK] : kept).join(" ").trim(), changed: true };
 }
