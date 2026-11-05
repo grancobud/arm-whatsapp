@@ -1,8 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { buildCsp } from "./src/lib/csp";
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  // Next firma sus scripts con el nonce que encuentra en este encabezado del pedido.
+  const nonce = btoa(crypto.randomUUID());
+  const csp = buildCsp(nonce, {
+    isDev: process.env.NODE_ENV !== "production",
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
+  // Se arma cada vez: Supabase puede renovar las cookies del pedido más abajo.
+  const continueWithNonce = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-nonce", nonce);
+    headers.set("content-security-policy", csp);
+    return NextResponse.next({ request: { headers } });
+  };
+  let supabaseResponse = continueWithNonce();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,7 +36,7 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = continueWithNonce();
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(
               name,
@@ -69,6 +83,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  supabaseResponse.headers.set("content-security-policy", csp);
   return supabaseResponse;
 }
 
