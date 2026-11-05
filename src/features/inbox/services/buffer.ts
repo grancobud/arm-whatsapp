@@ -4,6 +4,7 @@ import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
 import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
 import { backHandoffPromise, withHandoffNotice } from "./handoff-promise";
+import { starterPrompt } from "@/features/agents/lib/starter-prompts";
 import { backContactData, dropNameFromEmail } from "./contact-capture";
 import { removeBookingOffer } from "./booking-offer";
 import { recordLlmUsage } from "./cost-tracker";
@@ -382,7 +383,19 @@ export async function processNextBatch(opts?: {
         }),
         getActiveAgent(batch.workspace_id),
         getBusinessInfo(batch.workspace_id),
-        searchKb(batch.workspace_id, mergedText, 3),
+        // Sin búsqueda el agente responde igual: dice que no tiene el dato o lo pasa a una persona.
+        searchKb(batch.workspace_id, mergedText, 3).catch(async (err) => {
+          const error = err instanceof Error ? err.message || err.name : String(err);
+          console.error("[buffer] searchKb failed, replying without it:", error);
+          await supabase.from("events").insert({
+            type: "kb_search_failed",
+            level: "warn",
+            workspace_id: batch.workspace_id,
+            conversation_id: batch.conversation_id,
+            payload: { error: error.slice(0, 200) },
+          });
+          return [];
+        }),
         listKbSourceLinks(batch.workspace_id),
         getActiveClaims(batch.workspace_id, conversation.contact_id as string),
         getLessonsContext(batch.workspace_id),
@@ -413,7 +426,12 @@ export async function processNextBatch(opts?: {
     const memoryContext = formatClaimsContext(claims);
     const promptBase =
       resolvedPrompt?.body ??
-      "Eres un asistente de WhatsApp. Responde de forma concisa y útil en español.";
+      // Sin agente activo no hay prompt: las reglas de arranque evitan que invente datos.
+      starterPrompt(
+        "general",
+        (businessInfo?.structured as { name?: string } | null)?.name ?? "este negocio",
+        "el asistente",
+      );
     const structured = businessInfo?.structured as {
       timezone?: string;
       name?: string;
@@ -634,6 +652,12 @@ export async function processNextBatch(opts?: {
           channel: "whatsapp",
         },
       });
+      // El cliente quedó sin respuesta y volver a generarla podría duplicarla: lo
+      // toma una persona, que ve el mensaje fallido. Con YCloud caído el aviso tampoco saldría.
+      await applyTransition(batch.conversation_id, "handoff_pending", {
+        trigger: "dispatch_failure",
+        skipAck: true,
+      }).catch((e) => console.error("[buffer] handoff after failed send failed:", e));
     }
 
     // ── 10b. Mark batch as processed ────────────────────────────────────────
@@ -679,7 +703,8 @@ export async function processNextBatch(opts?: {
 
     return { processed: true, conversationId: batch.conversation_id };
   } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    // Algunos errores del AI SDK llegan con el mensaje vacío: sin el nombre no se sabría qué pasó.
+    const errorMsg = err instanceof Error ? err.message || err.name : String(err);
     console.error("[buffer] processNextBatch error:", {
       batchId: batch.id,
       retryCount,
@@ -729,6 +754,12 @@ export async function processNextBatch(opts?: {
           error: errorMsg,
         },
       });
+
+      // Sin esto el cliente no recibe nada y nadie lo ve en la Bandeja: la alerta
+      // le llega al dueño de la instalación, no a quien atiende la conversación.
+      await applyTransition(batch.conversation_id, "handoff_pending", {
+        trigger: "batch_dead_letter",
+      }).catch((e) => console.error("[buffer] handoff after giving up failed:", e));
 
       return {
         processed: false,

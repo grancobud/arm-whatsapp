@@ -54,3 +54,10 @@ test("el mail no lleva claves ni HTML del payload", () => {
   assert.doesNotMatch(html, /<script>/);
   assert.match(html, /Herramienta que falló/);
 });
+
+test("si la búsqueda de conocimiento falla, avisa", () => {
+  assert.equal(
+    isAlertWorthy({ workspace_id: "w", type: "kb_search_failed", level: "warn", payload: null, created_at: "" }),
+    true,
+  );
+});

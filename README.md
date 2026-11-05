@@ -252,7 +252,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 232.
+corre 233.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -286,6 +286,7 @@ corre 232.
 | ⏱️ Tiempos y filtro de respuestas | ✅ | Una respuesta llegó a tardar 209 s con un webhook de 60: ahora cada llamada al modelo tiene un tope de 25 s y se reservan 8 s para enviar. El filtro también frena el razonamiento en castellano y palabras en inglés como «turnover», que el modelo metía en las respuestas. |
 | 📱 Uso y celular | ✅ | En celular la Bandeja se rompía: ahora muestra la lista o la conversación, con botón para volver. El Panel y la Bandeja vacía dicen cuál es el siguiente paso, cada agente tiene su botón Probar y hay menos jerga. |
 | 🧪 Examen de producción | ✅ | Un 9.7 en `eval:agente` no detectaba estas fallas porque usa otro modelo y no tiene herramientas. `npm run eval:produccion` recorre los mismos pasos que un mensaje real, con el modelo que responde de verdad y las herramientas simuladas. Última medición, del 05/11: 457 de 460 chequeos, con 1 turno cortado por tiempo y 9 de 51 respuestas sin revisar, así que no cuenta como línea base. Leer las respuestas encontró fallas que la nota no mostraba. También se corrigió que las repeticiones de `eval:agente` eran la misma respuesta cacheada. |
+| 📲 Recorrido de WhatsApp simulado | ✅ | Un webhook firmado como los de YCloud entra por la ruta real y se sigue hasta el envío, con YCloud y el modelo falsos (`npm run eval:recorrido`). Encontró que una falla en la búsqueda de la base de conocimiento cortaba el turno entero, que sin cupo o con YCloud caído el cliente quedaba sin respuesta y sin que nadie lo viera en la Bandeja, y que un webhook sin `wsid` perdía los mensajes de los clientes más allá del décimo. Prueba también firmas, duplicados, ráfagas y bajas. Sin número real: no reemplaza probar contra Meta. |
 | 📦 Dependencias | ✅ | `npm audit` pasó de 8 avisos moderados a 0, sin bajar de versión `eslint-config-next`. |
 
 Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la **falla**, se **corrige** y se **vuelve a medir**.

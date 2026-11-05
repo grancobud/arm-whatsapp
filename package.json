@@ -15,6 +15,7 @@
     "eval:agente": "node --import ./evals/registrar.mjs evals/agente/correr.ts",
     "eval:herramientas": "node --import ./evals/registrar.mjs evals/herramientas/correr.ts",
     "eval:produccion": "node --import ./evals/registrar.mjs evals/produccion/correr.ts",
+    "eval:recorrido": "node --import ./evals/registrar.mjs evals/recorrido/correr.mjs",
     "eval:jev": "node --import ./evals/registrar.mjs evals/jev/correr.ts",
     "eval:revisor": "node --import ./evals/registrar.mjs evals/revisor/correr.ts",
     "eval:seguridad": "node --import ./evals/registrar.mjs evals/seguridad/correr.ts",

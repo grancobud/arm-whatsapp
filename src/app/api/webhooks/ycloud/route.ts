@@ -171,18 +171,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       ws = data ?? null;
     } else {
       // Fallback: phone-based lookup across all enabled integrations (inbound)
+      // Filtrado en la base: con un tope sobre todas, un cliente más allá del tope quedaba afuera.
       const { data: integrations } = await supabase
         .from("integrations")
         .select("workspace_id, credentials, config")
         .eq("provider", "ycloud")
         .eq("enabled", true)
-        .limit(10);
+        .eq("config->>phone_number", toPhone ?? "")
+        .limit(1);
 
-      ws =
-        (integrations ?? []).find(
-          (i: IntegrationRow) =>
-            (i.config as { phone_number?: string }).phone_number === toPhone,
-        ) ?? null;
+      ws = (integrations?.[0] as IntegrationRow | undefined) ?? null;
     }
 
     // No resolvable workspace → 401. A status update without a resolvable
