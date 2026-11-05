@@ -94,6 +94,7 @@ Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo.
 | `npm run eval:mcp -- --reps=2` | el agente con un servidor MCP real (stock, reserva con aprobación, orden escondida, sistema caído) | sí |
 | `npm run eval:agente -- --versiones=v3 --reps=2` | 18 charlas de WhatsApp, nota por código y por un juez | sí |
 | `npm run eval:herramientas -- --reps=2` | uso de herramientas con la función real | sí |
+| `npm run eval:produccion` | lo que recibe el cliente: `auto`, herramientas, traspaso y revisor, sin juez | sí |
 | `npm run eval:conocimiento` | si la búsqueda trae el fragmento correcto | sí |
 | `npm run eval:multimedia` | notas de voz, imágenes y PDFs | sí |
 | `npm run eval:cache` | cuánto del prompt se reutiliza | sí |

@@ -12,6 +12,9 @@ test("detecta lo que el modelo escribió de verdad al prometer un traspaso", () 
     "Perdoná, lamento mucho lo que pasó. Ya le avisé a Tito, el dueño, y te va a contactar hoy.",
     "Sí, ya le pasé tu mensaje a Tito.",
     "Tito se va a comunicar con vos.",
+    "¿Para qué día lo necesitás? Paso tu solicitud a Tito para que te confirme.",
+    "No puedo ver la agenda ahora. Le paso su consulta al equipo.",
+    "Los turnos los coordina el equipo. Te paso con Tito o algún peluquero para que te dé el horario.",
   ]) {
     assert.equal(promisesHandoff(texto), true, texto);
   }
