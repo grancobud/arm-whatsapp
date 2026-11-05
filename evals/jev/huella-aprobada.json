@@ -9,7 +9,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T05:52:16.359Z",
+  "fecha": "2026-11-05T13:32:35.290Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "Línea base inicial de la huella"
+  "motivo": "cada llamada al modelo tiene tope de tiempo y el filtro frena palabras en inglés"
 }

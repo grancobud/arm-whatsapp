@@ -477,6 +477,7 @@ export async function processNextBatch(opts?: {
       toolContext: toolCtx,
       history,
       temperature: activeAgent?.config.temperature,
+      deadlineAt: opts?.deadlineAt,
       onSideEffect: async () => {
         if (!meta.side_effects) await saveProgress({ side_effects: true });
       },
