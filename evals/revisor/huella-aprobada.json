@@ -1,5 +1,5 @@
 {
-  "total": "1f33e37fa6bd466b9a527887f8de73727f34c2950562d81c3295833c74dfc302",
+  "total": "1945454ce474185291da211b1ea124eba9c9f74804dd138153c5ba26597c0544",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
@@ -7,7 +7,7 @@
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/revisor/casos.json": "6a3d481ef2f0d9160c3ef517c4154b017a040b20175163ba82af69648e383569",
     "evals/revisor/correr.ts": "62e7f510147be58b144627fe7020d9308afdd00dd3c2a54bb4c12ed8ebda383a",
-    "src/features/agents/lib/starter-prompts.ts": "6f1c9d59561c02219d157d1c0e428d9e6cb6244597e165aa5fd8a84b44739655",
+    "src/features/agents/lib/starter-prompts.ts": "08350a9584589632729d3fd56c3c2ec5f245a9166b13f65c07f4a13e186bd84f",
     "src/features/inbox/services/business-info.ts": "025ac1a4d975f17707618f87e5f583801d82557e7a8938c8853f66310c51b809",
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
@@ -17,7 +17,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T12:17:01.338Z",
+  "fecha": "2026-11-05T12:42:24.556Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "el modelo y su respaldo del revisor comparten el tiempo, sin otros cambios"
+  "motivo": "reglas nuevas del prompt de arranque: turnos con herramienta, datos del cliente y uso interno de herramientas"
 }
