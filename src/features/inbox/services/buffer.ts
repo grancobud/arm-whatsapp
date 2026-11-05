@@ -3,6 +3,7 @@ import { resolveCitations } from "./kb-citations";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
 import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
+import { backHandoffPromise } from "./handoff-promise";
 import { recordLlmUsage } from "./cost-tracker";
 import { dispatchText, dispatchTemplate } from "./dispatch";
 import { decide, applyTransition } from "./decision-engine";
@@ -480,6 +481,19 @@ export async function processNextBatch(opts?: {
         if (!meta.side_effects) await saveProgress({ side_effects: true });
       },
     });
+
+    // ── 8a. A promised handoff has to happen, whatever the model did ─────────
+    // Before the review, so it sees the promise backed instead of rewriting it.
+    const forcedHandoff = await backHandoffPromise({
+      text: reply.text,
+      tools: decisionResult.availableTools,
+      results: reply.toolResults,
+      ctx: toolCtx,
+    });
+    if (forcedHandoff) {
+      reply.toolResults.push(forcedHandoff);
+      if (!meta.side_effects) await saveProgress({ side_effects: true });
+    }
 
     // ── 8b. Reply review (evaluador-optimizador, reply-review.ts) ───────────
     // A second call checks the draft against everything the agent had; a
