@@ -1,5 +1,5 @@
 {
-  "total": "0d6abb83e14ff433737b7bae37ada72e7d03e93500e57b0c803831174d4abcad",
+  "total": "6ce959161f518b36c5e24a4b8d0b0cc235e0203b7216b3f62816629b046cd2f5",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
@@ -15,7 +15,7 @@
     "src/features/inbox/services/media-understanding.ts": "8a0e0d5bdc59e9eba291e5bc12125ad8a312971c3cae6dd544a8b1b453cfaead",
     "src/features/inbox/services/model-chain.ts": "25ebc2960c5cfd3f7cbb556521f504411e8c9cae2b931c6b3bfb92596aade360",
     "src/features/inbox/services/openrouter.ts": "131a8d2f9fff3d66d0c7c101d2bbd154ce69ed39044668c548af6364c9f1f70a",
-    "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
+    "src/features/inbox/services/prompt-builder.ts": "c291b1db7e0b20d322f1ffa65c59eeacc0c545fb0e075ebec79d5f35956a230e",
     "src/features/inbox/services/reply-guard.ts": "330480e45c8df979f5590f92fd5fa3256cff441e40962f18162df833f30703e8",
     "src/features/inbox/services/reply-review.ts": "7572dc14885e95a5ceec64864ea867a8c8dc4cd77c48a0bbf02edefed36eb1e2",
     "src/features/inbox/services/sensitive-data.ts": "e4aade510395d73c6cd0d3302617ec91faf48b0ff412979a64e90f9d725da92a",
@@ -31,7 +31,7 @@
     "src/features/tools/tools/echo.ts": "cf25d4ff6609e199e3bfdc4e9358cbfa5e8d518134954765c3b977c842076656",
     "src/features/tools/tools/remember-fact.ts": "989e76397caef79fa9e918ceb37968b93911cda7310556b88696d8b48ccb5aa5",
     "src/features/tools/tools/request-human.ts": "5951b9a0bf8c3f69f399dd9329e7b617b1fcaefdd5a900cf8c5733884120fb1c",
-    "src/features/tools/tools/schedule-followup.ts": "c94de4332ea7453ac6df8b5a54b8262d740e6db5c09d94bfbe688ca360732cf8",
+    "src/features/tools/tools/schedule-followup.ts": "0d8c3c776c338a29f60d5fbcc3750931e0b9f3e8cd42ad97dbdcd0fcb3854ea2",
     "src/features/tools/tools/schedule-highlevel.ts": "3209d5241d3683daf3f0cb0c4c9f12bb1ea0d7da0587ad7982ff0ec3ff493af5",
     "src/features/tools/tools/schedule-link.ts": "c859864e6e2579c1733664f20817e97d552bc3cfb203627339e6619be1556349",
     "src/features/tools/tools/update-contact.ts": "41fdd6bb15babe0718eaad83451ea684df743704bb12b0d6b3873bbb8e610b18",
@@ -40,7 +40,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T16:13:59.202Z",
+  "fecha": "2026-11-05T19:36:49.969Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "guardias en codigo: traspaso por queja, datos de la ficha y ofertas de turno; cambia el codigo evaluado, no los casos"
+  "motivo": "nombre de la ficha en el prompt, seguimientos reemplazables y retoques finales; no cambian los casos"
 }

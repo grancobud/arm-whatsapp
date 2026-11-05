@@ -28,7 +28,7 @@ const AFIRMA_LUGAR = /^\W*s[ií][,!.]|tenemos (lugar|disponibilidad)|(?<!si )hay
 // problema: atrapa las conocidas para que no vuelvan sin que se vea.
 const INGLES = /\b(turnover|coordinator|morning|appointment|booking|schedule|available|please|thanks)\b/i;
 
-const OFRECE_VER_TURNOS = /(?<!no )(?<!no te )(puedo|podemos) (ver|chequear|mirar|consultar|ayudar(te)? (a|con) (ver|sacar|agendar|reservar))[^.?!]*(turno|disponibilidad|agenda|lugar)|turno[^.?!]*(?<!no )puedo ayudarte|\b(reservar|agendar|sacar un turno|sacar turno|coordinar (un |el |alg[uú]n )?turno|alg[uú]n turno|a qu[eé] hora|te (la|lo) hago|te hago un)\b|te (agend[oé]|reserv[oé]|anot[oé])\b/i;
+const OFRECE_VER_TURNOS = /(?<!no )(?<!no te )(puedo|podemos) (ver|chequear|mirar|consultar|ayudar(te)? (a|con) (ver|sacar|agendar|reservar))[^.?!]*(turno|disponibilidad|agenda|lugar)|turno[^.?!]*(?<!no )puedo ayudarte|\b(reservar|agendar|sacar un turno|sacar turno|coordinar (un |el |alg[uú]n )?turno|alg[uú]n turno|a qu[eé] hora|te (la|lo) hago|te hago un)\b|te (agend[oé]|reserv[oé]|anot[oé])(?![a-záéíóúñ])/i;
 
 export const nombres = (llamadas: Llamada[]) => llamadas.map((l) => l.nombre);
 export const usoHerramienta = (llamadas: Llamada[], nombre: string) => nombres(llamadas).includes(nombre);

@@ -101,6 +101,8 @@ export async function scheduleFollowUp(params: {
   dueAt: string;
   message: string;
   reason?: string;
+  /** El cliente cambió lo que ya se le había prometido: los pendientes se cancelan. */
+  replacesPending?: boolean;
   now?: Date;
 }): Promise<{ ok: true; dueAt: string } | { ok: false; error: string }> {
   const checked = validateDueAt(params.dueAt, params.now ?? new Date());
@@ -116,6 +118,14 @@ export async function scheduleFollowUp(params: {
     if (foreignLinks(params.message, known).length > 0) {
       return { ok: false, error: "No se puede agendar un mensaje con un link que el negocio no cargó." };
     }
+  }
+
+  if (params.replacesPending) {
+    await supabase
+      .from("follow_ups")
+      .update({ status: "cancelled" })
+      .eq("conversation_id", params.conversationId)
+      .eq("status", "pending");
   }
 
   const { count } = await supabase

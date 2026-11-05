@@ -5,8 +5,8 @@ import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./o
 import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
 import { backHandoffPromise, withHandoffNotice } from "./handoff-promise";
 import { starterPrompt } from "@/features/agents/lib/starter-prompts";
-import { backContactData, dropNameFromEmail } from "./contact-capture";
-import { removeBookingOffer } from "./booking-offer";
+import { backContactData } from "./contact-capture";
+import { finishReply } from "./reply-finish";
 import { recordLlmUsage } from "./cost-tracker";
 import { dispatchText, dispatchTemplate } from "./dispatch";
 import { decide, applyTransition } from "./decision-engine";
@@ -400,6 +400,11 @@ export async function processNextBatch(opts?: {
         getActiveClaims(batch.workspace_id, conversation.contact_id as string),
         getLessonsContext(batch.workspace_id),
       ]);
+    const { data: contactRow } = await supabase
+      .from("contacts")
+      .select("name")
+      .eq("id", conversation.contact_id as string)
+      .maybeSingle();
 
     const { data: pendingProposals } = await supabase
       .from("agent_proposals")
@@ -453,6 +458,7 @@ export async function processNextBatch(opts?: {
       lessonsContext,
       pendingActions,
       memoryContext,
+      contactName: (contactRow?.name as string | null) ?? null,
       kbContext,
       responseStyle: activeAgent?.config.responseStyle ?? null,
       guardrails: resolvedPrompt?.guardrails ?? null,
@@ -582,13 +588,12 @@ export async function processNextBatch(opts?: {
     }
 
     // ── 8c. Lo último que ve el texto, también si el revisor lo reescribió ──
-    replyText = dropNameFromEmail(replyText, mergedText);
-    const withoutOffer = removeBookingOffer(
+    const finished = finishReply(
       replyText,
       (decisionResult.availableTools ?? []).map((t) => t.name),
       mergedText,
     );
-    if (withoutOffer.changed) {
+    if (finished.bookingOfferRemoved) {
       await supabase.from("events").insert({
         type: "reply_guard",
         level: "info",
@@ -596,8 +601,8 @@ export async function processNextBatch(opts?: {
         conversation_id: batch.conversation_id,
         payload: { guard: "booking_offer_removed", draft: replyText.slice(0, 1000) },
       });
-      replyText = withoutOffer.text;
     }
+    replyText = finished.text;
 
     // Which KB fragments the reply says it used (shown in the inbox).
     const kbSources = resolveCitations(citedIds, kbResults);

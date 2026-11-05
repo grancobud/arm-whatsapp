@@ -13,8 +13,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { generateWithTools, createReviewCompleter } from "../../src/features/inbox/services/openrouter.ts";
 import { backHandoffPromise, withHandoffNotice } from "../../src/features/inbox/services/handoff-promise.ts";
-import { backContactData, dropNameFromEmail } from "../../src/features/inbox/services/contact-capture.ts";
-import { removeBookingOffer } from "../../src/features/inbox/services/booking-offer.ts";
+import { backContactData } from "../../src/features/inbox/services/contact-capture.ts";
+import { dropNameFromEmail } from "../../src/features/inbox/services/contact-capture.ts";
+import { finishReply } from "../../src/features/inbox/services/reply-finish.ts";
 import { reviewEnabled, reviewReply, type ToolOutcome } from "../../src/features/inbox/services/reply-review.ts";
 import { registry } from "../../src/features/tools/index.ts";
 import type { Tool, ToolResult } from "../../src/features/tools/core/tool.ts";
@@ -299,7 +300,7 @@ async function correr(c: Caso, rep: number) {
 
     // Los últimos pasos de buffer.ts, también si el revisor reescribió.
     const sinNombre = dropNameFromEmail(texto, c.mensaje);
-    const sinOferta = removeBookingOffer(sinNombre, nombresHerramientas, c.mensaje);
+    const sinOferta = finishReply(texto, nombresHerramientas, c.mensaje);
     const nombreQuitado = sinNombre !== texto;
     texto = sinOferta.text;
 
@@ -313,7 +314,7 @@ async function correr(c: Caso, rep: number) {
       forzado: !!forzado,
       datosForzados: datosForzados.length,
       nombreQuitado,
-      ofertaQuitada: sinOferta.changed,
+      ofertaQuitada: sinOferta.bookingOfferRemoved,
       revision,
       replyMs,
       reviewMs,
