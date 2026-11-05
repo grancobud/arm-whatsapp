@@ -1,5 +1,5 @@
 {
-  "total": "7ad962c4f8b01107e670069160b75f7d13fe33b667d5ef8e2679acc5bcf324e6",
+  "total": "1f33e37fa6bd466b9a527887f8de73727f34c2950562d81c3295833c74dfc302",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
@@ -12,12 +12,12 @@
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
     "src/features/inbox/services/reply-guard.ts": "4ec7fd1b1652601259634af8a5d209b818b70137697c8396f663546bcf0d30f2",
-    "src/features/inbox/services/reply-review.ts": "34c189b27c8f6b6bd6cbea59fec07642353f6b39c9221cc230df714a101cadae",
+    "src/features/inbox/services/reply-review.ts": "07fddd14e7190761051dec7fc2fe984ce2f1fb88e230acb5bb71b96302176265",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T12:01:42.754Z",
+  "fecha": "2026-11-05T12:17:01.338Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "el filtro también frena razonamiento en castellano, sin otros cambios"
+  "motivo": "el modelo y su respaldo del revisor comparten el tiempo, sin otros cambios"
 }

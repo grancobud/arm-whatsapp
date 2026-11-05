@@ -66,10 +66,31 @@ test("si el modelo del revisor falla, prueba con el otro", async () => {
   const falla: Complete = async () => {
     throw new Error("429");
   };
-  const pedido = { system: "", prompt: "", temperature: 0, maxOutputTokens: 1, timeoutMs: 1 };
+  const pedido = { system: "", prompt: "", temperature: 0, maxOutputTokens: 1, timeoutMs: 5_000 };
   assert.equal((await withBackup(ok("uno"), ok("dos"))(pedido)).text, "uno");
   assert.equal((await withBackup(falla, ok("dos"))(pedido)).text, "dos");
   await assert.rejects(withBackup(falla, falla)(pedido), /429/);
+});
+
+test("el modelo y su respaldo comparten el tiempo: entre los dos no se pasan", async () => {
+  const pedido = { system: "", prompt: "", temperature: 0, maxOutputTokens: 1, timeoutMs: 0 };
+  const tiempos: number[] = [];
+  const lento = (ms: number, texto?: string): Complete => async (req) => {
+    tiempos.push(req.timeoutMs);
+    await new Promise((r) => setTimeout(r, ms));
+    if (!texto) throw new Error("timeout");
+    return { text: texto, inputTokens: 0, outputTokens: 0 };
+  };
+
+  // El primero agota su parte: el respaldo recibe solo lo que queda.
+  assert.equal((await withBackup(lento(100), lento(0, "dos"))({ ...pedido, timeoutMs: 10_000 })).text, "dos");
+  assert.equal(tiempos[0], 7_000);
+  assert.ok(tiempos[1] <= 10_000 - 100 + 20 && tiempos[1] > 9_000, String(tiempos[1]));
+
+  // Sin tiempo para el respaldo, no lo llama.
+  tiempos.length = 0;
+  await assert.rejects(withBackup(lento(30), lento(0, "dos"))({ ...pedido, timeoutMs: 1_020 }));
+  assert.equal(tiempos.length, 1);
 });
 
 test("la regla de datos sensibles está en todos los prompts", () => {
