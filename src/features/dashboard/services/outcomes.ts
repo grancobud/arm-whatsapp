@@ -6,6 +6,7 @@
 // computeOutcomes is pure (tested in evals/metricas); getOutcomes only reads.
 
 import { createClient as createSbClient } from "@supabase/supabase-js";
+import { computeFirstResponse, type TimedMessage } from "./first-response";
 
 export const OUTCOME_DAYS = 30;
 /** A campaign recipient "came back" if they wrote within this many days. */
@@ -118,6 +119,8 @@ export function computeOutcomesByAgent(input: {
 }
 
 export interface Outcomes {
+  /** Mediana en segundos; null si todavía no hubo respuestas. */
+  firstResponseSeconds?: number | null;
   bookings: number;
   bookingLinks: number;
   qualifiedLeads: number;
@@ -237,7 +240,7 @@ export async function getOutcomes(workspaceId: string, now = new Date()): Promis
   const supabase = svc();
   const since = new Date(now.getTime() - OUTCOME_DAYS * DAY).toISOString();
 
-  const [events, inbound, recipients, followUps, activations, agents] = await Promise.all([
+  const [events, inbound, recipients, followUps, activations, agents, timed] = await Promise.all([
     supabase
       .from("events")
       .select("type, conversation_id, payload, created_at")
@@ -274,6 +277,13 @@ export async function getOutcomes(workspaceId: string, now = new Date()): Promis
       .order("created_at", { ascending: true })
       .limit(1_000),
     supabase.from("agents").select("id, name, type").eq("workspace_id", workspaceId),
+    supabase
+      .from("messages")
+      .select("conversation_id, direction, created_at, meta")
+      .eq("workspace_id", workspaceId)
+      .gte("created_at", since)
+      .order("created_at", { ascending: true })
+      .limit(20_000),
   ]);
 
   const recipientRows = (recipients.data ?? []) as CampaignRecipient[];
@@ -304,5 +314,6 @@ export async function getOutcomes(workspaceId: string, now = new Date()): Promis
       .map((a) => ({ agentId: a.payload!.agent_id!, at: a.created_at })),
     agents: (agents.data ?? []) as Array<{ id: string; name: string; type: string }>,
   });
+  outcomes.firstResponseSeconds = computeFirstResponse((timed.data ?? []) as TimedMessage[]);
   return outcomes;
 }

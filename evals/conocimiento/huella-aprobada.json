@@ -1,0 +1,15 @@
+{
+  "total": "74b836c8c13fe079b7b1197423e2d50e2610dace56d1bf4c05109f8c228cfd42",
+  "componentes": {
+    "evals/conocimiento/correr.ts": "2de20c5ddaeaca1f46e0d7cd6e5a5ddef82e9485bac423dd31fb09a017299545",
+    "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
+    "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
+    "src/features/inbox/services/kb-chunking.ts": "f89ea23fc10cde7bc06ed54529b76a45eb2168a6fd009298009714ddb78328cc",
+    "src/features/inbox/services/kb-rerank.ts": "a1a7607ad4dcafbf7806f5804a65c95876809ccbb69e53edbe377bd411d48f91",
+    "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "config": {},
+  "fecha": "2026-11-05T05:52:14.918Z",
+  "aprobadaPor": "Claude Code, a pedido de Gastón",
+  "motivo": "Línea base inicial de la huella"
+}

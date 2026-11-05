@@ -336,7 +336,7 @@ writeFileSync(
   ),
 );
 console.log(`\nDetalle completo: ${archivo.pathname}`);
-const sinJuez = resultados.filter((r) => !r.error && r.modelo === null).length;
-if (sinJuez > 0) {
-  console.log(`Ojo: ${sinJuez} de ${resultados.length} respuestas quedaron sin juez. Esta nota no sirve como línea base: repetila con --paralelo=1.`);
+const incompletas = resultados.filter((r) => r.modelo === null).length;
+if (incompletas > 0) {
+  console.log(`Ojo: ${incompletas} de ${resultados.length} respuestas fallaron o quedaron sin juez. Esta nota no sirve como línea base: repetila cuando haya cupo.`);
 }

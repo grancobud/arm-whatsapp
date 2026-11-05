@@ -11,6 +11,9 @@ import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-buil
 import { buildBusinessInfoContext } from "../../src/features/inbox/services/business-info.ts";
 import { starterPrompt } from "../../src/features/agents/lib/starter-prompts.ts";
 import { AHORA_FIJO, NEGOCIO } from "../agente/negocio.ts";
+import { exigirHuella } from "../exigir-huella.ts";
+
+exigirHuella(import.meta.url);
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {

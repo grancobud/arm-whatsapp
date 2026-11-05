@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { needsClientChoice } from "@/features/workspace/services/agency-gate";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/features/workspace/services/active-workspace";
 import { extractTemplateVariables } from "@/features/inbox/services/templates";
@@ -19,6 +20,7 @@ export default async function CampanasPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
+  if (await needsClientChoice(supabase, user.id)) redirect("/workspaces");
 
   const membership = await getActiveWorkspace(supabase, user.id);
 

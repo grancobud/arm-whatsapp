@@ -16,6 +16,7 @@ import type { CampaignRow, ProposalRow } from "../types";
 
 const PROPOSAL_STATUS: Record<ProposalRow["status"], string> = {
   pending: "Pendiente",
+  executing: "Ejecutando",
   executed: "Ejecutada",
   failed: "Falló",
   rejected: "Rechazada",

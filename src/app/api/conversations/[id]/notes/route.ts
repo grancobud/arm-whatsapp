@@ -62,6 +62,9 @@ export async function POST(
   });
 
   if (insertError) {
+    if (insertError.code === "42501") {
+      return NextResponse.json({ error: "No tenés permiso para escribir notas" }, { status: 403 });
+    }
     console.error("[POST /api/conversations/[id]/notes]:", insertError.message);
     return NextResponse.json(
       { error: "Error al guardar la nota" },

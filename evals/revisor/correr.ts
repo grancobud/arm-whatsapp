@@ -19,6 +19,9 @@ import { buildBusinessInfoContext } from "../../src/features/inbox/services/busi
 import { reviewReply, type Complete, type ToolOutcome } from "../../src/features/inbox/services/reply-review.ts";
 import { AHORA_FIJO, NEGOCIO } from "../agente/negocio.ts";
 import { PROMPTS } from "../agente/prompts.ts";
+import { exigirHuella } from "../exigir-huella.ts";
+
+exigirHuella(import.meta.url);
 
 interface Caso {
   id: string;

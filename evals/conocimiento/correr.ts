@@ -12,6 +12,9 @@ import { embedMany } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { chunkDocument } from "../../src/features/inbox/services/kb-chunking.ts";
 import { rerankHybrid } from "../../src/features/inbox/services/kb-rerank.ts";
+import { exigirHuella } from "../exigir-huella.ts";
+
+exigirHuella(import.meta.url);
 
 const baseURL =
   process.env.EVAL_BASE_URL ||

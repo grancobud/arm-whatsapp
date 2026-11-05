@@ -52,6 +52,8 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   check_availability: "Consulta los horarios libres reales del calendario de HighLevel.",
   remember_fact: "Guarda lo que el cliente cuenta (necesidad, objeción, compromiso, dato) citando su mensaje.",
   schedule_followup: "Cuando el agente promete escribirle al cliente más adelante, lo agenda y lo cumple.",
+  request_human: "Pasa la charla a una persona cuando el cliente se queja, negocia o lo pide.",
+  update_contact: "Guarda en la ficha el nombre o el correo que dio el cliente. Si hay otro valor, lo aprueba una persona.",
   custom_webhook: "Manda los datos a una URL tuya (HTTPS) para conectar otro sistema.",
 };
 
