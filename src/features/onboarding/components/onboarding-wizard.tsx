@@ -45,22 +45,22 @@ const USE_CASES: {
 }[] = [
   {
     id: "setter",
-    label: "Setter / Ventas",
-    description: "Califica leads, agenda citas y cierra ventas por WhatsApp.",
+    label: "Ventas",
+    description: "Califica interesados, saca turnos y cierra ventas por WhatsApp.",
     icon: <TrendingUp className="h-5 w-5" aria-hidden />,
   },
   {
     id: "soporte",
     label: "Soporte al cliente",
     description:
-      "Resuelve dudas, gestiona tickets y escala a humanos cuando es necesario.",
+      "Resuelve dudas y pasa a una persona cuando hace falta.",
     icon: <HeadphonesIcon className="h-5 w-5" aria-hidden />,
   },
   {
     id: "agendamiento",
     label: "Agendamiento",
     description:
-      "Reserva y confirma citas de forma automática con tus clientes.",
+      "Reserva y confirma turnos con tus clientes.",
     icon: <CalendarDays className="h-5 w-5" aria-hidden />,
   },
   {
@@ -111,11 +111,11 @@ function Step1({
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold text-foreground">
-          ¿Para qué usarás el agente?
+          ¿Para qué vas a usar el agente?
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Esto configurará el prompt inicial de tu asistente. Podrás modificarlo
-          después.
+          Con esto armamos las instrucciones iniciales de tu agente. Las podés
+          cambiar después.
         </p>
       </div>
 
@@ -185,7 +185,7 @@ function Step2({
           </Label>
           <Input
             id="business-name"
-            placeholder="Clínica Sonrisa Perfecta"
+            placeholder="Barbería El Faro"
             value={state.businessName}
             onChange={(e) => onChange({ businessName: e.target.value })}
             autoFocus
@@ -196,7 +196,7 @@ function Step2({
           <Label htmlFor="industry">Industria / Giro</Label>
           <Input
             id="industry"
-            placeholder="Salud dental, E-commerce, Bienes raíces..."
+            placeholder="Barbería, tienda online, inmobiliaria..."
             value={state.industry}
             onChange={(e) => onChange({ industry: e.target.value })}
           />
@@ -206,7 +206,7 @@ function Step2({
           <Label htmlFor="description">Descripción breve</Label>
           <Textarea
             id="description"
-            placeholder="Somos una clínica dental en Cancún especializada en ortodoncia y estética dental..."
+            placeholder="Somos una barbería en Palermo. Hacemos cortes, barba y corte infantil..."
             value={state.description}
             onChange={(e) => onChange({ description: e.target.value })}
             rows={4}
@@ -266,7 +266,7 @@ function Step3({
           Conectar YCloud
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Opcional. Podrás configurar esto más tarde desde Configuración →
+          Opcional. Lo podés completar más tarde desde Configuración →
           Integraciones.
         </p>
       </div>
@@ -285,18 +285,18 @@ function Step3({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="ycloud-phone">Número de WhatsApp (E.164)</Label>
+          <Label htmlFor="ycloud-phone">Número de WhatsApp, con código de país</Label>
           <Input
             id="ycloud-phone"
             type="tel"
-            placeholder="+521234567890"
+            placeholder="+5491123456789"
             value={state.ycloudPhone}
             onChange={(e) => onChange({ ycloudPhone: e.target.value })}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="ycloud-secret">Webhook Signing Secret</Label>
+          <Label htmlFor="ycloud-secret">Clave de firma del webhook (Webhook Signing Secret)</Label>
           <Input
             id="ycloud-secret"
             type="password"
@@ -386,7 +386,7 @@ function Step4({
         <Row label="Negocio" value={state.businessName} />
         {state.industry && <Row label="Industria" value={state.industry} />}
         <Row label="Tipo de agente" value={useCaseLabel} />
-        <Row label="Prompt inicial" value="Generado automáticamente" />
+        <Row label="Instrucciones iniciales" value="Generado automáticamente" />
         {state.ycloudApiKey && (
           <Row label="YCloud" value="Credenciales guardadas" />
         )}
@@ -500,7 +500,7 @@ export function OnboardingWizard() {
       setStep(3);
     } catch (err) {
       console.error("[OnboardingWizard] handleFinalize error:", err);
-      toast.error("Error inesperado al crear el workspace");
+      toast.error("Error inesperado al crear el cliente");
     } finally {
       setIsSubmitting(false);
     }

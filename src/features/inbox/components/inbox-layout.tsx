@@ -18,8 +18,8 @@ type FilterTab = "all" | "ai_active" | "human_active" | "handoff_pending";
 const TABS: { id: FilterTab; label: string }[] = [
   { id: "all", label: "Todos" },
   { id: "ai_active", label: "IA activa" },
-  { id: "human_active", label: "Humano" },
-  { id: "handoff_pending", label: "Handoff" },
+  { id: "human_active", label: "Persona" },
+  { id: "handoff_pending", label: "Esperan persona" },
 ];
 
 interface InboxLayoutProps {
@@ -58,12 +58,17 @@ export function InboxLayout({
     });
   }, [conversations, search, activeTab]);
 
+  // On a phone only one pane fits: the list, or whatever goes beside it (an open
+  // chat, or the next step while there is nothing to list yet).
+  const showListOnPhone = pathname === "/inbox" && conversations.length > 0;
+
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div className="flex h-[calc(100dvh-7rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden">
       {/* Left panel — conversation list */}
       <aside
         className={cn(
-          "w-80 shrink-0 border-r border-border/50 flex flex-col overflow-hidden",
+          "w-full md:w-80 shrink-0 md:border-r border-border/50 flex-col overflow-hidden",
+          showListOnPhone ? "flex" : "hidden md:flex",
         )}
         aria-label="Conversaciones"
       >
@@ -71,7 +76,7 @@ export function InboxLayout({
         <div className="shrink-0 px-4 pt-3 pb-2 border-b border-border/50 space-y-2">
           <div className="flex items-baseline justify-between">
             <h1 className="font-display text-sm font-semibold text-foreground">
-              Inbox
+              Bandeja
             </h1>
             <p className="text-xs text-muted-foreground">
               {filtered.length} de {conversations.length}
@@ -132,7 +137,7 @@ export function InboxLayout({
               <p className="text-xs text-muted-foreground/60 mt-1">
                 {search || activeTab !== "all"
                   ? "Probá con otro filtro o búsqueda"
-                  : "Los contactos de WhatsApp aparecerán aquí"}
+                  : "Cuando alguien te escriba, aparece acá"}
               </p>
             </div>
           ) : (
@@ -155,7 +160,9 @@ export function InboxLayout({
       </aside>
 
       {/* Right panel — thread / detail */}
-      <main className="flex-1 overflow-hidden">{children}</main>
+      <main className={cn("flex-1 min-w-0 overflow-hidden", showListOnPhone && "hidden md:block")}>
+        {children}
+      </main>
     </div>
   );
 }

@@ -20,11 +20,15 @@ import type {
 } from "@/features/dashboard/services/metrics";
 import type { ConversationState } from "@/features/inbox/types";
 
+import { NextStepCard } from "@/features/help/components/next-step-card";
+import type { SetupStatus } from "@/features/help/setup-status";
+
 interface DashboardMetricsProps {
   metrics: WorkspaceMetrics;
   recentConversations: RecentConversation[];
   outcomes: Outcomes;
   suggestions: Suggestion[];
+  setupStatus: SetupStatus;
 }
 
 interface KpiCardProps {
@@ -117,6 +121,7 @@ export function DashboardMetrics({
   recentConversations,
   outcomes,
   suggestions,
+  setupStatus,
 }: DashboardMetricsProps) {
   return (
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
@@ -129,6 +134,8 @@ export function DashboardMetrics({
           Qué logró el agente y qué pasa hoy
         </p>
       </div>
+
+      <NextStepCard status={setupStatus} />
 
       <ArmExplainer />
 

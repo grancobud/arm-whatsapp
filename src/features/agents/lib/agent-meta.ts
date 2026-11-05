@@ -12,12 +12,12 @@ export interface AgentTypeMeta {
 
 export const AGENT_TYPE_META: Record<AgentType, AgentTypeMeta> = {
   setter: {
-    label: "Setter",
-    tagline: "Califica leads y agenda citas",
+    label: "Ventas",
+    tagline: "Califica interesados y saca turnos",
     promptGuidance: [
-      "Define el objetivo: calificar y agendar.",
-      "Lista las preguntas clave para calificar (presupuesto, urgencia, etc.).",
-      "Indica cuándo escalar a un humano.",
+      "Definí el objetivo: calificar y sacar turno.",
+      "Listá las preguntas clave para calificar (presupuesto, urgencia, etc.).",
+      "Indicá cuándo pasar a una persona.",
       "Tono: amable, profesional y directo. Mensajes cortos.",
     ],
   },
@@ -25,19 +25,19 @@ export const AGENT_TYPE_META: Record<AgentType, AgentTypeMeta> = {
     label: "Soporte",
     tagline: "Resuelve dudas con precisión",
     promptGuidance: [
-      "Describe los temas que el agente puede resolver.",
-      "Define qué hacer cuando no sabe la respuesta (escalar).",
-      "Aclara el tono: empático y claro.",
-      "Recuérdale usar la base de conocimiento si existe.",
+      "Describí los temas que el agente puede resolver.",
+      "Definí qué hacer cuando no sabe la respuesta (pasar a una persona).",
+      "Aclará el tono: empático y claro.",
+      "Recordale usar la base de conocimiento si existe.",
     ],
   },
   agendamiento: {
     label: "Agendamiento",
-    tagline: "Reserva y confirma citas",
+    tagline: "Reserva y confirma turnos",
     promptGuidance: [
-      "Explica cómo agenda (link o calendario directo).",
+      "Explicá cómo agenda (link o calendario directo).",
       "Qué datos pedir antes de reservar.",
-      "Cómo confirmar y recordar la cita.",
+      "Cómo confirmar y recordar el turno.",
       "Tono: eficiente y cordial.",
     ],
   },

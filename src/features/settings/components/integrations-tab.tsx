@@ -237,7 +237,7 @@ function YCloudSection({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="ycloud-phone">Número de WhatsApp (E.164)</Label>
+          <Label htmlFor="ycloud-phone">Número de WhatsApp, con código de país</Label>
           <Input
             id="ycloud-phone"
             type="tel"
@@ -248,7 +248,7 @@ function YCloudSection({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="ycloud-secret">Webhook Signing Secret</Label>
+          <Label htmlFor="ycloud-secret">Clave de firma del webhook (Webhook Signing Secret)</Label>
           <Input
             id="ycloud-secret"
             type="password"
@@ -289,7 +289,7 @@ function YCloudSection({
 
         <div className="space-y-2">
           <Label htmlFor="ycloud-buffer">
-            Tiempo de espera del buffer (segundos)
+            Tiempo de espera antes de responder (segundos)
           </Label>
           <Input
             id="ycloud-buffer"
@@ -665,11 +665,11 @@ function HighLevelSection({
   return (
     <Section
       title="HighLevel"
-      description="Conectá tu CRM con un Private Integration Token (PIT). Requerido para sincronizar contactos y agendar en el calendario."
+      description="Conectá tu CRM con una clave de HighLevel (Private Integration Token). Requerido para sincronizar contactos y agendar en el calendario."
     >
       <div className="grid gap-4">
         <div className="space-y-2">
-          <Label htmlFor="hl-pit">Private Integration Token (PIT)</Label>
+          <Label htmlFor="hl-pit">Clave de HighLevel (Private Integration Token)</Label>
           <Input
             id="hl-pit"
             type="password"
@@ -679,7 +679,7 @@ function HighLevelSection({
             autoComplete="off"
           />
           <p className="text-xs text-muted-foreground">
-            GHL → Settings → Private Integrations → crea un token con permisos
+            GHL → Settings → Private Integrations → creá un token con permisos
             de contactos y calendarios.
           </p>
         </div>

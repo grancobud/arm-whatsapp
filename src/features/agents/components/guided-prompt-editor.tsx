@@ -162,7 +162,7 @@ export function GuidedPromptEditor({ workspaceId, agent, onPublished }: Props) {
           onChange={(e) => setRules(e.target.value)}
           rows={3}
           placeholder={
-            "Una regla por línea. Ej.:\nConfirma siempre el nombre del cliente\nOfrece agendar una cita al final"
+            "Una regla por línea. Ej.:\nConfirmá siempre el nombre del cliente\nOfrecé sacar un turno al final"
           }
         />
         <p className="text-[11px] text-muted-foreground">

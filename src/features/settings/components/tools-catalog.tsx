@@ -65,15 +65,15 @@ const sensitivityConfig: Record<
   { label: string; className: string; Icon?: React.ElementType }
 > = {
   read: {
-    label: "lectura",
+    label: "solo consulta",
     className: "text-blue-400 border-blue-400/30",
   },
   write: {
-    label: "escritura",
+    label: "guarda datos",
     className: "text-amber-400 border-amber-400/30",
   },
   sensitive: {
-    label: "sensible",
+    label: "manda datos afuera",
     className: "text-orange-400 border-orange-400/30",
     Icon: Lock,
   },

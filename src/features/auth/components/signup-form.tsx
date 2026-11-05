@@ -42,7 +42,7 @@ export function SignupForm() {
           Crear cuenta
         </h1>
         <p className="text-sm text-muted-foreground">
-          Empieza a gestionar tu inbox con IA
+          Empezá a atender tu WhatsApp con IA
         </p>
       </div>
 

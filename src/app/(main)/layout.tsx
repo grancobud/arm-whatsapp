@@ -239,7 +239,7 @@ export default async function MainLayout({
           className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           <Settings className="h-5 w-5" aria-hidden="true" />
-          <span>Ajustes</span>
+          <span>Config.</span>
         </Link>
 
         <Link
