@@ -195,7 +195,7 @@ export function ChatThread({
         {/* Sticky header */}
         <header
           className={cn(
-            "glass-strong shrink-0 flex items-center justify-between",
+            "glass-strong shrink-0 flex flex-wrap items-center justify-between gap-y-2",
             "px-4 py-3 border-b border-border/50",
           )}
         >
@@ -206,7 +206,7 @@ export function ChatThread({
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </Link>
-          <div className="flex-1 space-y-0.5 min-w-0">
+          <div className="flex-1 basis-[calc(100%-2.5rem)] md:basis-0 space-y-0.5 min-w-0">
             <h2 className="font-display text-sm font-semibold text-foreground truncate">
               {conversation.contact.name ?? conversation.contact.phone}
             </h2>
@@ -215,7 +215,7 @@ export function ChatThread({
             </p>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex w-full items-center justify-end gap-1 md:w-auto shrink-0">
             {/* Handoff button — gated by role */}
             {conversation.state === "ai_active" && (
               <RoleGate role={role} check={canHandoff}>
