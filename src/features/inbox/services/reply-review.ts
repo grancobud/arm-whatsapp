@@ -191,13 +191,23 @@ export type Complete = (req: {
  * Tries a second model when the first one errors. Found by evals/seguridad: with
  * the reviewer's model out of quota the review failed open and attacks it
  * normally stops went out.
+ *
+ * Both share req.timeoutMs. Measured in production: with 20 s for each model a
+ * review took 40 s against a 25 s budget, eating the time left to send the reply.
+ * An error that comes fast leaves nearly all of it to the backup.
  */
+const PRIMARY_TIME_SHARE = 0.7;
+const MIN_BACKUP_MS = 1_000;
+
 export function withBackup(primary: Complete, backup: Complete): Complete {
   return async (req) => {
+    const startedAt = Date.now();
     try {
-      return await primary(req);
-    } catch {
-      return backup(req);
+      return await primary({ ...req, timeoutMs: Math.round(req.timeoutMs * PRIMARY_TIME_SHARE) });
+    } catch (err) {
+      const left = req.timeoutMs - (Date.now() - startedAt);
+      if (left < MIN_BACKUP_MS) throw err;
+      return backup({ ...req, timeoutMs: left });
     }
   };
 }

@@ -1,5 +1,5 @@
 {
-  "total": "0f75bf2e16ce08736329369b769f12b1474ea007cfcaea58a3e579d04320a8f2",
+  "total": "75769ac86f313422ce7d0e78141d891d3df428c9647e81b32bd143f6d3293526",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
@@ -17,7 +17,7 @@
     "src/features/inbox/services/openrouter.ts": "cb75cc695b6977c1459e41fe67041c08f7f9c5b6478d84d71280f39fceaad039",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
     "src/features/inbox/services/reply-guard.ts": "4ec7fd1b1652601259634af8a5d209b818b70137697c8396f663546bcf0d30f2",
-    "src/features/inbox/services/reply-review.ts": "34c189b27c8f6b6bd6cbea59fec07642353f6b39c9221cc230df714a101cadae",
+    "src/features/inbox/services/reply-review.ts": "07fddd14e7190761051dec7fc2fe984ce2f1fb88e230acb5bb71b96302176265",
     "src/features/inbox/services/sensitive-data.ts": "e4aade510395d73c6cd0d3302617ec91faf48b0ff412979a64e90f9d725da92a",
     "src/features/inbox/services/turn-recovery.ts": "3a3223ee0c845f0ed7e126688669f4db6690611556be9d1e4d4285808e560558",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
@@ -40,7 +40,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T12:01:41.036Z",
+  "fecha": "2026-11-05T12:16:59.756Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "el filtro también frena razonamiento en castellano, sin otros cambios"
+  "motivo": "el modelo y su respaldo del revisor comparten el tiempo, sin otros cambios"
 }
