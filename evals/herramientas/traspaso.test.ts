@@ -2,7 +2,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { backHandoffPromise, promisesHandoff } from "../../src/features/inbox/services/handoff-promise.ts";
 import { checkReply } from "../../src/features/inbox/services/reply-guard.ts";
+import { upcomingDays } from "../../src/features/inbox/services/business-info.ts";
 import type { Tool } from "../../src/features/tools/core/tool.ts";
+
+test("la semana calculada le da al modelo la fecha del viernes", () => {
+  const linea = upcomingDays("America/Argentina/Buenos_Aires", new Date("2026-11-03T11:00:00-03:00"));
+  assert.match(linea, /viernes 2026-11-06/);
+  assert.match(linea, /miércoles 2026-11-04/);
+  assert.match(linea, /martes 2026-11-10/);
+});
 
 test("detecta lo que el modelo escribió de verdad al prometer un traspaso", () => {
   for (const texto of [
