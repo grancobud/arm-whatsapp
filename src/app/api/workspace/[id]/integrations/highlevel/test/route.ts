@@ -10,7 +10,7 @@ export async function POST(
 ) {
   const { id: workspaceId } = await params;
 
-  const auth = await requireWorkspaceMember(workspaceId);
+  const auth = await requireWorkspaceMember(workspaceId, { minRole: "manager" });
   if (!auth.ok) return auth.response;
 
   const cfg = await getHLConfig(workspaceId);
