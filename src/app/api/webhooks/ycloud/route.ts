@@ -374,7 +374,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
       try {
         // maxDuration is 60 s from the request: keep a margin.
-        await processNextBatch({ deadlineAt: requestStartedAt + (maxDuration - 5) * 1000 });
+        await processNextBatch({
+          deadlineAt: requestStartedAt + (maxDuration - 5) * 1000,
+          conversationId: conversationId,
+        });
       } catch (e) {
         console.error(
           "[webhook] fast-path process error:",

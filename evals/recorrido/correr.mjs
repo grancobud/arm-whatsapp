@@ -20,7 +20,8 @@ const APP = "http://localhost:3101";
 const db = createClient(lab.url, lab.service, { auth: { persistSession: false } });
 const SECRETO = "secreto-del-webhook";
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
-const controlar = (c) => writeFileSync(lab.control, JSON.stringify(c));
+// Tras una falla la app usa el respaldo por un minuto: por defecto responde, salvo que el caso diga otra cosa.
+const controlar = (c) => writeFileSync(lab.control, JSON.stringify({ respaldo: "ok", ...c }));
 const pedidos = () =>
   readFileSync(lab.log, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
 
@@ -124,7 +125,9 @@ async function cronYa(conversationId) {
 }
 
 // En producción el cron corre cada minuto y levanta lo que el camino rápido no alcanzó.
+let cronPausado = false;
 setInterval(() => {
+  if (cronPausado) return;
   fetch(`${APP}/api/cron/buffer-flush`, { headers: { Authorization: `Bearer ${lab.cron}` } }).catch(() => {});
 }, 15_000).unref();
 
@@ -151,6 +154,7 @@ const casos = {
     const salida = salientes(r).find((m) => m.body?.includes(TEXTO));
     chequear("normal", "queda guardada con su identificador", salida?.wamid, JSON.stringify(salida));
     chequear("normal", "el envío llegó a YCloud con el teléfono correcto", pedidos().some((p) => p.destino === "ycloud" && p.body?.includes(de.replace("+", "")) && p.body?.includes(TEXTO)));
+    await dormir(1500); // El lote se marca un momento después de enviar.
     const lote = await db.from("message_batches").select("status").eq("conversation_id", r.conversacion.id);
     chequear("normal", "el lote queda procesado", lote.data?.every((b) => b.status === "processed"), JSON.stringify(lote.data));
     console.log(`     salidas: ${salientes(r).map((m) => (m.body ?? "").slice(0, 60)).join(" | ")}`);
@@ -377,6 +381,38 @@ const casos = {
     }, 90_000);
     chequear("modeloColgado", "el turno se corta y queda para reintentar", x, "siguió colgado 90 s");
     console.log(`     cortó a los ${Math.round((Date.now() - inicio) / 1000)} s; ${JSON.stringify(x?.lotes?.map((b) => [b.status, String(b.meta?.last_error).slice(0, 70)]))}`);
+  },
+
+  // El reintento de un cliente con el modelo colgado no puede demorar a otro.
+  async colaCompartida({ a }) {
+    cronPausado = true;
+    try {
+      controlar({ texto: TEXTO, colgarSi: "COLGAR" });
+      const deA = nuevoCliente();
+      await webhook(evento(a.telefono, deA, "COLGAR este mensaje"));
+      const conA = await esperar(async () => {
+        const y = await conversacionDe(a.id, deA);
+        if (!y.conversacion) return null;
+        const lotes = (await db.from("message_batches").select("meta").eq("conversation_id", y.conversacion.id)).data ?? [];
+        return lotes.some((b) => b.meta?.last_error) ? y : null;
+      }, 60_000);
+      if (!conA) return chequear("colaCompartida", "preparación", false);
+
+      const deB = nuevoCliente();
+      const inicio = Date.now();
+      await webhook(evento(a.telefono, deB, "Hola, otro cliente"));
+      // El reintento de A vence justo antes que el mensaje de B: es el primero de la cola.
+      await db.from("message_batches").update({ flush_at: new Date(Date.now() - 1000).toISOString() }).eq("conversation_id", conA.conversacion.id).eq("status", "buffering");
+      const conB = await esperar(async () => {
+        const y = await conversacionDe(a.id, deB);
+        return salientes(y).some((m) => m.body?.includes(TEXTO)) ? y : null;
+      }, 20_000);
+      const segundos = Math.round((Date.now() - inicio) / 1000);
+      console.log(`     el otro cliente: ${conB ? `respondió a los ${segundos} s` : "sin respuesta en 20 s"}`);
+      chequear("colaCompartida", "el otro cliente responde sin esperar al colgado", conB && segundos <= 12, `${segundos} s`);
+    } finally {
+      cronPausado = false;
+    }
   },
 
   async queja({ a }) {

@@ -237,8 +237,28 @@ async function consolidateBatch(
 export async function processNextBatch(opts?: {
   /** Epoch ms by which the turn must be done (the caller's function limit). */
   deadlineAt?: number;
+  /**
+   * Atender solo esta conversación. La cola es global y por antigüedad: sin esto, el
+   * reintento de otro cliente con el modelo colgado le ganaba el turno al que acaba de
+   * escribir, que quedaba esperando al cron. El resto de la cola lo atiende el cron.
+   */
+  conversationId?: string;
 }): Promise<ProcessBatchResult> {
   const supabase = svc();
+
+  if (opts?.conversationId) {
+    // Un solo UPDATE condicional: si otro lo tomó antes, no devuelve nada.
+    const { data: own, error: ownError } = await supabase
+      .from("message_batches")
+      .update({ status: "processing", updated_at: new Date().toISOString() })
+      .eq("conversation_id", opts.conversationId)
+      .eq("status", "buffering")
+      .lte("flush_at", new Date().toISOString())
+      .select();
+    if (ownError) return { processed: false, error: ownError.message };
+    const ownBatch = (own as MessageBatch[] | null)?.[0];
+    return ownBatch ? processClaimedBatch(ownBatch, opts) : { processed: false };
+  }
 
   // ── 1. Claim one ready batch atomically ───────────────────────────────────
   const { data: claimedRows, error: claimError } =
@@ -255,6 +275,14 @@ export async function processNextBatch(opts?: {
   if (!batch) {
     return { processed: false };
   }
+  return processClaimedBatch(batch, opts);
+}
+
+async function processClaimedBatch(
+  batch: MessageBatch,
+  opts?: { deadlineAt?: number },
+): Promise<ProcessBatchResult> {
+  const supabase = svc();
 
   // One turn at a time per conversation: a message that arrives while a reply is
   // being written opens a new batch, and two replies at once would overlap.

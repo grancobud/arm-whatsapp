@@ -96,6 +96,7 @@ globalThis.fetch = async (input, init = {}) => {
     if (!/chat\/completions/.test(url)) return json({ error: "sin esto en el laboratorio" }, 404);
     if (modo === "429") return json({ error: { message: "sin cupo simulado" } }, 429);
     if (modo === "colgado") return esperarCorte(init.signal);
+    if (c.colgarSi && String(ultimo).includes(c.colgarSi)) return esperarCorte(init.signal);
     return respuestaModelo(pedido, c);
   }
   return real(input, init);
