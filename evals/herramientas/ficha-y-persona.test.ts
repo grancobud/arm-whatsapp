@@ -23,6 +23,10 @@ test("el valor tiene que estar en las palabras del cliente", () => {
   assert.equal(invalidContactValue("name", "José", "soy jose"), null);
   assert.ok(invalidContactValue("name", "12345678", "soy 12345678"));
   assert.ok(invalidContactValue("name", "<script>", "soy <script>"));
+  // Salió de verdad: el modelo guardó la pregunta del cliente como su nombre.
+  assert.ok(invalidContactValue("name", "tenés turno para mañana?", "tenés turno para mañana?"));
+  assert.ok(invalidContactValue("name", "quiero sacar un turno para el viernes", "quiero sacar un turno para el viernes"));
+  assert.equal(invalidContactValue("name", "María de los Ángeles Pérez", "soy María de los Ángeles Pérez"), null);
 });
 
 test("solo se deshace si nadie volvió a cambiar el campo", () => {

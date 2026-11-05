@@ -297,7 +297,7 @@ export async function processNextBatch(opts?: {
       return { processed: true, conversationId: batch.conversation_id };
     }
     if (previous === "hand_to_person") {
-      throw new Error("El turno anterior se cortó después de usar una herramienta");
+      throw new Error("El turno anterior se cortó después de usar una herramienta o de empezar a enviar");
     }
     if (previous === "give_up") {
       throw new Error("El turno se cortó demasiadas veces");
@@ -577,6 +577,7 @@ export async function processNextBatch(opts?: {
     }
 
     // ── 10a. Dispatch via single exit point (SEC-04) ────────────────────────
+    await saveProgress({ send_started: true });
     const dispatchResult = await dispatchText({
       workspaceId: batch.workspace_id,
       conversationId: batch.conversation_id,

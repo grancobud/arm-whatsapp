@@ -22,6 +22,11 @@ test("un turno cortado después de una herramienta pasa a una persona", () => {
   assert.equal(turnRecovery({ side_effects: true, attempts: 1 }), "hand_to_person");
 });
 
+test("un turno cortado al enviar no se repite: la respuesta pudo haber llegado", () => {
+  assert.equal(turnRecovery({ send_started: true, attempts: 1 }), "hand_to_person");
+  assert.equal(turnRecovery({ send_started: true, reply_sent: true, attempts: 1 }), "finish");
+});
+
 test("sin nada hecho reintenta, con un tope que cuenta las corridas que murieron", () => {
   assert.equal(turnRecovery({ attempts: 1 }), "retry");
   assert.equal(turnRecovery({ attempts: MAX_TURN_ATTEMPTS - 1 }), "retry");

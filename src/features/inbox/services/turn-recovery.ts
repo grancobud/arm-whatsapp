@@ -16,6 +16,8 @@ export interface TurnProgress {
   attempts?: number;
   /** A tool with side effects started: running the turn again would repeat it. */
   side_effects?: boolean;
+  /** The send started: if nothing else was saved, the customer may have the reply. */
+  send_started?: boolean;
   /** The customer already got the reply. */
   reply_sent?: boolean;
 }
@@ -25,7 +27,9 @@ export type TurnRecovery = "retry" | "finish" | "hand_to_person" | "give_up";
 /** Pure: how to go on from what this batch already did. */
 export function turnRecovery(progress: TurnProgress): TurnRecovery {
   if (progress.reply_sent) return "finish";
-  if (progress.side_effects) return "hand_to_person";
+  // Cortado entre el envío y guardar reply_sent: no se sabe si llegó. Repetirlo puede
+  // mandar la respuesta dos veces; una persona lo ve y decide.
+  if (progress.side_effects || progress.send_started) return "hand_to_person";
   if ((progress.attempts ?? 0) >= MAX_TURN_ATTEMPTS) return "give_up";
   return "retry";
 }
