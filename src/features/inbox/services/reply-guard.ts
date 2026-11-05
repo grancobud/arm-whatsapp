@@ -8,7 +8,7 @@
 //
 // Pure module (no imports) so it can be unit-tested on its own.
 
-export type UnusableReason = "empty" | "truncated" | "leaked_reasoning";
+export type UnusableReason = "empty" | "truncated" | "leaked_reasoning" | "mixed_language";
 
 export interface ReplyCheck {
   /** Text to send: reasoning tags stripped. Only meaningful when ok. */
@@ -25,6 +25,11 @@ const LEAK_AT_START =
 const LEAK_ANYWHERE =
   /\b(system prompt|developer (message|instruction)s?|the user (asks|says|wants|is asking)|higher[- ]level (system )?instructions|seg[uú]n (las|mis) (reglas|instrucciones),? (debo|tengo|no debo|no puedo|si)|(la|las) reglas? (dice|dicen|indica|indican)|mis instrucciones|(el|la) (cliente|clienta|usuario|usuaria) (pregunta|pide|dice|quiere|est[aá]|escribe|se queja))\b/i;
 
+// Palabras en inglés que dots-3-note metió en respuestas en castellano ("para sacar
+// turnover", "coordinator el turno"). Lista corta a propósito: la frena solo cuando
+// no hay forma de que sea una palabra del negocio. Otra pasada del modelo lo arregla.
+const MIXED_LANGUAGE = /\b(turnover|coordinator|appointment|scheduled)\b/i;
+
 /** Drops <think>…</think> blocks; an unclosed <think> means everything after it is reasoning. */
 export function stripThinking(text: string): string {
   let out = text.replace(/<think(ing)?>[\s\S]*?<\/think(ing)?>/gi, "");
@@ -40,5 +45,6 @@ export function checkReply(rawText: string, finishReason?: string): ReplyCheck {
   if (LEAK_AT_START.test(text) || LEAK_ANYWHERE.test(text.slice(0, 400))) {
     return { text, ok: false, reason: "leaked_reasoning" };
   }
+  if (MIXED_LANGUAGE.test(text)) return { text, ok: false, reason: "mixed_language" };
   return { text, ok: true };
 }

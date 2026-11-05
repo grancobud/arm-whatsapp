@@ -1,5 +1,5 @@
 {
-  "total": "b4a9dc11bf39aaa3c8536dfe8b572c1ebd3b3d0db767f61ac6e276f9a90550fe",
+  "total": "1d323fc2f9188f648a3ac3a70428b03199333ae37737d09a6417e6c9f2b7ae57",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
@@ -15,14 +15,14 @@
     "src/features/inbox/services/kb-rerank.ts": "a1a7607ad4dcafbf7806f5804a65c95876809ccbb69e53edbe377bd411d48f91",
     "src/features/inbox/services/kb-service.ts": "964d51bd93857536d280abf7034a129148d5604b82d68e1eacd400b7d6e7a4b0",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
-    "src/features/inbox/services/reply-guard.ts": "4ec7fd1b1652601259634af8a5d209b818b70137697c8396f663546bcf0d30f2",
+    "src/features/inbox/services/reply-guard.ts": "e7c40289f98e157c30e51bd1a0a95af4de31bfb61bd1dcc9fe8540813ad9b6b6",
     "src/features/inbox/services/reply-review.ts": "07fddd14e7190761051dec7fc2fe984ce2f1fb88e230acb5bb71b96302176265",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "src/features/tools/mcp/mcp-tools.ts": "d502720951c927fb36fb2d49606c3fdc4567c3ca21a6d7c5b495aa11e99fedf5",
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T12:42:26.338Z",
+  "fecha": "2026-11-05T13:32:32.670Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "reglas nuevas del prompt de arranque: turnos con herramienta, datos del cliente y uso interno de herramientas"
+  "motivo": "cada llamada al modelo tiene tope de tiempo y el filtro frena palabras en inglés"
 }

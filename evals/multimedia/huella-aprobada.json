@@ -1,5 +1,5 @@
 {
-  "total": "f9705e6c4d4474d86fc378ba9dfb1664b818f0346ec5c43ec416a92c8fe52606",
+  "total": "53d87f662090a6c7640cc4cbdad6b140cf14460ac82f5d3628eae0ed31902add",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
@@ -13,10 +13,10 @@
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/llm-failover.ts": "4504e97252df4ef5f5b4e6b3f65890f84a0ca97c0868703699293caa1bd11091",
     "src/features/inbox/services/media-understanding.ts": "8a0e0d5bdc59e9eba291e5bc12125ad8a312971c3cae6dd544a8b1b453cfaead",
-    "src/features/inbox/services/model-chain.ts": "5a953e959516375ca204870b62b02a71905cf4ae1c30f568d41b29696dd227ea",
-    "src/features/inbox/services/openrouter.ts": "cb75cc695b6977c1459e41fe67041c08f7f9c5b6478d84d71280f39fceaad039",
+    "src/features/inbox/services/model-chain.ts": "25ebc2960c5cfd3f7cbb556521f504411e8c9cae2b931c6b3bfb92596aade360",
+    "src/features/inbox/services/openrouter.ts": "5093beffe3d18431f42b960100546d476e1b43e8b9170c2cb0ee765e0855c69a",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
-    "src/features/inbox/services/reply-guard.ts": "4ec7fd1b1652601259634af8a5d209b818b70137697c8396f663546bcf0d30f2",
+    "src/features/inbox/services/reply-guard.ts": "e7c40289f98e157c30e51bd1a0a95af4de31bfb61bd1dcc9fe8540813ad9b6b6",
     "src/features/inbox/services/reply-review.ts": "07fddd14e7190761051dec7fc2fe984ce2f1fb88e230acb5bb71b96302176265",
     "src/features/inbox/services/sensitive-data.ts": "e4aade510395d73c6cd0d3302617ec91faf48b0ff412979a64e90f9d725da92a",
     "src/features/inbox/services/turn-recovery.ts": "3a3223ee0c845f0ed7e126688669f4db6690611556be9d1e4d4285808e560558",
@@ -40,7 +40,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T12:42:22.991Z",
+  "fecha": "2026-11-05T13:32:29.542Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "reglas nuevas del prompt de arranque: turnos con herramienta, datos del cliente y uso interno de herramientas"
+  "motivo": "cada llamada al modelo tiene tope de tiempo y el filtro frena palabras en inglés"
 }
