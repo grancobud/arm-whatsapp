@@ -1,5 +1,5 @@
 {
-  "total": "6a822f8af0c65187ac7c06dc624407a1770fe71b78dbe49adb6e08de0bfe62fc",
+  "total": "cf7e5f1e04cbb88bbeec2ddbe4acbd9a1d7ada27b2bed41107243b48dc21972d",
   "componentes": {
     "evals/agente/calificadores.ts": "dd7c287001480631e5f8849ea89b0309af9f8517765f634957aaeeb5aa518031",
     "evals/agente/casos.json": "70d6300221a343f2689b282882038fee21ff640f7dcc602fb332a508a5a6bfae",
@@ -13,7 +13,7 @@
     "src/features/inbox/services/kb-rerank.ts": "a1a7607ad4dcafbf7806f5804a65c95876809ccbb69e53edbe377bd411d48f91",
     "src/features/inbox/services/kb-service.ts": "964d51bd93857536d280abf7034a129148d5604b82d68e1eacd400b7d6e7a4b0",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
-    "src/features/inbox/services/reply-guard.ts": "4ec7fd1b1652601259634af8a5d209b818b70137697c8396f663546bcf0d30f2",
+    "src/features/inbox/services/reply-guard.ts": "e7c40289f98e157c30e51bd1a0a95af4de31bfb61bd1dcc9fe8540813ad9b6b6",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "config": "32f44f92ec27b7d5366ab2153af49b15a6b48e990f340b1eef15876fd9afb188"
   },
@@ -30,7 +30,7 @@
     "maxTokensRespuesta": 700,
     "maxTokensJuez": 1000
   },
-  "fecha": "2026-11-05T12:01:34.834Z",
+  "fecha": "2026-11-05T13:32:24.225Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "el filtro también frena razonamiento en castellano, sin otros cambios"
+  "motivo": "cada llamada al modelo tiene tope de tiempo y el filtro frena palabras en inglés"
 }

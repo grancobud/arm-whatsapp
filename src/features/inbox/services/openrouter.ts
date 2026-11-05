@@ -48,6 +48,7 @@ import { registry } from "@/features/tools/index";
 import { getActiveAgent } from "@/features/agents/services/active-agent";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 import {
+  modelCallTimeoutMs,
   buildModelChain,
   runWithModelChain,
   UnusableReplyError,
@@ -324,6 +325,7 @@ export async function generateReply(
     buildModelChain(modelId),
     async (m) => {
       const r = await generateText({
+        abortSignal: AbortSignal.timeout(modelCallTimeoutMs()),
         model: openrouter.chat(m),
         system: systemPrompt,
         messages: [{ role: "user", content: userMessage }],
@@ -408,6 +410,7 @@ export async function generateChatReply(params: {
     async (m) => {
       const r = await withTransientRetry(() =>
         generateText({
+          abortSignal: AbortSignal.timeout(modelCallTimeoutMs()),
           model: openrouter.chat(m),
           system: params.systemPrompt,
           messages: params.messages,
@@ -451,6 +454,8 @@ export interface GenerateWithToolsParams {
   history?: Array<{ role: "user" | "assistant"; content: string }>;
   /** Overrides DEFAULT_TEMPERATURE (agent config). */
   temperature?: number;
+  /** Epoch ms by which the turn must be done: each model call stops in time. */
+  deadlineAt?: number;
 }
 
 export interface GenerateWithToolsResult {
@@ -522,8 +527,11 @@ export async function generateWithTools(
         ...(params.history ?? []),
         { role: "user", content: params.userMessage },
       ];
+      // Una sola señal para la llamada y su cierre: entre las dos no se pasan.
+      const abortSignal = AbortSignal.timeout(modelCallTimeoutMs(params.deadlineAt));
       const r = await generateText({
         model: openrouter.chat(m),
+        abortSignal,
         system: params.systemPrompt,
         messages,
         temperature: params.temperature ?? DEFAULT_TEMPERATURE,
@@ -541,6 +549,7 @@ export async function generateWithTools(
       if (hasTools && r.steps.length > 1 && !stripThinking(r.text)) {
         const closing = await generateText({
           model: openrouter.chat(m),
+          abortSignal,
           system: params.systemPrompt,
           messages: [...messages, ...r.response.messages],
           temperature: params.temperature ?? DEFAULT_TEMPERATURE,

@@ -66,6 +66,21 @@ export function buildModelChain(
   return out;
 }
 
+// Medido el 05/11 con eval:produccion: una respuesta tardó 209 s. La función tiene
+// 60 s, así que moría antes de enviar y sin dejar registro. Con este tope el modelo
+// se corta a tiempo: pasa al siguiente o el turno se reintenta.
+export const MODEL_CALL_TIMEOUT_MS = 25_000;
+// Lo que hay que dejar para enviar la respuesta antes del límite de la función.
+export const RESERVE_TO_SEND_MS = 8_000;
+const MIN_MODEL_CALL_MS = 1_000;
+
+/** Cuánto puede tardar un modelo ahora. Sin plazo del turno, solo vale el tope. */
+export function modelCallTimeoutMs(deadlineAt?: number, now: number = Date.now()): number {
+  if (deadlineAt === undefined) return MODEL_CALL_TIMEOUT_MS;
+  const left = deadlineAt - now - RESERVE_TO_SEND_MS;
+  return Math.min(MODEL_CALL_TIMEOUT_MS, Math.max(left, MIN_MODEL_CALL_MS));
+}
+
 /**
  * Whether a failure with this model should move on to the next one.
  * Any API-level failure qualifies (429 saturated, 402 no credit, 403 gated,
