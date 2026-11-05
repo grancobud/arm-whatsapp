@@ -1,17 +1,11 @@
 // F7: Setter mode — knockout qualification + scoring via structured LLM evaluation.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 function getModel() {
   const openai = createOpenAI({

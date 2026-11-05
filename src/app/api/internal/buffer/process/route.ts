@@ -1,6 +1,6 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { processNextBatch } from "@/features/inbox/services/buffer";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -16,12 +16,6 @@ import { processNextBatch } from "@/features/inbox/services/buffer";
 // workspace_id is NEVER trusted from the request body — always read server-side.
 // ──────────────────────────────────────────────────────────────────────────────
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 function verifyHmac(rawBody: string, providedSig: string): boolean {
   const secret = process.env.BUFFER_PROCESS_SECRET;

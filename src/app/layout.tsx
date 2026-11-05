@@ -5,7 +5,7 @@ import { GeistMono } from "geist/font/mono";
 import { Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { Agentation } from "agentation";
+import { DevTools } from "@/components/dev-tools";
 import { brandStyleOverride } from "@/lib/branding";
 import "./globals.css";
 
@@ -51,7 +51,7 @@ export default async function RootLayout({
         >
           {children}
           <Toaster />
-          {process.env.NODE_ENV === "development" && <Agentation />}
+          <DevTools />
         </ThemeProvider>
       </body>
     </html>

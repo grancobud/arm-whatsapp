@@ -1,7 +1,7 @@
 // Loads a workspace's MCP servers from the DB and turns them into the turn's
 // tools (see mcp-tools.ts for the design rules).
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 import { validateWebhookUrl } from "../services/ssrf-guard";
 import type { Tool } from "../core/tool";
@@ -14,12 +14,6 @@ import {
   type McpToolPolicy,
 } from "./mcp-tools";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 /** Credentials are bound to this provider id, so a blob moved between servers fails to decrypt. */
 export const mcpProvider = (slug: string) => `mcp:${slug}`;

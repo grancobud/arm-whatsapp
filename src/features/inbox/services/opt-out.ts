@@ -13,7 +13,7 @@
 // message, or as an unambiguous phrase in a short one. "¿Hay baja de precio?"
 // must never unsubscribe anyone.
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import type { ConversationState } from "./state-machine";
 
 export type ConsentIntent = "opt_out" | "opt_in";
@@ -80,12 +80,6 @@ export function classifyConsentMessage(text: string | null | undefined): Consent
   return null;
 }
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export type ConsentOutcome = "opted_out" | "opted_in" | "ignored_opted_out";
 

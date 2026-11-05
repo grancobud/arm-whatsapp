@@ -1,3 +1,4 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { reviewEnabled, reviewReply, type ReviewOutcome } from "@/features/inbox/services/reply-review";
@@ -5,7 +6,6 @@ import { createReviewCompleter } from "@/features/inbox/services/openrouter";
 import { getLessonsContext } from "@/features/arm/services/lessons";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as svcClient } from "@supabase/supabase-js";
 import {
   generateChatReply,
   getWorkspaceModel,
@@ -28,8 +28,7 @@ import {
   DEFAULT_TIMEZONE,
 } from "@/features/inbox/services/business-info";
 import { getEnabledTools } from "@/features/tools/services/tool-configs";
-import { backHandoffPromise, withHandoffNotice } from "@/features/inbox/services/handoff-promise";
-import { backContactData } from "@/features/inbox/services/contact-capture";
+import { applyTurnGuards } from "@/features/inbox/services/turn-guards";
 import { finishReply } from "@/features/inbox/services/reply-finish";
 import type { AgentConfig } from "@/features/agents/types";
 
@@ -52,12 +51,6 @@ const Schema = z.object({
   modelOverride: z.string().max(120).optional(),
 });
 
-function svc() {
-  return svcClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export async function POST(
   req: NextRequest,
@@ -198,25 +191,14 @@ export async function POST(
     const replyMs = Date.now() - startedAt;
     const toolResults = [...(reply.toolResults ?? [])];
     // Same guarantee as production (buffer.ts). Without a conversation it changes nothing.
-    const forcedHandoff = await backHandoffPromise({
+    const { text: guardedText, forcedHandoff } = await applyTurnGuards({
       text: reply.text,
+      customerText: lastUserMessage,
       tools,
       results: toolResults,
       ctx: { workspaceId, conversationId: "", contactId: "" },
-      customerText: lastUserMessage,
     });
-    if (forcedHandoff) {
-      toolResults.push(forcedHandoff);
-      if (forcedHandoff.status === "ok") reply.text = withHandoffNotice(reply.text);
-    }
-    toolResults.push(
-      ...(await backContactData({
-        customerText: lastUserMessage,
-        tools,
-        results: toolResults,
-        ctx: { workspaceId, conversationId: "", contactId: "" },
-      })),
-    );
+    reply.text = guardedText;
 
     // Same reply review as production (buffer.ts), so the playground shows
     // what the customer would get.

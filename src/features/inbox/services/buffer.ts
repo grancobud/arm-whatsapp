@@ -1,12 +1,11 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { inboundMessageText } from "./inbound-text";
 import { resolveCitations } from "./kb-citations";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
 import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
-import { backHandoffPromise, withHandoffNotice } from "./handoff-promise";
+import { applyTurnGuards } from "./turn-guards";
 import { starterPrompt } from "@/features/agents/lib/starter-prompts";
-import { backContactData } from "./contact-capture";
 import { finishReply } from "./reply-finish";
 import { recordLlmUsage } from "./cost-tracker";
 import { dispatchText, dispatchTemplate } from "./dispatch";
@@ -92,12 +91,6 @@ export interface ProcessBatchResult {
 // ──────────────────────────────────────────────────────────────────────────────
 // Service-role Supabase client — only used inside services/, never in routes
 // ──────────────────────────────────────────────────────────────────────────────
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // upsertBatch
@@ -541,28 +534,16 @@ async function processClaimedBatch(
 
     // ── 8a. A promised or needed handoff has to happen, whatever the model did ──
     // Before the review, so it sees the promise backed instead of rewriting it.
-    const forcedHandoff = await backHandoffPromise({
+    const { text: guardedText, forcedHandoff, savedContactData } = await applyTurnGuards({
       text: reply.text,
-      tools: decisionResult.availableTools,
-      results: reply.toolResults,
-      ctx: toolCtx,
-      customerText: mergedText,
-    });
-    if (forcedHandoff) {
-      reply.toolResults.push(forcedHandoff);
-      if (forcedHandoff.status === "ok") reply.text = withHandoffNotice(reply.text);
-      if (!meta.side_effects) await saveProgress({ side_effects: true });
-    }
-    // Lo que el cliente dijo clarito queda en la ficha aunque el modelo se olvide.
-    const savedContactData = await backContactData({
       customerText: mergedText,
       tools: decisionResult.availableTools,
       results: reply.toolResults,
       ctx: toolCtx,
     });
-    if (savedContactData.length > 0) {
-      reply.toolResults.push(...savedContactData);
-      if (!meta.side_effects) await saveProgress({ side_effects: true });
+    reply.text = guardedText;
+    if ((forcedHandoff || savedContactData.length > 0) && !meta.side_effects) {
+      await saveProgress({ side_effects: true });
     }
 
     // ── 8b. Reply review (evaluador-optimizador, reply-review.ts) ───────────

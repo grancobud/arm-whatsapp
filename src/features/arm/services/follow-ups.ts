@@ -12,8 +12,8 @@
 //   - The conversation was closed or paused (opt-out) → cancelled.
 // Messages only go out between 9 and 21 in the business's time zone.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { DEFAULT_TIMEZONE } from "@/features/inbox/services/business-info";
 import { withinSendingHours } from "@/features/automations/engine";
 import type { ConversationState } from "@/features/inbox/services/state-machine";
@@ -88,12 +88,6 @@ export function validateDueAt(dueAt: string, now: Date): { date: Date } | { erro
   return { date };
 }
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export async function scheduleFollowUp(params: {
   workspaceId: string;

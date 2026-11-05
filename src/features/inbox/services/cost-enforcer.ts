@@ -2,15 +2,9 @@
 // Distinct from cost-tracker.ts (which only records usage).
 // This module ACTS on budget state: degrade or cut AI when thresholds are crossed.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // Hard cut: AI is completely halted above this daily token count
 const DAILY_TOKEN_HARD_LIMIT = 1_500_000;

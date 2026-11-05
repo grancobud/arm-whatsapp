@@ -1,21 +1,15 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 // Sends an approved template on the business's behalf, outside a person's
 // hands (automations, kept promises). Templates with no variables go as is;
 // with exactly one, it is filled with the contact's first name. Anything else
 // is skipped: we have no data to fill it with and a wrong value is worse.
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
 
 export type TemplateSendResult =
   | { status: "sent"; detail: string }
   | { status: "skipped"; detail: string }
   | { status: "failed"; detail: string };
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export async function sendApprovedTemplate(params: {
   workspaceId: string;

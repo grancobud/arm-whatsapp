@@ -2,17 +2,11 @@
  * templates.ts — Template management: list, sync from YCloud, helpers.
  */
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { fetchYCloudTemplates } from "./ycloud-client";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types

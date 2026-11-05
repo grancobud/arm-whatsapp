@@ -2,8 +2,8 @@
 
 // Server actions for graduated autonomy (Configuración → Herramientas).
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { registry } from "@/features/tools";
 import {
@@ -14,12 +14,6 @@ import {
   type TrackRecord,
 } from "@/features/tools/lib/autonomy";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 async function assertAdminOrManager(workspaceId: string): Promise<string | null> {
   const supabase = await createClient();

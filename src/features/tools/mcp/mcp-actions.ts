@@ -5,7 +5,7 @@
 // checked against SSRF and the auth header is stored encrypted.
 // NOTE: a "use server" file may only export async functions (no types).
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
 import { encryptCredentials } from "@/shared/lib/integration-secrets";
@@ -16,12 +16,6 @@ import { listRemoteTools } from "./mcp-tools";
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 type Policy = "read" | "sensitive" | "off";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 const PUBLIC_COLUMNS = "id, slug, name, url, enabled, tool_policies, created_at";
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err)).slice(0, 200);

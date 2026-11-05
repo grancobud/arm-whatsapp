@@ -1,6 +1,6 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { createClient as svcClient } from "@supabase/supabase-js";
 import { extractText, getDocumentProxy } from "unpdf";
 import { getOpenRouterApiKey } from "./openrouter";
 import { checkReply } from "./reply-guard";
@@ -40,12 +40,6 @@ const CUSTOM_AUDIO_MODEL =
 /** Characters of a PDF's text passed on to the agent. */
 const MAX_DOCUMENT_CHARS = 2000;
 
-function svc() {
-  return svcClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 async function downloadBytes(storagePath: string): Promise<Uint8Array | null> {
   const { data, error } = await svc()

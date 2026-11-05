@@ -1,12 +1,6 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 const ALLOWED_YCLOUD_HOST = "api.ycloud.com";
 const BUCKET = "whatsapp-media";

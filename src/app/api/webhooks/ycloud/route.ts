@@ -1,5 +1,5 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { type NextRequest, NextResponse, after } from "next/server";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { sendPrivacyNoticeOnce } from "@/features/inbox/services/privacy-notice";
 import {
   verifyYCloudSignature,
@@ -28,12 +28,6 @@ import { isMarketingOptOutError, messageErrorCode } from "@/features/arm/service
 // (sleep through the buffer window + AI generation). The cron is the fallback.
 export const maxDuration = 60;
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // WH-02: monotonic status order — never go backwards
 const STATUS_ORDER = ["queued", "sent", "delivered", "read"] as const;

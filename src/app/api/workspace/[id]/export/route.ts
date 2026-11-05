@@ -7,17 +7,11 @@
 // tokens are never part of an export. Reads page through each table so the
 // PostgREST row cap never truncates the file silently.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 const PAGE_SIZE = 1000;
 // A hard ceiling per table keeps one export inside the function time limit.

@@ -8,19 +8,13 @@
  * API v2 docs: https://highlevel.stoplight.io/docs/integrations
  */
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 
 const HL_BASE_URL = "https://services.leadconnectorhq.com";
 const HL_API_VERSION = "2021-07-28";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types

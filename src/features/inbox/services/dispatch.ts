@@ -5,19 +5,13 @@
  * No other module should invoke those functions directly for user-facing sends.
  */
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { sendText, sendTemplate } from "./ycloud-client";
 import type { TemplateParams } from "./ycloud-client";
 import { formatWhatsAppMarkdown } from "./text-formatter";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 import { canReceiveMarketing, isMarketingTemplate, NO_MARKETING_CONSENT } from "./marketing-consent";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Parameter interfaces

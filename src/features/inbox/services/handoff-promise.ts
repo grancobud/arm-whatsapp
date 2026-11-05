@@ -5,6 +5,7 @@
 // request_human (0 de 3). Nadie se enteraba. Depender de que el modelo se acuerde
 // no alcanza: si el texto final lo promete, el traspaso se hace acá.
 
+import { plainText as plain } from "@/lib/plain-text";
 import type { Tool, ToolContext } from "@/features/tools/core/tool";
 import { toolOutcome, type ToolOutcome } from "./reply-review";
 
@@ -32,13 +33,6 @@ const PROMISES = [
   /\bse (va|van) a (comunicar|contactar) con vos\b/,
   /\bse comunica(n)? con vos\b/,
 ];
-
-function plain(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-}
 
 /** Las oraciones que afirman algo: una pregunta o un "si querés" es solo una oferta. */
 function affirmedSentences(text: string): string[] {

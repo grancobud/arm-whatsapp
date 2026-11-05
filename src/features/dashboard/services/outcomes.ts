@@ -5,7 +5,7 @@
 //
 // computeOutcomes is pure (tested in evals/metricas); getOutcomes only reads.
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { computeFirstResponse, type TimedMessage } from "./first-response";
 
 export const OUTCOME_DAYS = 30;
@@ -229,12 +229,6 @@ export function computeOutcomes(input: {
   };
 }
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export async function getOutcomes(workspaceId: string, now = new Date()): Promise<Outcomes> {
   const supabase = svc();

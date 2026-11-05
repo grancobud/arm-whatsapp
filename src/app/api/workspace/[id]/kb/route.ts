@@ -1,22 +1,16 @@
 // F7: Knowledge base API — ingest documents and list KB for a workspace.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSvcClient } from "@supabase/supabase-js";
 import {
   ingestDocument,
   listKbDocuments,
 } from "@/features/inbox/services/kb-service";
 import { fetchUrlText } from "@/features/inbox/services/url-scraper";
 
-function svc() {
-  return createSvcClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 const IngestSchema = z.object({
   title: z.string().min(1).max(500),

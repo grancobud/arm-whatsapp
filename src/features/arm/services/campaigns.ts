@@ -6,7 +6,7 @@
 // approves it, the buffer-flush cron drains recipients in small batches so no
 // single request runs into the Vercel timeout.
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { dailyRoom, hasOptOutInstruction, OPT_OUT_LINE, shouldStopCampaign } from "./campaign-rules";
 import { dispatchTemplate } from "@/features/inbox/services/dispatch";
 import { canReceiveMarketing } from "@/features/inbox/services/marketing-consent";
@@ -16,12 +16,6 @@ import type {
   CampaignSegment,
 } from "../types";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export const MAX_RECIPIENTS_PER_CAMPAIGN = 500;
 const SEND_BATCH_SIZE = 20;

@@ -4,11 +4,11 @@
 // at submit time, build the YCloud `components` from the stored rich fields, and
 // flip the row to status='submitted' on success.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import {
   createYCloudTemplate,
   resolveWabaId,
@@ -23,12 +23,6 @@ import {
 } from "@/features/settings/lib/template-form";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 const BodySchema = z.object({ id: z.string().uuid() });
 

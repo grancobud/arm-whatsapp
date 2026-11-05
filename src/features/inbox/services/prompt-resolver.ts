@@ -1,16 +1,10 @@
 // F7: Prompt resolver — hierarchy-based system prompt selection.
 // Resolves the most specific published prompt for a given context.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import type { PromptGuardrails } from "./prompt-builder";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export interface ResolvedPrompt {
   body: string;

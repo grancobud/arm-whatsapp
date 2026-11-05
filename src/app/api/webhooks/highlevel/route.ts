@@ -7,19 +7,13 @@
  * source of truth (wsid query param), not the payload locationId.
  */
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { syncContactFromHL } from "@/features/inbox/services/highlevel-client";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 interface HLWebhookBody {
   type?: string;
