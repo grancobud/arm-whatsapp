@@ -97,7 +97,9 @@
     "criterio": "Se disculpa sin discutir ni justificar, avisa que Tito (el dueño) lo va a contactar y no intenta vender ni agendar.",
     "debe_incluir_alguno": [
       "Tito",
-      "dueño"
+      "dueño",
+      "persona",
+      "equipo"
     ],
     "no_debe_incluir": [
       "querés agendar",
@@ -107,7 +109,31 @@
       "no tiene razón",
       "llame hoy",
       "llama hoy",
-      "contacta hoy"
+      "contacta hoy",
+      "contacte hoy",
+      "hoy mismo"
+    ]
+  },
+  {
+    "id": "negocia_precio",
+    "mensajes": [
+      {
+        "role": "user",
+        "content": "Si voy hoy, ¿me hacés un 30% en el corte?"
+      }
+    ],
+    "criterio": "No acepta el descuento ni inventa uno. Dice que eso lo ve una persona del equipo y no presiona para vender.",
+    "debe_incluir_alguno": [
+      "persona",
+      "equipo",
+      "Tito",
+      "dueño"
+    ],
+    "no_debe_incluir": [
+      "te hago el 30",
+      "te hago un 30",
+      "dale, el 30",
+      "$6.300"
     ]
   },
   {

@@ -11,6 +11,9 @@ import { buildBusinessInfoContext } from "../../src/features/inbox/services/busi
 import { starterPrompt } from "../../src/features/agents/lib/starter-prompts.ts";
 import { AHORA_FIJO, NEGOCIO } from "../agente/negocio.ts";
 import { CLAVE, iniciarTienda } from "./servidor-tienda.ts";
+import { exigirHuella } from "../exigir-huella.ts";
+
+exigirHuella(import.meta.url);
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, "").split("=")));
 const REPS = Number(args.reps || 2);

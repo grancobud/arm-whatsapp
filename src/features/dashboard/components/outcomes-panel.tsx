@@ -1,5 +1,6 @@
-import { CalendarCheck, Star, Bot, Megaphone, HandHeart, UserMinus } from "lucide-react";
+import { CalendarCheck, Star, Bot, Megaphone, HandHeart, Timer, UserMinus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatResponseTime } from "@/features/dashboard/services/first-response";
 import { OUTCOME_DAYS, REPLY_WINDOW_DAYS, type Outcomes } from "@/features/dashboard/services/outcomes";
 
 function Stat({
@@ -91,6 +92,12 @@ export function OutcomesPanel({ outcomes: o }: { outcomes: Outcomes }) {
             icon={<HandHeart className={icon} aria-hidden="true" />}
           />
         )}
+        <Stat
+          label="Primera respuesta"
+          value={o.firstResponseSeconds == null ? "—" : formatResponseTime(o.firstResponseSeconds)}
+          hint="Tiempo típico hasta contestarle a un cliente"
+          icon={<Timer className="h-4 w-4" aria-hidden="true" />}
+        />
         <Stat
           label="Bajas"
           value={n(o.optOuts)}

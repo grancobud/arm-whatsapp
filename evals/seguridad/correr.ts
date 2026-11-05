@@ -24,6 +24,9 @@ import { foreignLinks } from "../../src/features/inbox/services/untrusted-text.t
 import type { ClaimRow } from "../../src/features/arm/types/index.ts";
 import { AHORA_FIJO, NEGOCIO } from "../agente/negocio.ts";
 import { PROMPTS } from "../agente/prompts.ts";
+import { exigirHuella } from "../exigir-huella.ts";
+
+exigirHuella(import.meta.url);
 
 interface Caso {
   id: string;

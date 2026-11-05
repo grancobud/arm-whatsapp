@@ -3,6 +3,9 @@
 
 import { callFreeJudge } from "@/features/jev-judge/free-judge";
 import { mapJudgment } from "@/features/jev-judge/map-judgment";
+import { exigirHuella } from "../exigir-huella.ts";
+
+exigirHuella(import.meta.url);
 
 const CASES: Array<{ text: string; decision: "respond" | "handoff" | "abstain" | Array<"respond" | "abstain">; optOut?: boolean; stage?: string | null }> = [
   { text: "Hola, vi el anuncio, ¿cuánto cuesta?", decision: "respond", stage: "engaged" },

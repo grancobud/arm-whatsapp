@@ -3,7 +3,7 @@ import { processNextBatch } from "@/features/inbox/services/buffer";
 import { drainCampaignQueue } from "@/features/arm/services/campaigns";
 import { checkAlerts } from "@/features/alerts/alerts";
 import { runAutomations } from "@/features/automations/engine";
-import { runFollowUps } from "@/features/arm/services/follow-ups";
+import { failStaleProposals, runFollowUps } from "@/features/arm/services/follow-ups";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Vercel Cron: process buffer batches every minute
@@ -54,6 +54,9 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   // Messages the agent promised to send later. Never throws.
   const followUps = await runFollowUps();
+
+  // Aprobaciones que se cortaron a mitad de camino. Un error acá no frena el resto.
+  await failStaleProposals().catch((err) => console.error("[cron] failStaleProposals failed:", err));
 
   // Email digest of new problems (every few minutes, with a cooldown). Never
   // throws, so it cannot break the reply loop either.

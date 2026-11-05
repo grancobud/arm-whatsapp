@@ -252,7 +252,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 179.
+corre 189.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |

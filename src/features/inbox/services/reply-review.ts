@@ -164,7 +164,7 @@ export function buildRewriteInput(
     teamWillSee
       ? "Si el problema es una acción que no se hizo, no digas que la hiciste ni que quedó reservada o confirmada: el pedido quedó pendiente y una persona del equipo lo va a confirmar, así que decí eso."
       : "Si el problema es una acción que no se hizo, no digas que la hiciste ni que quedó reservada o confirmada, y NO prometas que el equipo lo confirma o le escribe (nadie se va a enterar). Decí que no pudiste hacerlo o confirmarlo y preguntale si quiere que lo pases con una persona del equipo.",
-    "Devolvé solo el mensaje nuevo para el cliente, sin explicaciones.",
+    "Usá el mismo trato que el cliente (vos o usted) y no le preguntes lo que ya te pidió. Devolvé solo el mensaje nuevo para el cliente, sin explicaciones.",
     "",
     "<mensaje_del_cliente>",
     cut(customerMessage, 2000),

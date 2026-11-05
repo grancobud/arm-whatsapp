@@ -110,6 +110,8 @@ export interface TransitionOptions {
   userId?: string;
   /** What caused it: keyword | agent | manual. Recorded in the event payload. */
   trigger?: string;
+  /** La respuesta del agente ya le avisa al cliente: no mandar el aviso automático. */
+  skipAck?: boolean;
 }
 
 /**
@@ -189,7 +191,7 @@ export async function applyTransition(
   // 5. Side effects of the new state. Deliberately last and deliberately
   //    non-throwing: the transition above is already committed and must stand
   //    even if notifying anyone fails.
-  if (to === "handoff_pending") {
+  if (to === "handoff_pending" && !opts.skipAck) {
     const { notifyHandoffPending } = await import("./handoff-notifier");
     await notifyHandoffPending({
       workspaceId: conv.workspace_id as string,

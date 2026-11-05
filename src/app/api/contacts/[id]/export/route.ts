@@ -32,7 +32,7 @@ export async function GET(
     db.from(table).select(columns).eq("workspace_id", found.workspace_id);
 
   try {
-    const [contact, conversations, claims, appointments, followUps, proposals, campaigns] =
+    const [contact, conversations, claims, appointments, followUps, proposals, campaigns, changes] =
       await Promise.all([
         scoped(
           "contacts",
@@ -44,9 +44,10 @@ export async function GET(
         scoped("follow_ups", "id, due_at, message, reason, status, created_at, done_at").eq("contact_id", contactId),
         scoped("agent_proposals", "id, tool_name, args, status, result, decided_at, created_at").eq("contact_id", contactId),
         scoped("campaign_recipients", "id, campaign_id, status, sent_at, created_at").eq("contact_id", contactId),
+        scoped("contact_changes", "id, field, old_value, new_value, quote, reverted_at, created_at").eq("contact_id", contactId),
       ]);
 
-    const results = [contact, conversations, claims, appointments, followUps, proposals, campaigns];
+    const results = [contact, conversations, claims, appointments, followUps, proposals, campaigns, changes];
     const failed = results.find((r) => r.error);
     if (failed?.error) throw new Error(failed.error.message);
 
@@ -81,6 +82,7 @@ export async function GET(
           follow_ups: followUps.data,
           proposals: proposals.data,
           campaigns: campaigns.data,
+          contact_changes: changes.data,
         },
         null,
         2,

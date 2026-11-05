@@ -1,4 +1,5 @@
 import { lookup } from "node:dns/promises";
+import { Agent, fetch as undiciFetch } from "undici";
 import { isIP } from "node:net";
 
 const MAX_REDIRECTS = 3;
@@ -106,6 +107,33 @@ export async function validateWebhookUrl(
   return null;
 }
 
+type LookupResult = { address: string; family: number };
+type LookupDone = (err: Error | null, address: string | LookupResult[], family?: number) => void;
+
+/**
+ * DNS lookup for the actual connection: a host that answered with a public
+ * address during validation can't switch to an internal one when connecting.
+ */
+export function safeLookup(
+  hostname: string,
+  options: { all?: boolean },
+  done: LookupDone,
+  resolve: (host: string) => Promise<LookupResult[]> = (host) => lookup(host, { all: true }),
+): void {
+  resolve(hostname)
+    .then((addresses) => {
+      if (addresses.length === 0 || addresses.some((a) => isBlockedIp(a.address))) {
+        done(new Error("URL no permitida"), "", 0);
+        return;
+      }
+      if (options.all) done(null, addresses);
+      else done(null, addresses[0].address, addresses[0].family);
+    })
+    .catch((err: Error) => done(err, "", 0));
+}
+
+const pinnedAgent = new Agent({ connect: { lookup: safeLookup as never } });
+
 /**
  * fetch that validates the URL and every redirect it follows: a public page
  * must not be able to bounce the server into an internal address.
@@ -113,13 +141,21 @@ export async function validateWebhookUrl(
 export async function fetchPublicUrl(
   url: string,
   init: RequestInit,
-  opts?: { allowHttp?: boolean },
+  opts?: { allowHttp?: boolean; fetchImpl?: typeof fetch },
 ): Promise<Response> {
+  // Por defecto, con la dirección controlada al conectarse (safeLookup).
+  const send: typeof fetch =
+    opts?.fetchImpl ??
+    ((target, options) =>
+      undiciFetch(target as string, {
+        ...(options as object),
+        dispatcher: pinnedAgent,
+      }) as unknown as Promise<Response>);
   let current = url;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const problem = await validateWebhookUrl(current, opts);
     if (problem) throw new Error("URL no permitida");
-    const res = await fetch(current, { ...init, redirect: "manual" });
+    const res = await send(current, { ...init, redirect: "manual" });
     const location = res.headers.get("location");
     if (res.status < 300 || res.status >= 400 || !location) return res;
     current = new URL(location, current).toString();

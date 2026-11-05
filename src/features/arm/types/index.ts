@@ -31,7 +31,7 @@ export interface ClaimRow {
   created_at: string;
 }
 
-export type ProposalStatus = "pending" | "executed" | "failed" | "rejected";
+export type ProposalStatus = "pending" | "executing" | "executed" | "failed" | "rejected";
 
 export interface ProposalRow {
   id: string;

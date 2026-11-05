@@ -143,6 +143,31 @@ export async function scheduleFollowUp(params: {
  * Sends due follow-ups. Returns how many were handled. Never throws: the cron
  * that calls it also answers WhatsApp messages.
  */
+/**
+ * Una propuesta aprobada cuya herramienta nunca terminó (la función se cortó):
+ * se marca fallida y la conversación pasa a una persona, que ve qué quedó a medias.
+ */
+export async function failStaleProposals(now = new Date()): Promise<number> {
+  const db = svc();
+  const limit = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
+  const { data } = await db
+    .from("agent_proposals")
+    .update({ status: "failed", result: { ok: false, error: "La ejecución se cortó y no se sabe si terminó" } })
+    .eq("status", "executing")
+    .lt("decided_at", limit)
+    .select("id, workspace_id, conversation_id");
+  for (const row of (data ?? []) as { id: string; workspace_id: string; conversation_id: string | null }[]) {
+    await db.from("events").insert({
+      workspace_id: row.workspace_id,
+      conversation_id: row.conversation_id,
+      type: "turn_incomplete",
+      level: "error",
+      payload: { proposal_id: row.id },
+    });
+  }
+  return data?.length ?? 0;
+}
+
 export async function runFollowUps(now = new Date()): Promise<number> {
   try {
     const supabase = svc();

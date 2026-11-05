@@ -72,7 +72,7 @@ async function logToolCall(
   }
 }
 
-async function createProposal(
+export async function createProposal(
   name: string,
   args: unknown,
   ctx: ToolContext,

@@ -1,0 +1,28 @@
+{
+  "total": "795582a3a0f1c9e31cc363b842b7dd18030411fbbae14298485d5e9764750f00",
+  "componentes": {
+    "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
+    "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
+    "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
+    "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
+    "evals/seguridad/correr.ts": "419c8fb8d31d7aa72c6e38f03e6e5ff4bdf67535449dd371137162243c3f44f2",
+    "src/features/agents/lib/starter-prompts.ts": "73a9061e5eba5bbd2c486d92f73a410b3257661dc48048b2f8ca67de70737b09",
+    "src/features/arm/services/claims.ts": "eb468e5c627b07958781a6a62ac72c3b3454fb0b802fa780c1a923b728bcce8b",
+    "src/features/inbox/services/business-info.ts": "025ac1a4d975f17707618f87e5f583801d82557e7a8938c8853f66310c51b809",
+    "src/features/inbox/services/inbound-text.ts": "c06a9cafc21fc14f1f23dd6229f274f14f8349846823e8a5c729a68eec1a6c64",
+    "src/features/inbox/services/kb-chunking.ts": "f89ea23fc10cde7bc06ed54529b76a45eb2168a6fd009298009714ddb78328cc",
+    "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
+    "src/features/inbox/services/kb-rerank.ts": "a1a7607ad4dcafbf7806f5804a65c95876809ccbb69e53edbe377bd411d48f91",
+    "src/features/inbox/services/kb-service.ts": "964d51bd93857536d280abf7034a129148d5604b82d68e1eacd400b7d6e7a4b0",
+    "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
+    "src/features/inbox/services/reply-guard.ts": "7517681daa6b0a36cff17bd0827509862554625ab32a76e321ea5a824bb31d81",
+    "src/features/inbox/services/reply-review.ts": "34c189b27c8f6b6bd6cbea59fec07642353f6b39c9221cc230df714a101cadae",
+    "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
+    "src/features/tools/mcp/mcp-tools.ts": "d502720951c927fb36fb2d49606c3fdc4567c3ca21a6d7c5b495aa11e99fedf5",
+    "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "config": {},
+  "fecha": "2026-11-05T05:52:20.264Z",
+  "aprobadaPor": "Claude Code, a pedido de Gastón",
+  "motivo": "Línea base inicial de la huella"
+}

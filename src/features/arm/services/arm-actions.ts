@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
+import { canRevertChange } from "./contact-update-rules";
 import { dispatchText } from "@/features/inbox/services/dispatch";
 import { applyTransition } from "@/features/inbox/services/decision-engine";
 import { approvalFollowUp } from "@/features/inbox/services/turn-recovery";
@@ -242,7 +243,7 @@ export async function decideProposal(
   const { data: claimed } = await supabase
     .from("agent_proposals")
     .update({
-      status: approve ? "executed" : "rejected",
+      status: approve ? "executing" : "rejected",
       decided_by: auth.userId,
       decided_at: new Date().toISOString(),
     })
@@ -425,5 +426,69 @@ export async function decideCampaign(
 
   revalidatePath("/revision");
   revalidatePath("/campanas");
+  return { ok: true, data: null };
+}
+
+// ─────────────────────────────
+// Cambios del agente en la ficha
+// ─────────────────────────────
+
+export interface ContactChangeItem {
+  id: string;
+  field: string;
+  old_value: string | null;
+  new_value: string;
+  quote: string | null;
+  reverted_at: string | null;
+  created_at: string;
+}
+
+/** Through RLS: only members of the contact's workspace see it. */
+export async function listContactChanges(contactId: string): Promise<Result<ContactChangeItem[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("contact_changes")
+    .select("id, field, old_value, new_value, quote, reverted_at, created_at")
+    .eq("contact_id", contactId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) return { ok: false, error: "No se pudo leer el historial" };
+  return { ok: true, data: (data ?? []) as ContactChangeItem[] };
+}
+
+/** Puts the previous value back, unless someone changed the field afterwards. */
+export async function revertContactChange(changeId: string): Promise<Result> {
+  const db = svc();
+  const { data: change } = await db
+    .from("contact_changes")
+    .select("id, workspace_id, contact_id, field, old_value, new_value, reverted_at")
+    .eq("id", changeId)
+    .maybeSingle();
+  if (!change) return { ok: false, error: "Cambio no encontrado" };
+  const auth = await requireWorkspaceMember(change.workspace_id as string, { minRole: "agent" });
+  if (!auth.ok) return { ok: false, error: "No tenés permiso para deshacerlo" };
+  if (change.reverted_at) return { ok: false, error: "Ese cambio ya se deshizo" };
+
+  const field = change.field as "name" | "email";
+  const { data: contact } = await db
+    .from("contacts")
+    .select("name, email")
+    .eq("id", change.contact_id)
+    .eq("workspace_id", change.workspace_id)
+    .maybeSingle();
+  if (!contact || !canRevertChange(contact[field], change.new_value as string)) {
+    return { ok: false, error: "Ese dato volvió a cambiar: revisalo a mano" };
+  }
+
+  const { error } = await db
+    .from("contacts")
+    .update({ [field]: change.old_value, updated_at: new Date().toISOString() })
+    .eq("id", change.contact_id)
+    .eq("workspace_id", change.workspace_id);
+  if (error) return { ok: false, error: "No se pudo deshacer" };
+  await db
+    .from("contact_changes")
+    .update({ reverted_at: new Date().toISOString(), reverted_by: auth.userId })
+    .eq("id", changeId);
   return { ok: true, data: null };
 }

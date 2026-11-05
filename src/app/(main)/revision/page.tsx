@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { needsClientChoice } from "@/features/workspace/services/agency-gate";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/features/workspace/services/active-workspace";
 import { ReviewQueue } from "@/features/arm/components/review-queue";
@@ -15,6 +16,7 @@ export default async function RevisionPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
+  if (await needsClientChoice(supabase, user.id)) redirect("/workspaces");
 
   const membership = await getActiveWorkspace(supabase, user.id);
 

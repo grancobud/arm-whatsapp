@@ -1,8 +1,8 @@
 {
-  "total": "f6c94ed336506c9d8f4ff936fa7bee02fd0a3ff5c9a676df33be920d5d467678",
+  "total": "9f6a70cab0c693e57bb7b84726055ba2f0c20d1cc1416fffb2b53f1e66128bf3",
   "componentes": {
     "evals/agente/calificadores.ts": "dd7c287001480631e5f8849ea89b0309af9f8517765f634957aaeeb5aa518031",
-    "evals/agente/casos.json": "ec6d400bd98bfcfb4c4274239f7cb58fe2f496b0e337bcd6dbbb7c69cbeaa695",
+    "evals/agente/casos.json": "d5cf6ae1fbf2652bf615e8261934e427900ec636b93865110675685c3d49590d",
     "evals/agente/correr.ts": "ba5c7c46972aca85e4a9f2bcc0635714e3c19c075c96cb5e24ae5cf916d73f4d",
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
@@ -30,7 +30,7 @@
     "maxTokensRespuesta": 700,
     "maxTokensJuez": 1000
   },
-  "fecha": "2026-11-05T04:27:22.291Z",
+  "fecha": "2026-11-05T05:52:14.345Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "Repeticiones independientes con seed, juez con reintentos, chequeos corregidos y caso nuevo: si le preguntan, dice que es un asistente"
+  "motivo": "Pasar a una persona de verdad, negociación de precios y promesa de plazo en los chequeos"
 }
