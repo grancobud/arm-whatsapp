@@ -14,6 +14,7 @@ import {
 } from "../../src/features/inbox/services/contact-capture.ts";
 import { BOOKING_FALLBACK, removeBookingOffer } from "../../src/features/inbox/services/booking-offer.ts";
 import { dropInternalTalk } from "../../src/features/inbox/services/reply-finish.ts";
+import { hasSpecialCategoryData } from "../../src/features/privacy/privacy-rules.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
 import { invalidContactValue } from "../../src/features/arm/services/contact-update-rules.ts";
 import type { Tool } from "../../src/features/tools/core/tool.ts";
@@ -46,6 +47,8 @@ test("reconoce quejas y pedidos de una persona, también sin palabras como enoja
     "Estoy re enojada con lo que pasó",
     "Nadie me responde hace dos días",
     "Quiero hacer un reclamo",
+    "Le escribo para manifestar mi disconformidad: el corte de ayer no fue satisfactorio.",
+    "Sin ánimo de molestar, el corte de ayer no me quedó bien.",
   ]) {
     assert.equal(asksForPerson(texto), true, texto);
   }
@@ -95,6 +98,33 @@ test("el traspaso forzado no se repite ni pasa por encima de la aprobación del 
     null,
   );
   assert.equal(llamadas.length, 0);
+});
+
+test("pasar con una persona dicho de otra forma también es una promesa", async () => {
+  const llamadas: unknown[] = [];
+  const r = await backHandoffPromise({
+    text: "Te pido disculpas. Voy a pasarte con una persona del equipo para que atienda tu reclamo.",
+    tools: [herramienta("request_human", "write", llamadas)],
+    results: [],
+    ctx,
+  });
+  assert.equal(r?.status, "ok");
+  const pregunta = await backHandoffPromise({
+    text: "¿Querés que te vaya a pasar con alguien?",
+    tools: [herramienta("request_human", "write", llamadas)],
+    results: [],
+    ctx,
+  });
+  assert.equal(pregunta, null);
+});
+
+test("el filtro de memoria reconoce datos sensibles dichos de otra forma", () => {
+  for (const texto of ["El cliente es musulmán practicante", "Es judío", "Es católica", "Va en silla de ruedas", "Es una mujer trans", "Vota al peronismo", "Es peronista", "Tiene discapacidad"]) {
+    assert.equal(hasSpecialCategoryData(texto), true, texto);
+  }
+  for (const texto of ["Quiere un corte para su casamiento", "Paga por transferencia", "Se llama Cristian", "Es transportista", "Busca un auto usado", "Le gustó el barbero", "Viene el sábado"]) {
+    assert.equal(hasSpecialCategoryData(texto), false, texto);
+  }
 });
 
 test("prometer escribirle sin agendarlo lo toma una persona", async () => {
