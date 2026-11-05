@@ -252,7 +252,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 197.
+corre 227.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -277,6 +277,7 @@ corre 197.
 | 🔁 Respaldo de la IA | ✅ | Si FreeLLMAPI no responde (PC apagada, túnel caído, sin cupo o más de 45 s), la misma charla sigue por OpenRouter con un modelo gratis, salta al siguiente si ese no está, deja de probar el principal por un minuto y avisa por mail. 8 tests en `evals/respaldo`. |
 | 👀 Inspección del entorno | ✅ | Después de cada acción el agente mira qué pasó de verdad. Al reservar, la herramienta le devuelve la hora que **guardó el calendario** (antes devolvía la que pidió el agente: si HighLevel la corría, el cliente recibía una hora equivocada) y un error si el turno quedó cancelado aunque la API diga 200. `npm run eval:herramientas` suma 4 escenarios donde la acción sale mal (la reserva falla, se corre de hora, el horario se ocupa entre la consulta y la reserva, el seguimiento no se guarda): 22 de 22 chequeos, sin confirmar nada que no pasó y ofreciendo el horario libre. 4 tests en `evals/herramientas`. |
 | 🧐 Revisor de respuestas (evaluador-optimizador) | ✅ | Antes de mandar cada respuesta, un segundo modelo la compara con todo lo que sabía el agente (negocio, base de conocimiento, memoria del cliente y lo que devolvieron las herramientas en ese turno). Si encuentra un dato inventado o una acción que no se hizo ("te agendé" sin reserva, una reserva que falló o quedó pendiente), la reescribe sin volver a usar herramientas y revisa la corrección, con tope de 2 vueltas y 25 s en total. Si la acción no se hizo, ofrece pasar con una persona en vez de prometer que el equipo confirma. Si el revisor falla, sale el borrador: nunca deja al cliente sin respuesta. En `npm run eval:revisor` (24 borradores fijos: trampas y respuestas correctas, 8 de ellos distintos a los ejemplos del prompt), con llama-3.3-70b: **12 de 13 trampas corregidas y 11 de 11 respuestas correctas sin tocar**. Con "auto" los modelos que razonan se cortaban o tardaban de más, y mistral-small corregía todas las trampas pero tocaba respuestas correctas. El chat de prueba muestra qué se corrigió. 11 tests en `evals/revisor`. |
+| 🛡️ Guardias sobre el modelo | ✅ | Lo que el prompt pide y el modelo gratis a veces no cumple se asegura en el código, sin otra llamada al modelo: una queja clara o un pedido de hablar con una persona llega a una persona, el nombre y el correo que el cliente afirma como propios quedan en la ficha, un nombre no se deduce del correo y, sin herramienta de agenda, la oferta de un turno se cambia por el pase a una persona. 16 tests en `evals/herramientas/guardias.test.ts`; falta medirlo con el modelo real en `npm run eval:produccion`. |
 
 ### 🔎 Cómo se auditó y se mejoró cada área
 

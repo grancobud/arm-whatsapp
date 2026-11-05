@@ -3,7 +3,9 @@ import { resolveCitations } from "./kb-citations";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
 import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
-import { backHandoffPromise } from "./handoff-promise";
+import { backHandoffPromise, withHandoffNotice } from "./handoff-promise";
+import { backContactData, dropNameFromEmail } from "./contact-capture";
+import { removeBookingOffer } from "./booking-offer";
 import { recordLlmUsage } from "./cost-tracker";
 import { dispatchText, dispatchTemplate } from "./dispatch";
 import { decide, applyTransition } from "./decision-engine";
@@ -483,16 +485,29 @@ export async function processNextBatch(opts?: {
       },
     });
 
-    // ── 8a. A promised handoff has to happen, whatever the model did ─────────
+    // ── 8a. A promised or needed handoff has to happen, whatever the model did ──
     // Before the review, so it sees the promise backed instead of rewriting it.
     const forcedHandoff = await backHandoffPromise({
       text: reply.text,
       tools: decisionResult.availableTools,
       results: reply.toolResults,
       ctx: toolCtx,
+      customerText: mergedText,
     });
     if (forcedHandoff) {
       reply.toolResults.push(forcedHandoff);
+      if (forcedHandoff.status === "ok") reply.text = withHandoffNotice(reply.text);
+      if (!meta.side_effects) await saveProgress({ side_effects: true });
+    }
+    // Lo que el cliente dijo clarito queda en la ficha aunque el modelo se olvide.
+    const savedContactData = await backContactData({
+      customerText: mergedText,
+      tools: decisionResult.availableTools,
+      results: reply.toolResults,
+      ctx: toolCtx,
+    });
+    if (savedContactData.length > 0) {
+      reply.toolResults.push(...savedContactData);
       if (!meta.side_effects) await saveProgress({ side_effects: true });
     }
 
@@ -546,6 +561,23 @@ export async function processNextBatch(opts?: {
       } catch (err) {
         console.error("[buffer] reply review failed, sending the draft:", err);
       }
+    }
+
+    // ── 8c. Lo último que ve el texto, también si el revisor lo reescribió ──
+    replyText = dropNameFromEmail(replyText, mergedText);
+    const withoutOffer = removeBookingOffer(
+      replyText,
+      (decisionResult.availableTools ?? []).map((t) => t.name),
+    );
+    if (withoutOffer.changed) {
+      await supabase.from("events").insert({
+        type: "reply_guard",
+        level: "info",
+        workspace_id: batch.workspace_id,
+        conversation_id: batch.conversation_id,
+        payload: { guard: "booking_offer_removed", draft: replyText.slice(0, 1000) },
+      });
+      replyText = withoutOffer.text;
     }
 
     // Which KB fragments the reply says it used (shown in the inbox).

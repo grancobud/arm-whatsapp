@@ -55,6 +55,8 @@ export interface ToolOutcome {
   status: "ok" | "failed" | "pending";
   /** Short summary of what the tool returned (or its error). */
   summary: string;
+  /** Con qué se llamó, para saber qué dato guardó (contact-capture.ts). */
+  args?: Record<string, unknown>;
 }
 
 const STATUS_LABEL: Record<ToolOutcome["status"], string> = {
@@ -366,11 +368,12 @@ export async function reviewReply(params: {
  * Pure: what the reviewer needs from a tool run (registry ToolResult:
  * { ok, output, error, requiresConfirmation }).
  */
-export function toolOutcome(name: string, result: unknown): ToolOutcome {
+export function toolOutcome(name: string, result: unknown, args?: unknown): ToolOutcome {
+  const called = args && typeof args === "object" ? { args: args as Record<string, unknown> } : {};
   const r = (result ?? {}) as { ok?: unknown; output?: unknown; error?: unknown; requiresConfirmation?: unknown };
-  if (r.requiresConfirmation === true) return { name, status: "pending", summary: short(r.output) };
-  if (r.ok === false) return { name, status: "failed", summary: short(r.error ?? r.output) };
-  return { name, status: "ok", summary: short("output" in r ? r.output : result) };
+  if (r.requiresConfirmation === true) return { name, status: "pending", summary: short(r.output), ...called };
+  if (r.ok === false) return { name, status: "failed", summary: short(r.error ?? r.output), ...called };
+  return { name, status: "ok", summary: short("output" in r ? r.output : result), ...called };
 }
 
 function short(v: unknown): string {

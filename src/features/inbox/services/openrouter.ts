@@ -397,7 +397,7 @@ export async function generateChatReply(params: {
         execute: async (args: unknown): Promise<unknown> => {
           if (forgeTool.sensitivity !== "read") toolsRan = true;
           const res = await registry.runTool(forgeTool, args, ctx);
-          toolResults.push(toolOutcome(forgeTool.name, res));
+          toolResults.push(toolOutcome(forgeTool.name, res, args));
           return res;
         },
       });
@@ -511,7 +511,7 @@ export async function generateWithTools(
         if (blocksRetry(forgeTool)) await params.onSideEffect?.();
         // runTool, not run(name): a workspace's MCP tools are not in the shared registry.
         const res = await registry.runTool(forgeTool, args, ctx);
-        toolResults.push(toolOutcome(forgeTool.name, res));
+        toolResults.push(toolOutcome(forgeTool.name, res, args));
         return res;
       },
     });

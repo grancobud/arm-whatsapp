@@ -4,6 +4,7 @@ const normalize = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const EMAIL_IN_TEXT = /[^\s@]+@[^\s@]+/g;
 
 export type ContactField = "name" | "email";
 
@@ -15,7 +16,9 @@ export function invalidContactValue(field: ContactField, value: string, quote: s
     return "Ese nombre no parece válido.";
   }
   // El valor tiene que estar en las palabras del cliente: el modelo no lo puede inventar.
-  if (!normalize(quote).includes(normalize(clean))) {
+  // Un nombre, además, no sale del correo: "juan@mail.com" no dice que se llame Juan.
+  const source = field === "name" ? quote.replace(EMAIL_IN_TEXT, " ") : quote;
+  if (!normalize(source).includes(normalize(clean))) {
     return "El valor tiene que aparecer en lo que escribió el cliente.";
   }
   return null;
