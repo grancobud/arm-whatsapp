@@ -1,5 +1,5 @@
 {
-  "total": "d10a59a04a5dfabe969e466d9145a4614fab95a44052315940ef6ec018d0eb89",
+  "total": "be7c28a57b3e660ef10bf588f18a4c168153692bddf1135b325321fb5638f7b8",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
@@ -10,7 +10,7 @@
     "src/features/agents/services/active-agent.ts": "609ab6ac625ab39a56d7228c5a574ad0148010b2ada87bad7f61dab9c8b362b4",
     "src/features/arm/services/contact-update-rules.ts": "f35d09f48a070b918091156e711155acb6132013f8a96655b930502ac3aa5a2d",
     "src/features/inbox/services/business-info.ts": "4d0730984ecd23b15b4b871da52a320826a01684cc9518ed5877e6df06bd545d",
-    "src/features/inbox/services/handoff-promise.ts": "9e8fcbe9b089317f807a38d947a98bbf877914b67560978fe688862e71c6c45d",
+    "src/features/inbox/services/handoff-promise.ts": "c0cf2e5c27fc164adc9644890e72469bd58bc2c33cc16e114c76122ea1c03efb",
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/llm-failover.ts": "4504e97252df4ef5f5b4e6b3f65890f84a0ca97c0868703699293caa1bd11091",
     "src/features/inbox/services/model-chain.ts": "25ebc2960c5cfd3f7cbb556521f504411e8c9cae2b931c6b3bfb92596aade360",
@@ -40,7 +40,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T16:14:01.463Z",
+  "fecha": "2026-11-05T16:21:20.271Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "guardias en codigo: traspaso por queja, datos de la ficha y ofertas de turno; cambia el codigo evaluado, no los casos"
+  "motivo": "guardias en codigo: correccion de falsos positivos; cambia el codigo evaluado, no los casos"
 }

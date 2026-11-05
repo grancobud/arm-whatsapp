@@ -12,7 +12,8 @@ const TOOL = "update_contact";
 
 const EMAIL_SOURCE = String.raw`[^\s@<>()"',;:]+@[^\s@<>()"',;:]+\.[a-zA-Z]{2,}`;
 const OWN_EMAIL = new RegExp(`\\bmi (?:correo|mail|email|e-mail)\\b[^@\\n]{0,30}?(${EMAIL_SOURCE})`, "i");
-const ONLY_EMAIL = new RegExp(`^\\s*(${EMAIL_SOURCE})\\s*$`, "m");
+// Todo el texto: en un lote, una línea suelta puede ser "el mail de mi hermana".
+const ONLY_EMAIL = new RegExp(`^\\s*(${EMAIL_SOURCE})\\s*$`);
 const ANY_EMAIL = new RegExp(EMAIL_SOURCE, "g");
 
 const WORD = String.raw`[\p{L}'’-]{2,}`;
@@ -87,6 +88,9 @@ export async function backContactData(params: {
   return outcomes;
 }
 
+/** Casillas de un negocio, no nombres de personas. */
+const NOT_A_PERSON = new Set(["info", "ventas", "turnos", "reservas", "contacto", "hola", "admin", "consultas", "soporte", "administracion"]);
+
 const plain = (text: string) =>
   text
     .normalize("NFD")
@@ -104,7 +108,10 @@ export function dropNameFromEmail(reply: string, customerText: string): string {
 
   const guesses = emails
     .flatMap((email) => email.split("@")[0].split(/[^\p{L}]+/u))
-    .filter((word) => word.length >= 3 && !new RegExp(`(^|[^\\p{L}])${plain(word)}($|[^\\p{L}])`, "u").test(said));
+    .filter((word) => word.length >= 3 && !NOT_A_PERSON.has(plain(word)))
+    .filter((word) => !new RegExp(`(^|[^\\p{L}])${plain(word)}($|[^\\p{L}])`, "u").test(said))
+    // Solo con mayúscula, como se escribe un nombre: "te paso la info" no se toca.
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
 
   let out = reply;
   for (const guess of guesses) {
@@ -112,8 +119,8 @@ export function dropNameFromEmail(reply: string, customerText: string): string {
     const asWord = String.raw`${guess}(?![\p{L}@.]*@)(?![\p{L}])`;
     const before = String.raw`(?<![\p{L}@.])`;
     out = out
-      .replace(new RegExp(`^${before}${asWord},?\\s*`, "iu"), "")
-      .replace(new RegExp(`,?\\s+${before}${asWord}`, "giu"), "");
+      .replace(new RegExp(`^${before}${asWord},?\\s*`, "u"), "")
+      .replace(new RegExp(`,?\\s+${before}${asWord}`, "gu"), "");
   }
   if (out === reply) return reply;
   const trimmed = out.trim();

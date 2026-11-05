@@ -45,5 +45,7 @@ export function removeBookingOffer(text: string, toolNames: string[]): { text: s
   const kept = sentences.filter((sentence) => !offersBooking(sentence));
   if (kept.length === sentences.length) return { text, changed: false };
 
-  return { text: [...kept, BOOKING_FALLBACK].join(" ").trim(), changed: true };
+  // Si lo que queda ya ofrece el pase a una persona, no se repite.
+  const handsOver = kept.some((sentence) => HANDS_OVER.test(plain(sentence)));
+  return { text: (handsOver ? kept : [...kept, BOOKING_FALLBACK]).join(" ").trim(), changed: true };
 }

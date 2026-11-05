@@ -57,6 +57,8 @@ test("una charla normal no pasa a una persona", () => {
     "Quiero sacar un turno",
     "Mi mail es juan@ejemplo.com",
     "Gracias por todo, quedó hermoso",
+    "No quedó mal hecho, quedó bárbaro",
+    "No me quedó mal, gracias",
     "¿Me hacés un 20% de descuento si voy hoy?",
   ]) {
     assert.equal(asksForPerson(texto), false, texto);
@@ -128,6 +130,7 @@ test("no guarda lo que no es del cliente ni lo que no es un nombre", () => {
     "Soy Laura",
     "soy celíaco, ¿tienen opciones?",
     "mi nombre es importante para la factura",
+    "te paso el mail de mi hermana\nhermana@ejemplo.com",
   ]) {
     assert.deepEqual(statedContactData(texto), [], texto);
   }
@@ -188,6 +191,10 @@ test("deja el texto igual si el cliente dijo el nombre o si no hay nombre", () =
   assert.equal(dropNameFromEmail(correo, "Mi mail es juan@ejemplo.com"), correo);
   assert.equal(dropNameFromEmail("¡Gracias, Juan!", "Hola, ¿tenés turno?"), "¡Gracias, Juan!");
   assert.equal(dropNameFromEmail("Juana te va a atender.", "Mi mail es juan@ejemplo.com"), "Juana te va a atender.");
+  const palabraComun = "Ya le pasé la info al equipo.";
+  assert.equal(dropNameFromEmail(palabraComun, "Les escribí a info@negocio.com y nadie me contestó"), palabraComun);
+  assert.equal(dropNameFromEmail("Info no tengo, perdoná.", "Les escribí a info@negocio.com"), "Info no tengo, perdoná.");
+  assert.equal(dropNameFromEmail("Tengo tu pedido de ventas.", "mi correo es ventas@negocio.com"), "Tengo tu pedido de ventas.");
 });
 
 // ── Ofertas de turno sin herramienta ────────────────────────────────────────
@@ -206,6 +213,11 @@ test("cambia la oferta de turno por el pase a una persona", () => {
     assert.equal(r.changed, true, texto);
     assert.equal(r.text, queda);
   }
+});
+
+test("no repite el pase a una persona si ya estaba en la respuesta", () => {
+  const r = removeBookingOffer("¿Querés reservar? Si querés, te paso con una persona del equipo.", SIN_AGENDA);
+  assert.deepEqual(r, { text: "Si querés, te paso con una persona del equipo.", changed: true });
 });
 
 test("no toca lo que no es una oferta de turno", () => {
