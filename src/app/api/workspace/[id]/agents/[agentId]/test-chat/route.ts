@@ -250,7 +250,7 @@ export async function POST(
 
     // Los mismos últimos pasos que producción (buffer.ts).
     text = dropNameFromEmail(text, lastUserMessage);
-    const withoutOffer = removeBookingOffer(text, tools.map((t) => t.name));
+    const withoutOffer = removeBookingOffer(text, tools.map((t) => t.name), lastUserMessage);
     text = withoutOffer.text;
 
     // Best-effort observability — never blocks the response.

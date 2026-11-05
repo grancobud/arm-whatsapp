@@ -568,6 +568,7 @@ export async function processNextBatch(opts?: {
     const withoutOffer = removeBookingOffer(
       replyText,
       (decisionResult.availableTools ?? []).map((t) => t.name),
+      mergedText,
     );
     if (withoutOffer.changed) {
       await supabase.from("events").insert({

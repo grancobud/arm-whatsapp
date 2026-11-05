@@ -1,8 +1,8 @@
 // Examen de producción: lo que recibe el cliente, con el modelo que responde de verdad.
 //
 // eval:agente mide un modelo fijo sin herramientas y eval:herramientas mide el modelo
-// solo. Este recorre los mismos pasos que buffer.ts: generateWithTools, el traspaso que
-// se cumple y el revisor. Las herramientas son las reales (nombre, descripción y esquema),
+// solo. Este recorre los mismos pasos que buffer.ts: generateWithTools, los guardias de
+// código y el revisor. Si buffer.ts suma un paso, va también acá. Las herramientas son las reales (nombre, descripción y esquema),
 // con la ejecución simulada: no toca la base ni manda nada.
 //
 // Solo usa chequeos de código, sin juez: no depende del cupo de otro modelo.
@@ -12,7 +12,9 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { generateWithTools, createReviewCompleter } from "../../src/features/inbox/services/openrouter.ts";
-import { backHandoffPromise } from "../../src/features/inbox/services/handoff-promise.ts";
+import { backHandoffPromise, withHandoffNotice } from "../../src/features/inbox/services/handoff-promise.ts";
+import { backContactData, dropNameFromEmail } from "../../src/features/inbox/services/contact-capture.ts";
+import { removeBookingOffer } from "../../src/features/inbox/services/booking-offer.ts";
 import { reviewEnabled, reviewReply, type ToolOutcome } from "../../src/features/inbox/services/reply-review.ts";
 import { registry } from "../../src/features/tools/index.ts";
 import type { Tool, ToolResult } from "../../src/features/tools/core/tool.ts";
@@ -29,6 +31,7 @@ import {
   noAfirmaLugar,
   noDeduceNombre,
   noOfreceVerTurnos,
+  ofrecePersona,
   pasaAPersona,
   usoHerramienta,
   validezDeLaCorrida,
@@ -131,12 +134,12 @@ const CASOS: Caso[] = [
   {
     id: "turno_sin_herramienta",
     mensaje: "tenés turno para mañana?",
-    chequear: (_ll, t) => [noAfirmaLugar(t), noOfreceVerTurnos(t)],
+    chequear: (_ll, t) => [noAfirmaLugar(t), noOfreceVerTurnos(t), ofrecePersona(t)],
   },
   {
     id: "pide_turno_sin_herramienta",
     mensaje: "Quiero sacar un turno",
-    chequear: (_ll, t) => [noOfreceVerTurnos(t), siNo("responde_algo", t.trim().length > 0)],
+    chequear: (_ll, t) => [noOfreceVerTurnos(t), ofrecePersona(t), siNo("responde_algo", t.trim().length > 0)],
   },
   {
     id: "turno_con_herramienta",
@@ -259,10 +262,23 @@ async function correr(c: Caso, rep: number) {
     replyMs = Date.now() - inicio;
 
     const toolResults: ToolOutcome[] = [...reply.toolResults];
-    const forzado = await backHandoffPromise({ text: reply.text, tools: herramientas, results: toolResults, ctx });
+    const borrador = reply.text;
+    const forzado = await backHandoffPromise({
+      text: reply.text,
+      tools: herramientas,
+      results: toolResults,
+      ctx,
+      customerText: c.mensaje,
+    });
     if (forzado) {
       toolResults.push(forzado);
       llamadas.push({ nombre: "request_human", args: {}, forzada: true });
+      if (forzado.status === "ok") reply.text = withHandoffNotice(reply.text);
+    }
+    const datosForzados = await backContactData({ customerText: c.mensaje, tools: herramientas, results: toolResults, ctx });
+    for (const d of datosForzados) {
+      toolResults.push(d);
+      llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
     }
 
     let texto = reply.text;
@@ -281,14 +297,23 @@ async function correr(c: Caso, rep: number) {
       reviewMs = Date.now() - inicioRevision;
     }
 
+    // Los últimos pasos de buffer.ts, también si el revisor reescribió.
+    const sinNombre = dropNameFromEmail(texto, c.mensaje);
+    const sinOferta = removeBookingOffer(sinNombre, nombresHerramientas, c.mensaje);
+    const nombreQuitado = sinNombre !== texto;
+    texto = sinOferta.text;
+
     return {
       id: c.id,
       rep,
       texto,
-      borrador: reply.text,
+      borrador,
       modelo: reply.modelUsed ?? "?",
       llamadas,
       forzado: !!forzado,
+      datosForzados: datosForzados.length,
+      nombreQuitado,
+      ofertaQuitada: sinOferta.changed,
       revision,
       replyMs,
       reviewMs,
@@ -304,6 +329,9 @@ async function correr(c: Caso, rep: number) {
       modelo: "?",
       llamadas,
       forzado: false,
+      datosForzados: 0,
+      nombreQuitado: false,
+      ofertaQuitada: false,
       revision: "error",
       replyMs,
       reviewMs,
@@ -367,6 +395,9 @@ const modeloAlTerminar = await modeloDetrasDeAuto();
 console.log(`Modelo detrás de auto: al empezar ${modeloAlEmpezar} · al terminar ${modeloAlTerminar}`);
 console.log(`Revisor: ${cuenta(resultados.map((r) => r.revision))}`);
 console.log(`Traspasos forzados por el código: ${resultados.filter((r) => r.forzado).length}`);
+console.log(
+  `Otros guardias: datos guardados ${resultados.reduce((n, r) => n + r.datosForzados, 0)} · nombres quitados ${resultados.filter((r) => r.nombreQuitado).length} · ofertas de turno cambiadas ${resultados.filter((r) => r.ofertaQuitada).length}`,
+);
 console.log(`Mediana: respuesta ${mediana(validos.map((r) => r.replyMs))} ms · revisor ${mediana(validos.map((r) => r.reviewMs))} ms`);
 console.log(`Máximo: respuesta ${Math.max(0, ...validos.map((r) => r.replyMs))} ms · revisor ${Math.max(0, ...validos.map((r) => r.reviewMs))} ms`);
 
