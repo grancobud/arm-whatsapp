@@ -61,15 +61,28 @@ function offsetFor(timeZone: string, now: Date): string {
  * "hoy", "mañana", "esta semana" and build correct ISO times when checking
  * availability / booking. Timezone is per-workspace (defaults to Argentina).
  */
-export function buildNowContext(timeZone = DEFAULT_TIMEZONE): string {
-  const now = new Date();
+export function buildNowContext(timeZone = DEFAULT_TIMEZONE, now: Date = new Date()): string {
   const human = now.toLocaleString("es-AR", {
     timeZone,
     dateStyle: "full",
     timeStyle: "short",
   });
   const offset = offsetFor(timeZone, now);
-  return `## Fecha actual\nHoy es ${human} (zona horaria ${timeZone}, offset ${offset}). Usa esta fecha para interpretar "hoy", "mañana", "esta semana", etc. al consultar disponibilidad o agendar. Cuando agendes, construye las horas en ISO con el offset ${offset} (ej: 2026-06-12T10:00:00${offset}), y pasa la zona horaria ${timeZone} a la herramienta de disponibilidad.`;
+  return `## Fecha actual\nHoy es ${human} (zona horaria ${timeZone}, offset ${offset}). Usa esta fecha para interpretar "hoy", "mañana", "esta semana", etc. al consultar disponibilidad o agendar. Cuando agendes, construye las horas en ISO con el offset ${offset} (ej: 2026-06-12T10:00:00${offset}), y pasa la zona horaria ${timeZone} a la herramienta de disponibilidad.\n${upcomingDays(timeZone, now)}`;
+}
+
+/**
+ * La semana ya calculada. Medido con eval:produccion: con solo "hoy es martes", el
+ * modelo consultó la agenda del miércoles cuando le pidieron el viernes.
+ */
+export function upcomingDays(timeZone: string, now: Date): string {
+  const dias = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now.getTime() + (i + 1) * 86_400_000);
+    const nombre = d.toLocaleDateString("es-AR", { timeZone, weekday: "long" });
+    const iso = d.toLocaleDateString("en-CA", { timeZone });
+    return `${nombre} ${iso}`;
+  });
+  return `Próximos días: ${dias.join(", ")}.`;
 }
 
 /**

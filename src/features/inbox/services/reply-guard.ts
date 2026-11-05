@@ -28,7 +28,7 @@ const LEAK_ANYWHERE =
 // Palabras en inglés que dots-3-note metió en respuestas en castellano ("para sacar
 // turnover", "coordinator el turno"). Lista corta a propósito: la frena solo cuando
 // no hay forma de que sea una palabra del negocio. Otra pasada del modelo lo arregla.
-const MIXED_LANGUAGE = /\b(turnover|coordinator|appointment|scheduled)\b/i;
+const MIXED_LANGUAGE = /\b(turnover|coordinator|morning|appointment|scheduled)\b|\bi['’]?m sorry\b|\bi can['’]?t\b/i;
 
 /** Drops <think>…</think> blocks; an unclosed <think> means everything after it is reasoning. */
 export function stripThinking(text: string): string {

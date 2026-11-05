@@ -23,6 +23,8 @@ test("el tope por modelo respeta el plazo del turno", () => {
 test("frena palabras en inglés que salieron en respuestas reales", () => {
   assert.equal(checkReply("¡Hola! Para sacar turnover, te paso con una persona.").reason, "mixed_language");
   assert.equal(checkReply("Te ayudo a coordinator el turno.").reason, "mixed_language");
+  assert.equal(checkReply("Perfecto, te escribo el viernes a la morning.").reason, "mixed_language");
+  assert.equal(checkReply("I’m sorry, but I can’t comply with that.").reason, "mixed_language");
   assert.equal(checkReply("Te paso con una persona para coordinar el turno.").ok, true);
   assert.equal(checkReply("Podés ver nuestro Instagram o reservar por WhatsApp.").ok, true);
 });

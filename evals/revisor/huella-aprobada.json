@@ -1,5 +1,5 @@
 {
-  "total": "e3df19e7dfd42cb04eb3e577d8cb35c7a3c73cdd5668a29cee330e693d699ff6",
+  "total": "0bd47da4654f04713df033523127df984db30e9f0810ec5e574e9673bcc53e0b",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
@@ -7,17 +7,17 @@
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/revisor/casos.json": "6a3d481ef2f0d9160c3ef517c4154b017a040b20175163ba82af69648e383569",
     "evals/revisor/correr.ts": "62e7f510147be58b144627fe7020d9308afdd00dd3c2a54bb4c12ed8ebda383a",
-    "src/features/agents/lib/starter-prompts.ts": "08350a9584589632729d3fd56c3c2ec5f245a9166b13f65c07f4a13e186bd84f",
-    "src/features/inbox/services/business-info.ts": "025ac1a4d975f17707618f87e5f583801d82557e7a8938c8853f66310c51b809",
+    "src/features/agents/lib/starter-prompts.ts": "feb16ce1f229d577bb966ee2c41316e1161e2af93c2f23c01808aa4ffd0615b6",
+    "src/features/inbox/services/business-info.ts": "4d0730984ecd23b15b4b871da52a320826a01684cc9518ed5877e6df06bd545d",
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
-    "src/features/inbox/services/reply-guard.ts": "e7c40289f98e157c30e51bd1a0a95af4de31bfb61bd1dcc9fe8540813ad9b6b6",
+    "src/features/inbox/services/reply-guard.ts": "330480e45c8df979f5590f92fd5fa3256cff441e40962f18162df833f30703e8",
     "src/features/inbox/services/reply-review.ts": "07fddd14e7190761051dec7fc2fe984ce2f1fb88e230acb5bb71b96302176265",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T13:44:27.380Z",
+  "fecha": "2026-11-05T14:09:51.434Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "reenvío, validación de nombre y nota de request_human"
+  "motivo": "reglas de Martín, semana calculada y más inglés en el filtro"
 }

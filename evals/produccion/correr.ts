@@ -18,9 +18,9 @@ import { registry } from "../../src/features/tools/index.ts";
 import type { Tool, ToolResult } from "../../src/features/tools/core/tool.ts";
 import { invalidContactValue } from "../../src/features/arm/services/contact-update-rules.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
-import { buildBusinessInfoContext } from "../../src/features/inbox/services/business-info.ts";
+import { buildBusinessInfoContext, buildNowContext } from "../../src/features/inbox/services/business-info.ts";
 import { starterPrompt } from "../../src/features/agents/lib/starter-prompts.ts";
-import { AHORA_FIJO, NEGOCIO } from "../agente/negocio.ts";
+import { NEGOCIO } from "../agente/negocio.ts";
 import { exigirHuella } from "../exigir-huella.ts";
 import {
   chequeosGenerales,
@@ -108,7 +108,7 @@ const CASOS: Caso[] = [
   {
     id: "precio_conocido",
     mensaje: "cuánto sale la barba?",
-    chequear: (ll, t) => [siNo("precio_correcto", /6[.,]?000/.test(t), t.slice(0, 80)), noPasaSinMotivo(ll)],
+    chequear: (ll, t) => [siNo("precio_correcto", /6[.,]?000/.test(t), t.slice(0, 80)), noPasaSinMotivo(ll), noOfreceVerTurnos(t)],
   },
   {
     id: "horario_conocido",
@@ -116,6 +116,7 @@ const CASOS: Caso[] = [
     chequear: (ll, t) => [
       siNo("dice_que_cierra", /cerrad|cerramos|no abr|no atend|domingo no/i.test(t), t.slice(0, 80)),
       noPasaSinMotivo(ll),
+      noOfreceVerTurnos(t),
     ],
   },
   {
@@ -143,6 +144,11 @@ const CASOS: Caso[] = [
     herramientas: [...BASICAS, "check_availability"],
     chequear: (ll, t) => [
       siNo("consulta_la_agenda", usoHerramienta(ll, "check_availability")),
+      siNo(
+        "consulta_el_viernes_correcto",
+        ll.some((l) => l.nombre === "check_availability" && JSON.stringify(l.args).includes("2026-11-06")),
+        JSON.stringify(ll.find((l) => l.nombre === "check_availability")?.args ?? {}).slice(0, 90),
+      ),
       siNo("ofrece_horarios_reales", /15/.test(t) && /17[:.]30/.test(t), t.slice(0, 80)),
     ],
   },
@@ -172,7 +178,8 @@ function simular(nombre: string, a: Record<string, unknown>): ToolResult {
       ok: true,
       output: {
         handed_over: true,
-        message: "Listo: la conversación quedó para el equipo. Decile que una persona lo va a atender, sin prometer cuándo.",
+        message:
+          "Hecho. Nota interna, no se la copies al cliente: respondele con tus palabras, en una oración, que una persona del equipo lo va a atender. Si le pasó algo malo, pedí disculpas. No prometas cuándo.",
       },
     };
   }
@@ -182,6 +189,10 @@ function simular(nombre: string, a: Record<string, unknown>): ToolResult {
     return invalido ? { ok: false, output: null, error: invalido } : { ok: true, output: { saved: true, field: a.field } };
   }
   if (nombre === "check_availability") {
+    // Como el calendario real: si pide otro día, no hay esos horarios.
+    if (!JSON.stringify(a).includes("2026-11-06")) {
+      return { ok: true, output: { slots: [], count: 0, message: "No hay horarios disponibles en esas fechas." } };
+    }
     return {
       ok: true,
       output: {
@@ -222,8 +233,8 @@ async function correr(c: Caso, rep: number) {
   };
 
   const biz = buildBusinessInfoContext(c.sinHorario ? (NEGOCIO_SIN_HORARIO as typeof NEGOCIO) : NEGOCIO);
-  // Otro minuto en cada repetición: el proveedor cachea pedidos idénticos.
-  const ahora = AHORA_FIJO.replace("11:00", `11:0${rep}`);
+  // Martes 3/11/2026. Otro minuto en cada repetición: el proveedor cachea pedidos idénticos.
+  const ahora = buildNowContext("America/Argentina/Buenos_Aires", new Date(`2026-11-03T11:0${rep}:00-03:00`));
   const system = buildSystemPrompt({
     nowContext: ahora,
     bizContext: biz,
