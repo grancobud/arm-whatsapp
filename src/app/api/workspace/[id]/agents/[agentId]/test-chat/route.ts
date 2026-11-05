@@ -27,6 +27,7 @@ import {
   DEFAULT_TIMEZONE,
 } from "@/features/inbox/services/business-info";
 import { getEnabledTools } from "@/features/tools/services/tool-configs";
+import { backHandoffPromise } from "@/features/inbox/services/handoff-promise";
 import type { AgentConfig } from "@/features/agents/types";
 
 // POST /api/workspace/[id]/agents/[agentId]/test-chat
@@ -174,6 +175,7 @@ export async function POST(
   });
 
   try {
+    const startedAt = Date.now();
     const reply = await generateChatReply({
       model,
       systemPrompt,
@@ -189,8 +191,20 @@ export async function POST(
       },
     });
 
+    const replyMs = Date.now() - startedAt;
+    const toolResults = [...(reply.toolResults ?? [])];
+    // Same guarantee as production (buffer.ts). Without a conversation it changes nothing.
+    const forcedHandoff = await backHandoffPromise({
+      text: reply.text,
+      tools,
+      results: toolResults,
+      ctx: { workspaceId, conversationId: "", contactId: "" },
+    });
+    if (forcedHandoff) toolResults.push(forcedHandoff);
+
     // Same reply review as production (buffer.ts), so the playground shows
     // what the customer would get.
+    const reviewStartedAt = Date.now();
     let text = reply.text;
     let review: { outcome: ReviewOutcome; problems: string[] } | null = null;
     let reviewIn = 0;
@@ -204,7 +218,7 @@ export async function POST(
           sources: {
             business: bizContext,
             knowledge: kbContext,
-            toolResults: reply.toolResults,
+            toolResults,
             toolNames: tools.map((t) => t.name),
           },
           complete: await createReviewCompleter(workspaceId, model),
@@ -217,6 +231,8 @@ export async function POST(
         console.error("[agents/test-chat] reply review failed:", err);
       }
     }
+
+    const reviewMs = Date.now() - reviewStartedAt;
 
     // Best-effort observability — never blocks the response.
     void db
@@ -243,6 +259,10 @@ export async function POST(
       outputTokens: reply.completionTokens + reviewOut,
       model,
       review,
+      // Lo que no se ve en el texto: qué herramientas corrieron y dónde se fue el tiempo.
+      tools: toolResults.map((t) => ({ name: t.name, status: t.status })),
+      forcedHandoff: Boolean(forcedHandoff),
+      timing: { replyMs, reviewMs },
     });
   } catch (err) {
     console.error("[agents/test-chat]", err);

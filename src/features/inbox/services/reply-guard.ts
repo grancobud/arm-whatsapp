@@ -3,7 +3,8 @@
 // Found auditing against real traffic (FreeLLMAPI "auto"): some routed models
 // think out loud and return that reasoning as the reply ("The user asks...",
 // "We need to obey policy..."), often cut by the token limit. Sent as-is, the
-// customer would get the model's internal English notes on WhatsApp.
+// customer would get the model's internal notes on WhatsApp. dots-3-note does it
+// in Spanish ("El cliente pregunta... Según las reglas, debo..."), about 1 of 6.
 //
 // Pure module (no imports) so it can be unit-tested on its own.
 
@@ -19,10 +20,10 @@ export interface ReplyCheck {
 // Reasoning that announces itself: talks ABOUT the user, the system or its
 // instructions instead of TO the customer.
 const LEAK_AT_START =
-  /^\s*(the user\b|user (asks|says|wants|is asking|requested)\b|we (need|should|must|have) to\b|the (system|developer)\b|according to the (system|developer|instructions)\b|i (need|should|must) to (respond|answer|reply)\b|okay,? (so )?the user\b)/i;
+  /^\s*(the user\b|user (asks|says|wants|is asking|requested)\b|we (need|should|must|have) to\b|the (system|developer)\b|according to the (system|developer|instructions)\b|i (need|should|must) to (respond|answer|reply)\b|okay,? (so )?the user\b|(el|la) (cliente|clienta|usuario|usuaria)\b)/i;
 
 const LEAK_ANYWHERE =
-  /\b(system prompt|developer (message|instruction)s?|the user (asks|says|wants|is asking)|higher[- ]level (system )?instructions)\b/i;
+  /\b(system prompt|developer (message|instruction)s?|the user (asks|says|wants|is asking)|higher[- ]level (system )?instructions|seg[uú]n (las|mis) (reglas|instrucciones),? (debo|tengo|no debo|no puedo|si)|(la|las) reglas? (dice|dicen|indica|indican)|mis instrucciones|(el|la) (cliente|clienta|usuario|usuaria) (pregunta|pide|dice|quiere|est[aá]|escribe|se queja))\b/i;
 
 /** Drops <think>…</think> blocks; an unclosed <think> means everything after it is reasoning. */
 export function stripThinking(text: string): string {

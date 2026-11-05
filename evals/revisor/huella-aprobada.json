@@ -1,5 +1,5 @@
 {
-  "total": "94e010bee4e48464e5eb923c316ef2b5221adccec9f11711c7efd3f5e8865dc9",
+  "total": "7ad962c4f8b01107e670069160b75f7d13fe33b667d5ef8e2679acc5bcf324e6",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
@@ -7,17 +7,17 @@
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/revisor/casos.json": "6a3d481ef2f0d9160c3ef517c4154b017a040b20175163ba82af69648e383569",
     "evals/revisor/correr.ts": "62e7f510147be58b144627fe7020d9308afdd00dd3c2a54bb4c12ed8ebda383a",
-    "src/features/agents/lib/starter-prompts.ts": "73a9061e5eba5bbd2c486d92f73a410b3257661dc48048b2f8ca67de70737b09",
+    "src/features/agents/lib/starter-prompts.ts": "6f1c9d59561c02219d157d1c0e428d9e6cb6244597e165aa5fd8a84b44739655",
     "src/features/inbox/services/business-info.ts": "025ac1a4d975f17707618f87e5f583801d82557e7a8938c8853f66310c51b809",
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
-    "src/features/inbox/services/reply-guard.ts": "7517681daa6b0a36cff17bd0827509862554625ab32a76e321ea5a824bb31d81",
+    "src/features/inbox/services/reply-guard.ts": "4ec7fd1b1652601259634af8a5d209b818b70137697c8396f663546bcf0d30f2",
     "src/features/inbox/services/reply-review.ts": "34c189b27c8f6b6bd6cbea59fec07642353f6b39c9221cc230df714a101cadae",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T05:52:19.280Z",
+  "fecha": "2026-11-05T12:01:42.754Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "Línea base inicial de la huella"
+  "motivo": "el filtro también frena razonamiento en castellano, sin otros cambios"
 }

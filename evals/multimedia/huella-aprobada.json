@@ -1,11 +1,11 @@
 {
-  "total": "45416d3bed4e034a774ad29651472bb25c7de4241813b90e7bf56b95d6edccd8",
+  "total": "0f75bf2e16ce08736329369b769f12b1474ea007cfcaea58a3e579d04320a8f2",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/multimedia/correr.ts": "1d3cbd213d358cb5537904904b7bf90e57e2a1ad35a166207abab58359a8da09",
-    "src/features/agents/lib/starter-prompts.ts": "73a9061e5eba5bbd2c486d92f73a410b3257661dc48048b2f8ca67de70737b09",
+    "src/features/agents/lib/starter-prompts.ts": "6f1c9d59561c02219d157d1c0e428d9e6cb6244597e165aa5fd8a84b44739655",
     "src/features/agents/services/active-agent.ts": "609ab6ac625ab39a56d7228c5a574ad0148010b2ada87bad7f61dab9c8b362b4",
     "src/features/arm/services/contact-update-rules.ts": "320569a5f4294def5a4b4df8e3563fcda4c58d8fbfaed4b124ca25e08b229c5f",
     "src/features/inbox/services/business-info.ts": "025ac1a4d975f17707618f87e5f583801d82557e7a8938c8853f66310c51b809",
@@ -16,7 +16,7 @@
     "src/features/inbox/services/model-chain.ts": "5a953e959516375ca204870b62b02a71905cf4ae1c30f568d41b29696dd227ea",
     "src/features/inbox/services/openrouter.ts": "cb75cc695b6977c1459e41fe67041c08f7f9c5b6478d84d71280f39fceaad039",
     "src/features/inbox/services/prompt-builder.ts": "739a715ecadc21d74753a619c548b7ad67f82219669d8f833df2201ac354254e",
-    "src/features/inbox/services/reply-guard.ts": "7517681daa6b0a36cff17bd0827509862554625ab32a76e321ea5a824bb31d81",
+    "src/features/inbox/services/reply-guard.ts": "4ec7fd1b1652601259634af8a5d209b818b70137697c8396f663546bcf0d30f2",
     "src/features/inbox/services/reply-review.ts": "34c189b27c8f6b6bd6cbea59fec07642353f6b39c9221cc230df714a101cadae",
     "src/features/inbox/services/sensitive-data.ts": "e4aade510395d73c6cd0d3302617ec91faf48b0ff412979a64e90f9d725da92a",
     "src/features/inbox/services/turn-recovery.ts": "3a3223ee0c845f0ed7e126688669f4db6690611556be9d1e4d4285808e560558",
@@ -40,7 +40,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T05:52:18.628Z",
+  "fecha": "2026-11-05T12:01:41.036Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "Línea base inicial de la huella"
+  "motivo": "el filtro también frena razonamiento en castellano, sin otros cambios"
 }
