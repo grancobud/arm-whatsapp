@@ -11,7 +11,7 @@ export type ContactField = "name" | "email";
 export function invalidContactValue(field: ContactField, value: string, quote: string): string | null {
   const clean = value.trim();
   if (field === "email" && !EMAIL.test(clean)) return "Ese correo no parece válido.";
-  if (field === "name" && (clean.length < 2 || clean.length > 80 || /\d{3}|[@/\\<>]/.test(clean))) {
+  if (field === "name" && (clean.length < 2 || clean.length > 80 || /\d{3}|[@/\\<>?!¿¡]/.test(clean) || clean.split(/\s+/).length > 5)) {
     return "Ese nombre no parece válido.";
   }
   // El valor tiene que estar en las palabras del cliente: el modelo no lo puede inventar.

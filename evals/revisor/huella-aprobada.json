@@ -17,7 +17,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T13:32:30.960Z",
+  "fecha": "2026-11-05T13:44:27.380Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "cada llamada al modelo tiene tope de tiempo y el filtro frena palabras en inglés"
+  "motivo": "reenvío, validación de nombre y nota de request_human"
 }

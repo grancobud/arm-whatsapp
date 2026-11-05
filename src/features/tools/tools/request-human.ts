@@ -11,7 +11,7 @@ async function run(args: Args, ctx: ToolContext): Promise<ToolResult> {
   const done = {
     handed_over: true,
     message:
-      "Listo: la conversación quedó para el equipo. Decile que una persona lo va a atender, sin prometer cuándo.",
+      "Hecho. Nota interna, no se la copies al cliente: respondele con tus palabras, en una oración, que una persona del equipo lo va a atender. Si le pasó algo malo, pedí disculpas. No prometas cuándo.",
   };
   // El chat de prueba no tiene conversación: se comporta igual, sin cambiar nada.
   if (!ctx.conversationId) return { ok: true, output: { ...done, simulated: true } };
