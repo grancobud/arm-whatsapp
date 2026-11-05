@@ -1,5 +1,5 @@
 {
-  "total": "6ce959161f518b36c5e24a4b8d0b0cc235e0203b7216b3f62816629b046cd2f5",
+  "total": "b01f81190d2c064b40778e97ebee025c53041734e3994de7e92fc379361bbe18",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
@@ -21,7 +21,7 @@
     "src/features/inbox/services/sensitive-data.ts": "e4aade510395d73c6cd0d3302617ec91faf48b0ff412979a64e90f9d725da92a",
     "src/features/inbox/services/turn-recovery.ts": "12a638bc2296a427048d5608226a5234db3a678ec6bf53fd647811bb3c981843",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
-    "src/features/privacy/privacy-rules.ts": "8e6e2f3474f52146aff422afaa4de63a8222aa1eb112e47d06bba66690afa703",
+    "src/features/privacy/privacy-rules.ts": "36a886e0aacedce8df7be595fe8efa0475bb0cd2aebd406c28603ee201d75e56",
     "src/features/tools/index.ts": "e545a63f42413564ab522147b04f3d88a51427609b2ce609538a71f9680d7388",
     "src/features/tools/lib/tool-config.ts": "8178567ceaa91f54f903764d7f8ea363ddf8b4599102f72242389541378d9331",
     "src/features/tools/registry.ts": "439aa03e42a8be46c6fe4ab248f6c605f54cbef7eecb6a84ead6cf0132f9cf45",
@@ -40,7 +40,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T19:36:49.969Z",
+  "fecha": "2026-11-05T20:31:21.107Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "nombre de la ficha en el prompt, seguimientos reemplazables y retoques finales; no cambian los casos"
+  "motivo": "filtro de datos sensibles, promesas de traspaso y motor compartido; no cambian los casos"
 }

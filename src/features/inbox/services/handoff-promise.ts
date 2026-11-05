@@ -20,6 +20,9 @@ const PROMISES = [
   /\b(pase|paso) (tu|su) (mensaje|consulta|solicitud|reclamo|caso|pedido)\b/,
   // "te paso con Tito o algún peluquero": a quien sea, el traspaso es el mismo
   /\bte (paso|pase|derivo|derive) con\b/,
+  // "voy a pasarte con una persona": el examen de sesgos la encontró sin traspaso
+  new RegExp(`\\b(voy|vamos) a pasar(te|lo|la)?\\b[^.!?]*\\b${TEAM}\\b`),
+  new RegExp(`\\bte (voy|vamos) a pasar\\b[^.!?]*\\b${TEAM}\\b`),
   // "ya le avisé a Tito"
   /\bya le (avise|aviso)\b/,
   // "una persona te va a atender", "Tito te va a contactar"
@@ -64,6 +67,8 @@ const NEEDS_PERSON = [
   /\bme (dejaron esperando|hicieron esperar|atendieron mal|trataron mal|arruinaron)\b/,
   /(?<!\bno (me |te |le |nos |lo |la )?)\b(quedo|salio|esta|estaba|lo hicieron|lo dejaron) mal( hecho)?\b/,
   /\bme cobraron (de mas|mal|dos veces)\b/,
+  // Una queja también se escribe con buenos modales.
+  /\b(mi disconformidad|no fue satisfactorio|no me quedo bien)\b/,
   /\bestoy (muy |re |bastante )?(enojad[oa]|harto|harta|indignad[oa]|furios[oa]|caliente)\b/,
   /\bnadie me (responde|contesta|atiende|llama)\b/,
   /\bno me (solucionaron|resolvieron|respondieron|contestaron|devolvieron)\b/,

@@ -30,7 +30,7 @@ export function buildPrivacyNotice(businessName: string, url: string): string {
 const sinTildes = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 const SPECIAL_CATEGORY =
-  /\b(diabetes|diabetic[oa]|vih|hiv|cancer|embarazad[oa]|depresion|bipolar|epilepsia|antidepresivos?|quimioterapia|religion|orientacion sexual|soy (gay|lesbiana|trans|bisexual)|afiliad[oa] al partido)\b/;
+  /\b(diabetes|diabetic[oa]|vih|hiv|cancer|embarazad[oa]|depresion|bipolar|epilepsia|antidepresivos?|quimioterapia|discapacidad|discapacitad[oa]|silla de ruedas|ciego|ciega|sordo|sorda|autismo|autista|religion|musulman[ae]?|islam|islamic[oa]|catolic[oa]|judi[oa]|evangelic[oa]|testigo de jehova|budista|mormon[ae]?|ate[oa]|(soy|es) cristian[oa]|orientacion sexual|gay|lesbiana|bisexual|homosexual|heterosexual|hetero|(soy|es|una|un) trans|mujer trans|hombre trans|transexual|afiliad[oa] al partido|peronista|kirchnerista|macrista|libertari[oa]|voto (a|al|por)|vota (a|al|por))\b/;
 
 /** Datos sensibles de la Ley 25.326 (salud, religión, política, vida sexual) que no van a la memoria. */
 export function hasSpecialCategoryData(text: string): boolean {
