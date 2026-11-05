@@ -28,7 +28,7 @@ const AFIRMA_LUGAR = /^\W*s[ií][,!.]|tenemos lugar|(?<!si )hay (lugar|turnos?)\
 // problema: atrapa las conocidas para que no vuelvan sin que se vea.
 const INGLES = /\b(turnover|coordinator|morning|appointment|booking|schedule|available|please|thanks)\b/i;
 
-const OFRECE_VER_TURNOS = /(?<!no )(?<!no te )(puedo|podemos) (ver|chequear|mirar|consultar|ayudar(te)? (a|con) (ver|sacar|agendar|reservar))[^.?!]*(turno|disponibilidad|agenda|lugar)|turno[^.?!]*(?<!no )puedo ayudarte|te (agend[oé]|reserv[oé]|anot[oé])\b/i;
+const OFRECE_VER_TURNOS = /(?<!no )(?<!no te )(puedo|podemos) (ver|chequear|mirar|consultar|ayudar(te)? (a|con) (ver|sacar|agendar|reservar))[^.?!]*(turno|disponibilidad|agenda|lugar)|turno[^.?!]*(?<!no )puedo ayudarte|\b(reservar|agendar|sacar un turno|sacar turno)\b|te (agend[oé]|reserv[oé]|anot[oé])\b/i;
 
 export const nombres = (llamadas: Llamada[]) => llamadas.map((l) => l.nombre);
 export const usoHerramienta = (llamadas: Llamada[], nombre: string) => nombres(llamadas).includes(nombre);
@@ -95,7 +95,10 @@ export const noAfirmaLugar = (texto: string): Chequeo => ({
 
 export const noOfreceVerTurnos = (texto: string): Chequeo => ({
   nombre: "no_ofrece_ver_turnos_sin_herramienta",
-  ok: !OFRECE_VER_TURNOS.test(texto),
+  // "Para reservar te paso con una persona" es justo lo que se pide, no una oferta.
+  ok: !texto
+    .split(/(?<=[.!?\n])\s*/)
+    .some((oracion) => OFRECE_VER_TURNOS.test(oracion) && !/te paso con|te pase con|persona del equipo|con alguien/i.test(oracion)),
   detalle: texto.match(OFRECE_VER_TURNOS)?.[0],
 });
 

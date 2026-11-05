@@ -69,6 +69,12 @@ test("nombre deducido, lugar afirmado y turnos ofrecidos sin herramienta", () =>
   assert.equal(noOfreceVerTurnos("Te puedo ayudar a ver la disponibilidad para un día en particular.").ok, false);
   assert.equal(noOfreceVerTurnos("Si es para agendar un turno, puedo ayudarte con eso.").ok, false);
   assert.equal(noOfreceVerTurnos("Te agendo para el viernes.").ok, false);
+  assert.equal(noOfreceVerTurnos("La barba cuesta $6.000. ¿Te gustaría reservar un turno?").ok, false);
+  assert.equal(noOfreceVerTurnos("¿Te gustaría agendar tu turno para otro día?").ok, false);
+  assert.equal(noOfreceVerTurnos("Si querés, te paso con una persona para coordinar el turno.").ok, true);
+  assert.equal(noOfreceVerTurnos("¡Hola! Para reservar un turno te paso con una persona del equipo.").ok, true);
+  assert.equal(noOfreceVerTurnos("No, estamos cerrados. ¿Te gustaría agendar para otro día?").ok, false);
+  assert.equal(noOfreceVerTurnos("¿Querés reservar para algún día de la semana?").ok, false);
   assert.equal(noOfreceVerTurnos("No puedo ver la disponibilidad. Si querés, te paso con una persona.").ok, true);
 });
 
