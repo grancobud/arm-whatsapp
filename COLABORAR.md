@@ -98,7 +98,7 @@ Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo.
 | `npm run eval:multimedia` | notas de voz, imágenes y PDFs | sí |
 | `npm run eval:cache` | cuánto del prompt se reutiliza | sí |
 
-**Línea base actual:** agente **9.6** (10/10 en código), herramientas **40/42**,
+**Línea base actual:** agente **9.7** (10/10 en código, 19 casos con repeticiones independientes), herramientas **40/42**,
 multimedia **32/32**. Si tu cambio baja alguno de estos números, no se mergea
 hasta entender por qué.
 
@@ -117,7 +117,7 @@ npm run eval:agente -- --aprobar-huella="motivo del cambio" --aprobada-por="nomb
 Los prompts (`prompts.ts`) no entran en la huella porque son lo que se evalúa:
 cada resultado guarda su hash aparte. El resumen muestra la nota separada por
 juez, y `--juez-fijo` usa un solo juez: si falla, o si el proveedor responde con
-otro modelo, el caso queda sin juez en vez de calificarlo otro. La línea base de arriba se midió **antes** de existir la
+otro modelo, el caso queda sin juez en vez de calificarlo otro. El 9.6 anterior se midió **antes** de existir la
 huella y con la cadena de jueces; vale como referencia, no como comparación
 controlada. Idea de Arian Z. Pendiente: llevar la huella a las otras evals.
 
