@@ -5,6 +5,7 @@ import { resolveCitations } from "./kb-citations";
 import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
 import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
 import { applyTurnGuards } from "./turn-guards";
+import { DEFAULT_HISTORY_WINDOW } from "./conversation-history";
 import { starterPrompt } from "@/features/agents/lib/starter-prompts";
 import { finishReply } from "./reply-finish";
 import { recordLlmUsage } from "./cost-tracker";
@@ -395,7 +396,7 @@ async function processClaimedBatch(
     );
     const historyWindow = Number.isFinite(rawWindow)
       ? Math.min(50, Math.max(5, rawWindow))
-      : 10;
+      : DEFAULT_HISTORY_WINDOW;
 
     // ── 6c + 7. Carga concurrente (Paralelización): memoria, agente, negocio y KB ──
     const [history, activeAgent, businessInfo, kbResults, kbLinks, claims, lessonsContext] =
@@ -570,6 +571,7 @@ async function processClaimedBatch(
             business: bizContext,
             knowledge: kbContext,
             memory: memoryContext,
+            contactName: (contactRow?.name as string | null) ?? null,
             toolResults: reply.toolResults,
             toolNames: (decisionResult.availableTools ?? []).map((t) => t.name),
           },

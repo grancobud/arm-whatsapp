@@ -126,7 +126,7 @@ function YCloudSection({
     (initial?.config?.buffer_silence_seconds as number | undefined) ?? 30,
   );
   const [messagesInMemory, setMessagesInMemory] = useState<number>(
-    (initial?.config?.message_history_window as number | undefined) ?? 10,
+    (initial?.config?.message_history_window as number | undefined) ?? 20,
   );
   // Handoff acknowledgement: defaults to on, so a workspace that never opens
   // this screen still replies to the contact instead of going silent.

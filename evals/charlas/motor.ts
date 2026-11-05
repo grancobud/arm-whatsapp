@@ -3,6 +3,7 @@
 
 import { generateWithTools, createReviewCompleter } from "../../src/features/inbox/services/openrouter.ts";
 import { applyTurnGuards } from "../../src/features/inbox/services/turn-guards.ts";
+import { DEFAULT_HISTORY_WINDOW } from "../../src/features/inbox/services/conversation-history.ts";
 import { finishReply } from "../../src/features/inbox/services/reply-finish.ts";
 import { reviewEnabled, reviewReply, type ToolOutcome } from "../../src/features/inbox/services/reply-review.ts";
 import { registry } from "../../src/features/tools/index.ts";
@@ -17,7 +18,7 @@ import { NEGOCIO } from "../agente/negocio.ts";
 import type { Charla, Turno } from "./charlas.ts";
 
 const GEN = "auto";
-const VENTANA = 10;
+const VENTANA = DEFAULT_HISTORY_WINDOW;
 const BASICAS = ["request_human", "update_contact", "remember_fact", "schedule_followup"];
 
 process.env.OPENROUTER_FALLBACK_MODELS = GEN;
@@ -111,7 +112,7 @@ export async function correrCharla(c: Pick<Charla, "mensajes" | "herramientas" |
           draft: reply.text,
           customerMessage: mensaje,
           agentSystemPrompt: system,
-          sources: { business: biz, memory: formatClaimsContext(memoria as never), toolResults: resultados, toolNames: nombres },
+          sources: { business: biz, memory: formatClaimsContext(memoria as never), contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
           complete: await createReviewCompleter("eval", GEN),
         });
         texto = r.text;

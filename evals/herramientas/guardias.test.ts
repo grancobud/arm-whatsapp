@@ -14,6 +14,7 @@ import {
 } from "../../src/features/inbox/services/contact-capture.ts";
 import { BOOKING_FALLBACK, removeBookingOffer } from "../../src/features/inbox/services/booking-offer.ts";
 import { dropInternalTalk } from "../../src/features/inbox/services/reply-finish.ts";
+import { checkReply } from "../../src/features/inbox/services/reply-guard.ts";
 import { hasSpecialCategoryData } from "../../src/features/privacy/privacy-rules.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
 import { invalidContactValue } from "../../src/features/arm/services/contact-update-rules.ts";
@@ -130,7 +131,8 @@ test("el filtro de memoria reconoce datos sensibles dichos de otra forma", () =>
 test("prometer escribirle sin agendarlo lo toma una persona", async () => {
   const texto = "Te escribo el viernes a la mañana. ¿En qué te puedo ayudar ahora?";
   assert.equal(promisesFollowup(texto), true);
-  for (const oferta of ["Si querés, te escribo el viernes.", "¿Te escribo el viernes?", "Escribime cuando quieras."]) {
+  assert.equal(promisesFollowup("Te llamo el viernes."), true);
+  for (const oferta of ["Si querés, te escribo el viernes.", "¿Te escribo el viernes?", "Escribime cuando quieras.", "Sí, te llamo Ana."]) {
     assert.equal(promisesFollowup(oferta), false, oferta);
   }
   const llamadas: { reason: string }[] = [];
@@ -300,6 +302,22 @@ test("si el cliente pide turno y la respuesta no da salida, ofrece una persona",
   // Sin pedir un turno, una pregunta común sigue su curso.
   assert.equal(removeBookingOffer("¿Qué servicio te interesa?", SIN_AGENDA, "cuánto sale la barba?").changed, false);
   assert.equal(removeBookingOffer("¿Qué servicio te interesa?", SIN_AGENDA, "Gracias por el turno de ayer").changed, false);
+});
+
+test("una herramienta escrita como texto no le llega al cliente", () => {
+  for (const texto of [
+    '{"tool": "check_availability", "params": {"date": "2026-11-06"}}',
+    '```json\n{"name": "request_human", "arguments": {}}\n```',
+    "<tool_call>algo</tool_call>",
+    "Voy a usar check_availability para ver.",
+  ]) {
+    const r = checkReply(texto);
+    assert.equal(r.ok, false, texto);
+    assert.equal(r.reason, "leaked_tool_call");
+  }
+  for (const texto of ["El corte sale $9.000.", "Tu nombre es Ana {sic}.", "Abrimos de 10 a 20."]) {
+    assert.equal(checkReply(texto).ok, true, texto);
+  }
 });
 
 test("saca los comentarios internos sin tocar lo demás", () => {

@@ -75,7 +75,7 @@ export function asksForPerson(customerText: string): boolean {
 }
 
 const FOLLOWUP_TOOL = "schedule_followup";
-const FOLLOWUP_PROMISE = /\bte (escribo|escribimos|escribire|escribiremos|aviso|avisamos|avisare|llamo|llamamos|contacto|contactamos)\b/;
+const FOLLOWUP_PROMISE = /\bte (escribo|escribimos|escribire|escribiremos|aviso|avisamos|avisare|contacto|contactamos)\b|\bte (llamo|llamamos)\s+(el|la|los|hoy|manana|en|a|cuando|despues|apenas|esta|este)\b/;
 
 /**
  * "Te escribo el viernes" sin seguimiento agendado es un mensaje que nunca sale.

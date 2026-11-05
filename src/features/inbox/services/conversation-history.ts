@@ -16,6 +16,12 @@ interface HistoryRow {
   batch_id: string | null;
 }
 
+/**
+ * Mensajes de historial por turno. Con 10 (5 idas y vueltas), un cliente que contó algo
+ * al principio recibía «no me dijiste» a los pocos mensajes (examen de charlas).
+ */
+export const DEFAULT_HISTORY_WINDOW = 20;
+
 export interface ConversationTurn {
   role: "user" | "assistant";
   content: string;
