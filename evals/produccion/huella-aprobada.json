@@ -1,5 +1,5 @@
 {
-  "total": "e26a3b30986aacc7f051958d0ca02356de90fcce3a8650b2d7db1b8bea5210a7",
+  "total": "aa2c8a39b6438c238eb78b528551ef90516206cca66ee6b4192a98a627ea90cf",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
@@ -10,7 +10,7 @@
     "src/features/agents/services/active-agent.ts": "609ab6ac625ab39a56d7228c5a574ad0148010b2ada87bad7f61dab9c8b362b4",
     "src/features/arm/services/contact-update-rules.ts": "f35d09f48a070b918091156e711155acb6132013f8a96655b930502ac3aa5a2d",
     "src/features/inbox/services/booking-offer.ts": "8363572b49f5a3011acf1215f111b4a08f1149b63429dd6f25a4a88ea64eafd5",
-    "src/features/inbox/services/business-info.ts": "4d0730984ecd23b15b4b871da52a320826a01684cc9518ed5877e6df06bd545d",
+    "src/features/inbox/services/business-info.ts": "a36038f62574b33692fead4eede178b032189a327b5272bdcec905848bca5624",
     "src/features/inbox/services/contact-capture.ts": "d8b23bde36ec6d3bfaf89dc70ca113ec4ea199d7906f3bb04a926b0e03560351",
     "src/features/inbox/services/handoff-promise.ts": "a9777ea9d996ad3a155d4e79d5f7cc5d903c6667da2037d5027caa471cc60242",
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
@@ -27,7 +27,7 @@
     "src/features/privacy/privacy-rules.ts": "36a886e0aacedce8df7be595fe8efa0475bb0cd2aebd406c28603ee201d75e56",
     "src/features/tools/index.ts": "e545a63f42413564ab522147b04f3d88a51427609b2ce609538a71f9680d7388",
     "src/features/tools/lib/tool-config.ts": "8178567ceaa91f54f903764d7f8ea363ddf8b4599102f72242389541378d9331",
-    "src/features/tools/registry.ts": "439aa03e42a8be46c6fe4ab248f6c605f54cbef7eecb6a84ead6cf0132f9cf45",
+    "src/features/tools/registry.ts": "68b94d389942b699bf8b047eedf9939efc2ab77ef58a1c048a55b7140be396e5",
     "src/features/tools/services/ssrf-guard.ts": "f0b7f017ffd9a0f6fb1c1f6a9528dcd4f0736c9ecc3d8a2c7f30903ea60914d0",
     "src/features/tools/tools/check-availability.ts": "026d2f263bb028d89a92e39589c8bad058a82814214dc8a338d04379a96a10bc",
     "src/features/tools/tools/custom-webhook.ts": "7d3a4302eb63283af602fc517ca30fa7bbcdf99be42836554d6a8006ef7f1463",
@@ -38,12 +38,13 @@
     "src/features/tools/tools/schedule-highlevel.ts": "3209d5241d3683daf3f0cb0c4c9f12bb1ea0d7da0587ad7982ff0ec3ff493af5",
     "src/features/tools/tools/schedule-link.ts": "c859864e6e2579c1733664f20817e97d552bc3cfb203627339e6619be1556349",
     "src/features/tools/tools/update-contact.ts": "41fdd6bb15babe0718eaad83451ea684df743704bb12b0d6b3873bbb8e610b18",
+    "src/lib/safe-error.ts": "89b23f213b68c0268e375f92c2266802623095f4bdf5b7ea01d755949f6803fe",
     "src/shared/lib/crypto.ts": "0a9255484ddc67d203ec1ddaab282d981e000f3e11cbfc10b234f0da87c54a83",
     "src/shared/lib/integration-secrets.ts": "8a16764a87e4649112815e629f75fdc87af9503fee73f1cdad64ae82587a543f",
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T20:31:24.888Z",
+  "fecha": "2026-11-05T20:45:41.253Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "filtro de datos sensibles, promesas de traspaso y motor compartido; no cambian los casos"
+  "motivo": "logs sin el error completo y evento por turno; no cambian los casos"
 }

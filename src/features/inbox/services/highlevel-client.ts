@@ -8,6 +8,7 @@
  * API v2 docs: https://highlevel.stoplight.io/docs/integrations
  */
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
 
@@ -171,7 +172,7 @@ export async function upsertHLContactByPhone(
     };
     return json.contact?.id ?? json.id ?? null;
   } catch (err) {
-    console.error("[HL] upsertHLContactByPhone error:", err);
+    console.error("[HL] upsertHLContactByPhone error:", safeError(err));
     return null;
   }
 }
@@ -259,7 +260,7 @@ export async function syncContactToHL(
       if (!hlId) throw new Error("HL upsert returned no contact id");
     }
   } catch (err) {
-    console.error("[HL] syncContactToHL error:", err);
+    console.error("[HL] syncContactToHL error:", safeError(err));
     return null;
   }
 
@@ -302,7 +303,7 @@ export async function syncContactFromHL(
     hlContact =
       "contact" in json && json.contact ? json.contact : (json as HLContact);
   } catch (err) {
-    console.error("[HL] syncContactFromHL fetch error:", err);
+    console.error("[HL] syncContactFromHL fetch error:", safeError(err));
     return;
   }
 
@@ -379,7 +380,7 @@ export async function listHLPipelines(
       stages: (p.stages ?? []).map((s) => ({ id: s.id, name: s.name })),
     }));
   } catch (err) {
-    console.error("[HL] listHLPipelines error:", err);
+    console.error("[HL] listHLPipelines error:", safeError(err));
     return null;
   }
 }
@@ -489,7 +490,7 @@ export async function createHLOpportunity(
     const id = json.opportunity?.id ?? json.id ?? null;
     return id ? { id } : null;
   } catch (err) {
-    console.error("[HL] createHLOpportunity error:", err);
+    console.error("[HL] createHLOpportunity error:", safeError(err));
     return null;
   }
 }

@@ -1,5 +1,6 @@
 // G5: Setter mode API — CRUD for setter_configs table.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -138,7 +139,7 @@ export async function GET(
     .maybeSingle();
 
   if (error) {
-    console.error("[GET /api/workspace/[id]/setter]:", error);
+    console.error("[GET /api/workspace/[id]/setter]:", safeError(error));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -190,7 +191,7 @@ export async function POST(
     .single();
 
   if (error || !data) {
-    console.error("[POST /api/workspace/[id]/setter]:", error);
+    console.error("[POST /api/workspace/[id]/setter]:", safeError(error));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -258,7 +259,7 @@ export async function PATCH(
     .single();
 
   if (error || !data) {
-    console.error("[PATCH /api/workspace/[id]/setter]:", error);
+    console.error("[PATCH /api/workspace/[id]/setter]:", safeError(error));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },

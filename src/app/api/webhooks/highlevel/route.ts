@@ -7,6 +7,7 @@
  * source of truth (wsid query param), not the payload locationId.
  */
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { createClient as createSbClient } from "@supabase/supabase-js";
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
   try {
     await syncContactFromHL(wsid, hlContactId);
   } catch (err) {
-    console.error("[HL webhook] syncContactFromHL failed:", err);
+    console.error("[HL webhook] syncContactFromHL failed:", safeError(err));
     // Return 200 so HL does not retry — error is logged for investigation
     return NextResponse.json({ ok: true, synced: false });
   }

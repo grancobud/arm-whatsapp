@@ -1,5 +1,6 @@
 // F7: Business info API — GET/PUT for workspace business context.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -117,7 +118,7 @@ export async function PUT(
     await upsertBusinessInfo(workspaceId, parsed.data);
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[PUT /api/workspace/[id]/business-info]:", err);
+    console.error("[PUT /api/workspace/[id]/business-info]:", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },

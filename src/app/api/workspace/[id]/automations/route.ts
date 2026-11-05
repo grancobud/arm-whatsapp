@@ -1,5 +1,6 @@
 // G3: Automation Rules API — list, create, update, delete workspace automation rules.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -103,7 +104,7 @@ export async function GET(
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("[GET /api/workspace/[id]/automations]:", error);
+    console.error("[GET /api/workspace/[id]/automations]:", safeError(error));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -166,7 +167,7 @@ export async function POST(
     .single();
 
   if (error) {
-    console.error("[POST /api/workspace/[id]/automations]:", error);
+    console.error("[POST /api/workspace/[id]/automations]:", safeError(error));
     return NextResponse.json(
       { error: "Error al crear la automatización" },
       { status: 500 },
@@ -233,7 +234,7 @@ export async function PATCH(
     .single();
 
   if (error) {
-    console.error("[PATCH /api/workspace/[id]/automations]:", error);
+    console.error("[PATCH /api/workspace/[id]/automations]:", safeError(error));
     return NextResponse.json(
       { error: "Error al actualizar la automatización" },
       { status: 500 },
@@ -296,7 +297,7 @@ export async function DELETE(
     .eq("workspace_id", workspaceId);
 
   if (error) {
-    console.error("[DELETE /api/workspace/[id]/automations]:", error);
+    console.error("[DELETE /api/workspace/[id]/automations]:", safeError(error));
     return NextResponse.json(
       { error: "Error al eliminar la automatización" },
       { status: 500 },

@@ -1,5 +1,6 @@
 "use server";
 
+import { safeError } from "@/lib/safe-error";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -139,7 +140,7 @@ export async function createWorkspaceForClient(
         };
       }
     } catch (err) {
-      console.error("[agency] client provisioning error:", err);
+      console.error("[agency] client provisioning error:", safeError(err));
       // Non-fatal — workspace still created, agency can add the user later.
     }
   }
@@ -283,7 +284,7 @@ export async function deleteWorkspaceForClient(
   try {
     await removeStorageFolder(service, workspaceId);
   } catch (err) {
-    console.error("[agency] workspace media delete error:", err);
+    console.error("[agency] workspace media delete error:", safeError(err));
     return { error: "No se pudieron borrar los archivos del cliente" };
   }
 
@@ -293,7 +294,7 @@ export async function deleteWorkspaceForClient(
     .eq("id", workspaceId);
 
   if (error) {
-    console.error("[agency] workspace delete error:", error);
+    console.error("[agency] workspace delete error:", safeError(error));
     return { error: "Error al eliminar el cliente" };
   }
 

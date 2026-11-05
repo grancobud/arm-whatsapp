@@ -1,6 +1,7 @@
 // F3-T4: Decision engine — orchestrates respond / handoff / abstain.
 // Uses service-role client for DB state transitions.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import {
   aiShouldRespond,
@@ -79,7 +80,7 @@ export async function decide(opts: {
       } catch (err) {
         console.error(
           "[decision-engine] failed to transition to handoff_pending:",
-          err,
+          safeError(err),
         );
       }
     }

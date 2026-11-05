@@ -1,0 +1,17 @@
+# Vigilante de afuera: las alertas por mail corren dentro del cron, así que si el cron o
+# Vercel se caen no pueden avisar. Si esto falla, GitHub le manda un mail a quien
+# modificó este horario por última vez. Gratis en un repo público.
+# GitHub puede demorar los horarios y apaga el programa tras 60 días sin actividad.
+name: Vigilancia
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  salud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: La app responde y no hay nada demorado
+        run: curl --silent --show-error --fail-with-body --retry 2 --retry-delay 60 --retry-all-errors --max-time 30 https://arm-whatsapp.vercel.app/api/health

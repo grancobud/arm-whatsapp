@@ -2,6 +2,7 @@
  * templates.ts — Template management: list, sync from YCloud, helpers.
  */
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { fetchYCloudTemplates } from "./ycloud-client";
 import { decryptCredentials } from "@/shared/lib/integration-secrets";
@@ -194,7 +195,7 @@ export async function syncTemplatesFromYCloud(
         synced++;
       }
     } catch (err) {
-      console.error("[templates] record processing error:", err);
+      console.error("[templates] record processing error:", safeError(err));
       errors++;
     }
   }

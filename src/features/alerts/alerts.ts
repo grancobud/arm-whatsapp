@@ -14,6 +14,7 @@
 //
 // Disabled unless RESEND_API_KEY and ALERT_EMAIL_TO are set.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { redactSensitivePayload } from "@/features/inbox/services/observability";
 
@@ -46,6 +47,19 @@ export interface AlertRow {
   last: string;
 }
 
+/** Una falla suelta del revisor es normal con modelos gratis; muchas juntas dejan sin revisar todo. */
+export const REVIEW_FAILURE_BURST = 5;
+const REVIEW_FAILURES = new Set(["review_failed", "rewrite_failed"]);
+const isReviewFailure = (e: AlertEvent) =>
+  e.type === "reply_review" && REVIEW_FAILURES.has(String(e.payload?.outcome));
+
+/** Lo que amerita un mail, contando también lo que solo importa en cantidad. */
+export function alertWorthyEvents(events: AlertEvent[]): AlertEvent[] {
+  const failures = events.filter(isReviewFailure);
+  const burst = failures.length >= REVIEW_FAILURE_BURST ? failures : [];
+  return [...events.filter(isAlertWorthy), ...burst];
+}
+
 /** True if this event needs a person to look at it. */
 export function isAlertWorthy(e: AlertEvent): boolean {
   if (e.type === "alert_sent") return false;
@@ -68,7 +82,7 @@ function detailOf(payload: Record<string, unknown> | null): string {
 /** Groups the problems by workspace and type, most frequent first. */
 export function buildDigest(events: AlertEvent[], workspaceNames: Record<string, string>): AlertRow[] {
   const groups = new Map<string, AlertRow>();
-  for (const e of events.filter(isAlertWorthy)) {
+  for (const e of alertWorthyEvents(events)) {
     const key = `${e.workspace_id}|${e.type}`;
     const row = groups.get(key);
     if (row) {
@@ -152,6 +166,25 @@ async function sendEmail(subject: string, html: string): Promise<boolean> {
   return res.ok;
 }
 
+let lastUnexpectedAt = 0;
+
+/** Un error que ninguna ruta atrapó. Sin contenido, y como mucho un mail cada 30 minutos por instancia. */
+export async function reportUnexpectedError(path: string, err: unknown, now = Date.now()): Promise<boolean> {
+  console.error("[inesperado]", path.split("?")[0], safeError(err));
+  if (!process.env.RESEND_API_KEY || !process.env.ALERT_EMAIL_TO) return false;
+  if (now - lastUnexpectedAt < COOLDOWN_MINUTES * 60_000) return false;
+  lastUnexpectedAt = now;
+  const escape = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+  try {
+    return await sendEmail(
+      "ARM: error no previsto",
+      `<p>Ruta: ${escape(path.split("?")[0])}</p><p>${escape(safeError(err))}</p>`,
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Called by the cron every minute. Never throws. Returns how many problems
  * were emailed (0 when disabled, off-minute, cooling down or all quiet).
@@ -179,7 +212,7 @@ export async function checkAlerts(now = new Date()): Promise<number> {
       .gt("created_at", since.toISOString())
       .order("created_at", { ascending: false })
       .limit(500);
-    const worthy = ((events ?? []) as AlertEvent[]).filter(isAlertWorthy);
+    const worthy = alertWorthyEvents((events ?? []) as AlertEvent[]);
     if (worthy.length === 0) return 0;
 
     const ids = [...new Set(worthy.map((e) => e.workspace_id))];

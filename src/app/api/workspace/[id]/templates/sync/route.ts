@@ -1,5 +1,6 @@
 // G1: Templates sync — pulls templates from YCloud and upserts into workspace.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { syncTemplatesFromYCloud } from "@/features/inbox/services/templates";
@@ -55,7 +56,7 @@ export async function POST(
     return NextResponse.json({ synced: result.synced, errors: result.errors });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error desconocido";
-    console.error("[POST /api/workspace/[id]/templates/sync]:", err);
+    console.error("[POST /api/workspace/[id]/templates/sync]:", safeError(err));
 
     // Surface integration-not-configured as a 422 so the UI can show a
     // helpful message instead of a generic 500.

@@ -1,5 +1,6 @@
 // F7: Setter mode — knockout qualification + scoring via structured LLM evaluation.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject } from "ai";
@@ -89,7 +90,7 @@ export async function getSetterConfig(
     .maybeSingle();
 
   if (error) {
-    console.error("[setter] getSetterConfig error:", error);
+    console.error("[setter] getSetterConfig error:", safeError(error));
     return null;
   }
 

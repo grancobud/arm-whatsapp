@@ -1,5 +1,6 @@
 // F7: Knowledge base service — ingest documents, chunk, embed, and search with pgvector.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createOpenAI } from "@ai-sdk/openai";
 import { embed, embedMany } from "ai";
@@ -206,7 +207,7 @@ export async function searchKb(
   });
 
   if (error) {
-    console.error("[kb-service] match_kb_chunks RPC error:", error);
+    console.error("[kb-service] match_kb_chunks RPC error:", safeError(error));
     return [];
   }
 

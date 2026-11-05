@@ -7,6 +7,7 @@
 // tokens are never part of an export. Reads page through each table so the
 // PostgREST row cap never truncates the file silently.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
@@ -165,7 +166,7 @@ export async function GET(
       },
     });
   } catch (err) {
-    console.error("[export] failed:", err);
+    console.error("[export] failed:", safeError(err));
     return NextResponse.json(
       { error: "No se pudo generar la exportación" },
       { status: 500 },

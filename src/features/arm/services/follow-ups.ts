@@ -12,6 +12,7 @@
 //   - The conversation was closed or paused (opt-out) → cancelled.
 // Messages only go out between 9 and 21 in the business's time zone.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { DEFAULT_TIMEZONE } from "@/features/inbox/services/business-info";
 import { withinSendingHours } from "@/features/automations/engine";
@@ -297,7 +298,7 @@ export async function runFollowUps(now = new Date()): Promise<number> {
     }
     return handled;
   } catch (err) {
-    console.error("[follow-ups] run failed:", err);
+    console.error("[follow-ups] run failed:", safeError(err));
     return 0;
   }
 }

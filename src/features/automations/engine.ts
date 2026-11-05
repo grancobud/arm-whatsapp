@@ -15,6 +15,7 @@
 //   - Templates go through dispatchTemplate (opt-out is checked there) and,
 //     for the 24h follow-up, only inside business hours.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { DEFAULT_TIMEZONE } from "@/features/inbox/services/business-info";
 import type { ConversationState } from "@/features/inbox/services/state-machine";
@@ -459,7 +460,7 @@ export async function runAutomations(now = new Date()): Promise<number> {
     }
     return attempted;
   } catch (err) {
-    console.error("[automations] run failed:", err);
+    console.error("[automations] run failed:", safeError(err));
     return 0;
   }
 }

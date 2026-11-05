@@ -154,6 +154,9 @@ const casos = {
     const lote = await db.from("message_batches").select("status").eq("conversation_id", r.conversacion.id);
     chequear("normal", "el lote queda procesado", lote.data?.every((b) => b.status === "processed"), JSON.stringify(lote.data));
     console.log(`     salidas: ${salientes(r).map((m) => (m.body ?? "").slice(0, 60)).join(" | ")}`);
+    const turnos = (await db.from("events").select("payload").eq("conversation_id", r.conversacion.id).eq("type", "turn_completed")).data ?? [];
+    chequear("normal", "queda un evento del turno con sus tiempos", turnos.length === 1 && turnos[0].payload.total_ms > 0 && turnos[0].payload.sent === true, JSON.stringify(turnos));
+    chequear("normal", "el evento no lleva el contenido", !JSON.stringify(turnos).includes(TEXTO) && !JSON.stringify(turnos).includes("cuánto sale"));
 
     const segundo = await webhook(evento(a.telefono, de, "Gracias"));
     chequear("normal", "el segundo mensaje también entra", segundo.status === 200);
@@ -176,6 +179,28 @@ const casos = {
     await estado("read");
     await estado("delivered");
     chequear("normal", "un estado viejo no lo hace retroceder", (await leer()) === "read", await leer());
+  },
+
+  async salud({ a }) {
+    controlar({ texto: TEXTO });
+    await limpiarCola();
+    const pedir = async () => {
+      const r = await fetch(`${APP}/api/health`);
+      return { status: r.status, json: await r.json() };
+    };
+    const bien = await pedir();
+    chequear("salud", "sin nada demorado responde 200", bien.status === 200 && bien.json.ok, JSON.stringify(bien));
+    const de = nuevoCliente();
+    await webhook(evento(a.telefono, de, "Mensaje que se demora"));
+    const x = await esperar(async () => {
+      const y = await conversacionDe(a.id, de);
+      return y.conversacion ? y : null;
+    }, 8000);
+    await db.from("message_batches").update({ flush_at: new Date(Date.now() - 10 * 60_000).toISOString() }).eq("conversation_id", x.conversacion.id).eq("status", "buffering");
+    const mal = await pedir();
+    chequear("salud", "con un lote demorado responde 503", mal.status === 503 && /cron/.test(mal.json.problems.join()), JSON.stringify(mal));
+    chequear("salud", "no muestra datos de clientes", !JSON.stringify(mal).includes(de) && !JSON.stringify(mal).includes(a.id));
+    await limpiarCola();
   },
 
   async firmas({ a }) {

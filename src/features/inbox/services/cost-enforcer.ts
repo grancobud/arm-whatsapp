@@ -2,6 +2,7 @@
 // Distinct from cost-tracker.ts (which only records usage).
 // This module ACTS on budget state: degrade or cut AI when thresholds are crossed.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 
 function svc() {
@@ -51,7 +52,7 @@ export async function enforceCostPolicy(
     .gte("created_at", dayStart.toISOString());
 
   if (error) {
-    console.error("[cost-enforcer] failed to read daily events:", error);
+    console.error("[cost-enforcer] failed to read daily events:", safeError(error));
     // Fail open — don't block on DB errors
     return { policy: "allow", reason: "db_error_fail_open" };
   }

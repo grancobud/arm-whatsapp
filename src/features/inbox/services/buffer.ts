@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import { inboundMessageText } from "./inbound-text";
 import { resolveCitations } from "./kb-citations";
 import { createClient as createSbClient } from "@supabase/supabase-js";
@@ -290,6 +291,7 @@ export async function processNextBatch(opts?: {
     await supabase.from("message_batches").update({ meta }).eq("id", batch.id);
   };
 
+  const turnStartedAt = Date.now();
   try {
     await saveProgress({});
 
@@ -386,7 +388,7 @@ export async function processNextBatch(opts?: {
         // Sin búsqueda el agente responde igual: dice que no tiene el dato o lo pasa a una persona.
         searchKb(batch.workspace_id, mergedText, 3).catch(async (err) => {
           const error = err instanceof Error ? err.message || err.name : String(err);
-          console.error("[buffer] searchKb failed, replying without it:", error);
+          console.error("[buffer] searchKb failed, replying without it:", safeError(error));
           await supabase.from("events").insert({
             type: "kb_search_failed",
             level: "warn",
@@ -543,6 +545,7 @@ export async function processNextBatch(opts?: {
     let citedIds = reply.citedIds;
     let reviewIn = 0;
     let reviewOut = 0;
+    let reviewOutcome: string | null = null;
     // Leave time to send: with less than ~8 s left the draft goes out unreviewed.
     const reviewBudget = opts?.deadlineAt
       ? Math.min(DEFAULT_REVIEW_BUDGET_MS, opts.deadlineAt - Date.now() - 5_000)
@@ -564,6 +567,7 @@ export async function processNextBatch(opts?: {
           complete: await createReviewCompleter(batch.workspace_id, model),
         });
         replyText = review.text;
+        reviewOutcome = review.outcome;
         // The rewrite's own citations: the draft's may no longer apply.
         if (review.outcome === "rewritten" || review.outcome === "unresolved") citedIds = review.citedIds ?? [];
         reviewIn = review.inputTokens;
@@ -583,7 +587,7 @@ export async function processNextBatch(opts?: {
           });
         }
       } catch (err) {
-        console.error("[buffer] reply review failed, sending the draft:", err);
+        console.error("[buffer] reply review failed, sending the draft:", safeError(err));
       }
     }
 
@@ -634,6 +638,7 @@ export async function processNextBatch(opts?: {
     }
 
     // ── 10a. Dispatch via single exit point (SEC-04) ────────────────────────
+    const replyDoneAt = Date.now();
     await saveProgress({ send_started: true });
     const dispatchResult = await dispatchText({
       workspaceId: batch.workspace_id,
@@ -662,8 +667,28 @@ export async function processNextBatch(opts?: {
       await applyTransition(batch.conversation_id, "handoff_pending", {
         trigger: "dispatch_failure",
         skipAck: true,
-      }).catch((e) => console.error("[buffer] handoff after failed send failed:", e));
+      }).catch((e) => console.error("[buffer] handoff after failed send failed:", safeError(e)));
     }
+
+    // Para saber qué pasó sin leer la charla: solo hechos, nunca el contenido.
+    await supabase.from("events").insert({
+      type: "turn_completed",
+      level: "info",
+      workspace_id: batch.workspace_id,
+      conversation_id: batch.conversation_id,
+      payload: {
+        model: reply.modelUsed ?? model,
+        total_ms: Date.now() - turnStartedAt,
+        generate_ms: replyDoneAt - turnStartedAt,
+        review: reviewOutcome,
+        attempts: meta.attempts,
+        tools: reply.toolResults.map((t) => `${t.name}:${t.status}`),
+        forced_handoff: Boolean(forcedHandoff),
+        contact_data_saved: savedContactData.length,
+        booking_offer_removed: finished.bookingOfferRemoved,
+        sent: dispatchResult.ok,
+      },
+    });
 
     // ── 10b. Mark batch as processed ────────────────────────────────────────
     await markBatchProcessed(batch.id, mergedText, supabase);
@@ -739,7 +764,7 @@ export async function processNextBatch(opts?: {
       });
       await applyTransition(batch.conversation_id, "handoff_pending", {
         trigger: "turn_incomplete",
-      }).catch((e) => console.error("[buffer] handoff after cut turn failed:", e));
+      }).catch((e) => console.error("[buffer] handoff after cut turn failed:", safeError(e)));
       return { processed: false, conversationId: batch.conversation_id, error: errorMsg };
     }
 
@@ -764,7 +789,7 @@ export async function processNextBatch(opts?: {
       // le llega al dueño de la instalación, no a quien atiende la conversación.
       await applyTransition(batch.conversation_id, "handoff_pending", {
         trigger: "batch_dead_letter",
-      }).catch((e) => console.error("[buffer] handoff after giving up failed:", e));
+      }).catch((e) => console.error("[buffer] handoff after giving up failed:", safeError(e)));
 
       return {
         processed: false,
@@ -818,7 +843,7 @@ async function markBatchProcessed(
     .eq("id", batchId);
 
   if (error) {
-    console.error("[buffer] markBatchProcessed error:", error);
+    console.error("[buffer] markBatchProcessed error:", safeError(error));
   }
 }
 

@@ -1,5 +1,6 @@
 // F7: Prompts API — list prompts, create versions, publish versions.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -81,7 +82,7 @@ export async function GET(
     const prompts = await listPrompts(workspaceId);
     return NextResponse.json({ data: prompts });
   } catch (err) {
-    console.error("[GET /api/workspace/[id]/prompts]:", err);
+    console.error("[GET /api/workspace/[id]/prompts]:", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -192,7 +193,7 @@ export async function POST(
       { status: 201 },
     );
   } catch (err) {
-    console.error("[POST /api/workspace/[id]/prompts]:", err);
+    console.error("[POST /api/workspace/[id]/prompts]:", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -256,7 +257,7 @@ export async function PATCH(
     }
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[PATCH /api/workspace/[id]/prompts]:", err);
+    console.error("[PATCH /api/workspace/[id]/prompts]:", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },

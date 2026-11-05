@@ -4,6 +4,7 @@
  * contact-actions.ts — Server actions for contact CRUD and HL sync.
  */
 
+import { safeError } from "@/lib/safe-error";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
@@ -91,7 +92,7 @@ export async function updateContact(
 
   // 4. Fire-and-forget HL sync (do not block UI)
   syncContactToHL(workspace_id, contactId).catch((err: unknown) => {
-    console.warn("[updateContact] HL sync failed (non-critical):", err);
+    console.warn("[updateContact] HL sync failed (non-critical):", safeError(err));
   });
 
   return { ok: true, data: { id: updatedId } };
