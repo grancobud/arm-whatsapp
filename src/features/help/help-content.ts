@@ -36,6 +36,7 @@ export const FIRST_STEPS: HelpStep[] = [
       "Copiá la Webhook URL que te muestra esta pantalla y pegala en la configuración de webhooks de YCloud.",
       "En el perfil del número, cargá un mail, una web o un teléfono de atención: WhatsApp lo pide.",
       "Revisá que tu rubro esté permitido: WhatsApp no admite, entre otros, drogas, alcohol, tabaco, armas ni productos médicos.",
+      "Por ahora no lo uses en rubros de salud: esas charlas contienen datos sensibles y tienen reglas más estrictas.",
     ],
     link: { label: "Ir a Integraciones", href: "/settings?tab=integraciones" },
     setupKey: "whatsapp",
@@ -180,10 +181,18 @@ export const SCREENS: { name: string; text: string; href: string }[] = [
   { name: "Base de conocimiento", text: "Documentos que el agente consulta para responder.", href: "/settings?tab=knowledge-base" },
   { name: "Equipo", text: "Quién tiene acceso y con qué rol.", href: "/settings?tab=equipo" },
   { name: "Automatizaciones", text: "Reglas que se disparan solas, y la plantilla para las promesas del agente.", href: "/settings?tab=automatizaciones" },
-  { name: "Datos", text: "Descargar todo en JSON o los contactos en CSV. Las credenciales nunca salen.", href: "/settings?tab=datos" },
+  { name: "Datos", text: "Descargar todo en JSON o los contactos en CSV, y elegir cuánto tiempo se guardan los datos. Las credenciales nunca salen.", href: "/settings?tab=datos" },
 ];
 
 export const FAQ: { question: string; answer: string[]; link?: HelpLink }[] = [
+  {
+    question: "Un cliente pide ver o borrar sus datos. ¿Qué hago?",
+    answer: [
+      "Abrí su conversación y tocá Ver contacto. Ahí están Bajar sus datos y Borrar todos sus datos.",
+      "Tenés que responder en 10 días corridos si pide verlos, y en 5 días hábiles si pide corregirlos o borrarlos.",
+      "Borrar no se puede deshacer. Si está en HighLevel u otro sistema conectado, borralo también ahí.",
+    ],
+  },
   {
     question: "La IA no contesta. ¿Qué reviso?",
     answer: [

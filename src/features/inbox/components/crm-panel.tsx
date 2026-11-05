@@ -6,7 +6,8 @@
  */
 
 import { useState, useTransition, KeyboardEvent } from "react";
-import { User, RefreshCw, Save, ChevronDown, ChevronUp, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { User, RefreshCw, Save, ChevronDown, ChevronUp, X, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,8 @@ export function CrmPanel({
   contact,
   conversationId: _conversationId,
 }: CrmPanelProps) {
+  const router = useRouter();
+  const [erasing, setErasing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Local editable state
@@ -143,6 +146,33 @@ export function CrmPanel({
   }
 
   // ── HL Sync ──────────────────────────────────────────────────────────────────
+
+  async function handleErase() {
+    const confirmed = window.confirm(
+      "¿Borrar todos los datos de este contacto? Se borran sus conversaciones, memoria, turnos y archivos. No se puede deshacer. Si está en HighLevel u otro sistema, también hay que borrarlo ahí.",
+    );
+    if (!confirmed) return;
+    setErasing(true);
+    try {
+      const res = await fetch(`/api/contacts/${contact.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(
+          res.status === 403
+            ? "Solo un manager o admin puede borrar un contacto"
+            : (json.error ?? "No se pudo borrar el contacto"),
+        );
+        return;
+      }
+      toast.success("Contacto borrado");
+      router.push("/inbox");
+      router.refresh();
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setErasing(false);
+    }
+  }
 
   function handleSyncHL() {
     startTransition(async () => {
@@ -364,6 +394,22 @@ export function CrmPanel({
         >
           <RefreshCw className="h-3.5 w-3.5" />
           Sync HighLevel
+        </Button>
+        <Button asChild size="sm" variant="outline" className="w-full h-7 text-xs gap-1.5">
+          <a href={`/api/contacts/${contact.id}/export`} download>
+            <Download className="h-3.5 w-3.5" />
+            Bajar sus datos
+          </a>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleErase}
+          disabled={erasing}
+          className="w-full h-7 text-xs gap-1.5 text-destructive border-destructive/40"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {erasing ? "Borrando..." : "Borrar todos sus datos"}
         </Button>
       </div>
 

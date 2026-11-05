@@ -29,7 +29,7 @@ const TABLES = {
   contact_claims:
     "id, contact_id, kind, text, source_message_id, quote, author, status, created_at",
   conversations:
-    "id, contact_id, channel, state, last_message_at, created_at",
+    "id, contact_id, channel, state, summary, last_message_at, created_at",
   messages:
     "id, conversation_id, direction, type, body, status, created_at",
   campaigns:
@@ -38,6 +38,10 @@ const TABLES = {
     "id, campaign_id, contact_id, conversation_id, status, error, sent_at, created_at",
   agent_proposals:
     "id, conversation_id, contact_id, tool_name, args, status, result, decided_at, created_at",
+  appointments:
+    "id, contact_id, conversation_id, scheduled_at, status, meta, created_at",
+  follow_ups:
+    "id, contact_id, conversation_id, due_at, message, reason, status, created_at, done_at",
 } as const;
 
 type TableName = keyof typeof TABLES;
@@ -101,6 +105,13 @@ export async function GET(
 
   const stamp = new Date().toISOString().slice(0, 10);
   const format = req.nextUrl.searchParams.get("format");
+
+  await svc().from("events").insert({
+    workspace_id: workspaceId,
+    type: "data_exported",
+    level: "info",
+    payload: { by: auth.userId, format: format === "csv" ? "csv" : "json" },
+  });
 
   try {
     if (format === "csv") {

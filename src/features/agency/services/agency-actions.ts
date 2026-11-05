@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { provisionWorkspaceUser } from "@/lib/auth/provision-user";
+import { removeStorageFolder } from "@/features/privacy/services/contact-erasure";
 import type {
   ClientCredentials,
   CreateWorkspaceResult,
@@ -278,6 +279,14 @@ export async function deleteWorkspaceForClient(
   if (!userId) return { error: "No autorizado" };
 
   const service = svc();
+  // Files first: once the workspace is gone nothing points at them anymore.
+  try {
+    await removeStorageFolder(service, workspaceId);
+  } catch (err) {
+    console.error("[agency] workspace media delete error:", err);
+    return { error: "No se pudieron borrar los archivos del cliente" };
+  }
+
   const { error } = await service
     .from("workspaces")
     .delete()

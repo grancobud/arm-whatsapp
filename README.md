@@ -130,6 +130,8 @@ flowchart LR
 > esté prendida, y los proveedores gratis pueden guardar o entrenar con lo que
 > reciben. Ideal para demos y pruebas. Con datos personales de clientes, conviene
 > un modelo pago que no entrene con los datos.
+>
+> La página `/privacidad` es un borrador: completá `NEXT_PUBLIC_LEGAL_NAME`, `NEXT_PUBLIC_LEGAL_ADDRESS` y `NEXT_PUBLIC_LEGAL_EMAIL`, hacela revisar por un abogado y recién entonces poné `NEXT_PUBLIC_LEGAL_REVIEWED=true`.
 
 ### 🧩 Las piezas de IA
 
@@ -250,7 +252,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 169.
+corre 179.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |

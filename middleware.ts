@@ -46,6 +46,7 @@ export async function middleware(request: NextRequest) {
     "/signup",
     "/forgot-password",
     "/reset-password",
+    "/privacidad",
   ];
   const isPublicRoute = publicRoutes.includes(pathname);
 

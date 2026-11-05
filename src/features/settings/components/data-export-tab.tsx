@@ -7,6 +7,7 @@
 
 import { Download, FileJson, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RetentionSetting } from "./retention-setting";
 
 interface Props {
   workspaceId: string;
@@ -29,6 +30,8 @@ export function DataExportTab({ workspaceId, canExport }: Props) {
           de las integraciones nunca se incluyen.
         </p>
       </div>
+
+      {canExport && <RetentionSetting workspaceId={workspaceId} />}
 
       {!canExport ? (
         <p className="text-sm text-muted-foreground">

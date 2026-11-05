@@ -100,6 +100,12 @@ export function LoginForm({ message }: { message?: string }) {
           Crear cuenta
         </Link>
       </p>
+
+      <p className="text-center text-xs text-muted-foreground">
+        <Link href="/privacidad" className="underline-offset-4 hover:underline">
+          Política de privacidad
+        </Link>
+      </p>
     </div>
   );
 }
