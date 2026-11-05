@@ -50,7 +50,7 @@ export function TestChatPanel({
   const cat = findCatalogModel(agent.model);
   const modelLabel = cat
     ? cat.model.label
-    : (agent.model ?? "Modelo del workspace");
+    : (agent.model ?? "Modelo general");
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

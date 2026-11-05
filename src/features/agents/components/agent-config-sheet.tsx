@@ -36,6 +36,7 @@ const STYLE_OPTIONS: { value: ResponseStyle; label: string; hint: string }[] = [
 interface Props {
   workspaceId: string;
   agent: AgentDto;
+  initialTab?: "identidad" | "prueba";
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: (agent: Partial<AgentDto> & { id: string }) => void;
@@ -44,6 +45,7 @@ interface Props {
 export function AgentConfigSheet({
   workspaceId,
   agent,
+  initialTab = "identidad",
   open,
   onOpenChange,
   onSaved,
@@ -121,7 +123,7 @@ export function AgentConfigSheet({
           </div>
         </SheetHeader>
 
-        <Tabs defaultValue="identidad" className="px-4 py-2">
+        <Tabs defaultValue={initialTab} className="px-4 py-2">
           <TabsList className="mb-4">
             <TabsTrigger value="identidad">Identidad</TabsTrigger>
             <TabsTrigger value="prompt">Prompt</TabsTrigger>

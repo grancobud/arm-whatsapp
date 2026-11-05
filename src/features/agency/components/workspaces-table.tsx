@@ -239,12 +239,12 @@ export function WorkspacesTable({ workspaces }: Props) {
                 size="sm"
                 variant="ghost"
                 className="h-8 px-2.5 text-muted-foreground hover:text-foreground"
-                aria-label={`Ir al inbox de ${workspace.name}`}
+                aria-label={`Ir a la Bandeja de ${workspace.name}`}
                 onClick={() => handleEnter(workspace.id, "/inbox")}
               >
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="sr-only sm:not-sr-only sm:ml-1.5 text-xs">
-                  Inbox
+                  Bandeja
                 </span>
               </Button>
               <Button
