@@ -65,15 +65,15 @@ export function SettingsShell({
 
       <LlmProviderProvider custom={llmCustom}>
       <Tabs defaultValue={initialTab}>
-        {/* Scroll the tab strip within its own track instead of letting 11 tabs
-            push horizontal overflow onto the whole page. */}
+        {/* On a phone the tabs wrap, so none stays hidden past the edge; wider
+            screens keep one row and scroll within its own track. */}
         <div className="mb-6 -mx-1 overflow-x-auto px-1 pb-1">
-          <TabsList className="w-max">
+          <TabsList className="h-auto w-full flex-wrap justify-start sm:w-max sm:flex-nowrap">
             <TabsTrigger value="agentes">Agentes</TabsTrigger>
             <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
             <TabsTrigger value="negocio">Negocio</TabsTrigger>
             <TabsTrigger value="tools">Herramientas</TabsTrigger>
-            <TabsTrigger value="sistemas">Sistemas (MCP)</TabsTrigger>
+            <TabsTrigger value="sistemas">Sistemas</TabsTrigger>
             <TabsTrigger value="templates">Plantillas</TabsTrigger>
             <TabsTrigger value="knowledge-base">Base de conocimiento</TabsTrigger>
             <TabsTrigger value="equipo">Equipo</TabsTrigger>

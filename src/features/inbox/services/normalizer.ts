@@ -71,11 +71,16 @@ export async function processInbound(
   // undo a BAJA, only ALTA does (see opt-out.ts).
   const { data: existing } = await supabase
     .from("contacts")
-    .select("opt_out_at")
+    .select("opt_out_at, opt_in_at, opt_in_source")
     .eq("workspace_id", workspaceId)
     .eq("phone", phone)
     .maybeSingle();
-  const optedOut = Boolean((existing as { opt_out_at: string | null } | null)?.opt_out_at);
+  const known = existing as {
+    opt_out_at: string | null;
+    opt_in_at: string | null;
+    opt_in_source: string | null;
+  } | null;
+  const optedOut = Boolean(known?.opt_out_at);
   const { data: contactData, error: contactError } = await supabase
     .from("contacts")
     .upsert(
@@ -84,7 +89,13 @@ export async function processInbound(
         phone,
         // Only update name when the incoming value is non-null
         name: normalized.customerName,
-        ...(optedOut ? {} : { opt_in: true, opt_in_at: new Date().toISOString() }),
+        ...(optedOut
+          ? {}
+          : {
+              opt_in: true,
+              opt_in_at: known?.opt_in_at ?? new Date().toISOString(),
+              opt_in_source: known?.opt_in_source ?? "WhatsApp: escribió primero",
+            }),
       },
       {
         onConflict: "workspace_id,phone",

@@ -8,6 +8,8 @@ import {
 import { getOutcomes } from "@/features/dashboard/services/outcomes";
 import { getSuggestions } from "@/features/arm/services/relationship";
 import { DashboardMetrics } from "@/features/dashboard/components/dashboard-metrics";
+import { getSetupFacts } from "@/features/help/setup-facts";
+import { buildSetupStatus } from "@/features/help/setup-status";
 
 export const dynamic = "force-dynamic";
 
@@ -32,11 +34,12 @@ export default async function DashboardPage() {
     );
   }
 
-  const [metrics, recentConversations, outcomes, suggestions] = await Promise.all([
+  const [metrics, recentConversations, outcomes, suggestions, setupFacts] = await Promise.all([
     getWorkspaceMetrics(membership.workspace_id),
     getRecentConversations(membership.workspace_id, 5),
     getOutcomes(membership.workspace_id),
     getSuggestions(membership.workspace_id),
+    getSetupFacts(membership.workspace_id),
   ]);
 
   return (
@@ -45,6 +48,7 @@ export default async function DashboardPage() {
       recentConversations={recentConversations}
       outcomes={outcomes}
       suggestions={suggestions}
+      setupStatus={buildSetupStatus(setupFacts)}
     />
   );
 }

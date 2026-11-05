@@ -21,6 +21,11 @@ export interface HelpStep {
   optional?: boolean;
 }
 
+/** First required step still pending, or null when the setup is complete. */
+export function nextSetupStep(status: Record<SetupKey, boolean>): HelpStep | null {
+  return FIRST_STEPS.find((s) => s.setupKey && !s.optional && !status[s.setupKey]) ?? null;
+}
+
 export const FIRST_STEPS: HelpStep[] = [
   {
     title: "Conectá tu número de WhatsApp",
@@ -31,6 +36,7 @@ export const FIRST_STEPS: HelpStep[] = [
       "Copiá la Webhook URL que te muestra esta pantalla y pegala en la configuración de webhooks de YCloud.",
       "En el perfil del número, cargá un mail, una web o un teléfono de atención: WhatsApp lo pide.",
       "Revisá que tu rubro esté permitido: WhatsApp no admite, entre otros, drogas, alcohol, tabaco, armas ni productos médicos.",
+      "Por ahora no lo uses en rubros de salud: esas charlas contienen datos sensibles y tienen reglas más estrictas.",
     ],
     link: { label: "Ir a Integraciones", href: "/settings?tab=integraciones" },
     setupKey: "whatsapp",
@@ -70,7 +76,7 @@ export const FIRST_STEPS: HelpStep[] = [
     title: "Probalo antes de que hable con un cliente",
     why: "Es la forma segura de ver cómo contesta: no se manda nada por WhatsApp.",
     how: [
-      "Abrí el agente y entrá a la solapa Prueba.",
+      "Tocá Probar en la tarjeta del agente.",
       "Escribile como lo haría un cliente, incluso con preguntas que no debería poder responder.",
       "Si algo no te gusta, ajustá el prompt, publicá y volvé a probar.",
     ],
@@ -82,7 +88,7 @@ export const FIRST_STEPS: HelpStep[] = [
     how: [
       "En Herramientas, activá solo las que vayas a usar.",
       "Empezá con las sensibles en modo de aprobación. Cuando el agente acumula aprobaciones seguidas, la pantalla te sugiere darle más autonomía.",
-      "Si tenés un sistema propio de stock, agenda o CRM, conectalo en Sistemas (MCP).",
+      "Si tenés un sistema propio de stock, agenda o CRM, conectalo en Sistemas.",
     ],
     link: { label: "Ir a Herramientas", href: "/settings?tab=tools" },
     optional: true,
@@ -113,7 +119,7 @@ export const FIRST_STEPS: HelpStep[] = [
 export const DAILY_TASKS: HelpStep[] = [
   {
     title: "Mirá la Bandeja",
-    why: "Acá están todas las conversaciones. El filtro Handoff te muestra las que esperan a una persona: empezá por esas.",
+    why: "Acá están todas las conversaciones. El filtro Esperan persona te muestra las que esperan a una persona: empezá por esas.",
     how: [
       "Tomar: agarrás la conversación y la IA deja de contestar.",
       "Devolver a IA: cuando terminás, el agente sigue la charla.",
@@ -170,20 +176,28 @@ export const SCREENS: { name: string; text: string; href: string }[] = [
   { name: "Integraciones", text: "La conexión con YCloud y HighLevel, el modelo de IA y el tope diario de consumo.", href: "/settings?tab=integraciones" },
   { name: "Negocio", text: "Los datos del negocio que el agente usa para contestar.", href: "/settings?tab=negocio" },
   { name: "Herramientas", text: "Qué puede hacer el agente, y si lo hace solo o lo propone.", href: "/settings?tab=tools" },
-  { name: "Sistemas (MCP)", text: "Conectar sistemas propios, como stock, agenda o CRM.", href: "/settings?tab=sistemas" },
+  { name: "Sistemas", text: "Conectar sistemas propios, como stock, agenda o CRM.", href: "/settings?tab=sistemas" },
   { name: "Plantillas", text: "Los mensajes aprobados por Meta, y su estado.", href: "/settings?tab=templates" },
   { name: "Base de conocimiento", text: "Documentos que el agente consulta para responder.", href: "/settings?tab=knowledge-base" },
   { name: "Equipo", text: "Quién tiene acceso y con qué rol.", href: "/settings?tab=equipo" },
   { name: "Automatizaciones", text: "Reglas que se disparan solas, y la plantilla para las promesas del agente.", href: "/settings?tab=automatizaciones" },
-  { name: "Datos", text: "Descargar todo en JSON o los contactos en CSV. Las credenciales nunca salen.", href: "/settings?tab=datos" },
+  { name: "Datos", text: "Descargar todo en JSON o los contactos en CSV, y elegir cuánto tiempo se guardan los datos. Las credenciales nunca salen.", href: "/settings?tab=datos" },
 ];
 
 export const FAQ: { question: string; answer: string[]; link?: HelpLink }[] = [
   {
+    question: "Un cliente pide ver o borrar sus datos. ¿Qué hago?",
+    answer: [
+      "Abrí su conversación y tocá Ver contacto. Ahí están Bajar sus datos y Borrar todos sus datos.",
+      "Tenés que responder en 10 días corridos si pide verlos, y en 5 días hábiles si pide corregirlos o borrarlos.",
+      "Borrar no se puede deshacer. Si está en HighLevel u otro sistema conectado, borralo también ahí.",
+    ],
+  },
+  {
     question: "La IA no contesta. ¿Qué reviso?",
     answer: [
       "Que haya un agente activo y con el prompt publicado.",
-      "El estado de la conversación: si dice Humano o Handoff, la tiene una persona. Tocá Devolver a IA.",
+      "El estado de la conversación: si dice Persona o Espera persona, la tiene tu equipo. Tocá Devolver a IA.",
       "Si alguien del equipo escribió a mano: por defecto eso pausa a la IA en esa charla.",
       "Si el cliente pidió la baja, o si se llegó al tope diario de consumo en Integraciones.",
     ],
@@ -206,7 +220,7 @@ export const FAQ: { question: string; answer: string[]; link?: HelpLink }[] = [
   {
     question: "Un cliente quiere hablar con una persona.",
     answer: [
-      "Cuando lo pide, la conversación pasa a Handoff y la IA deja de contestar. Entrá a la Bandeja y tocá Tomar.",
+      "Cuando lo pide, la conversación pasa a Espera persona y la IA deja de contestar. Entrá a la Bandeja y tocá Tomar.",
     ],
     link: { label: "Ir a la Bandeja", href: "/inbox" },
   },

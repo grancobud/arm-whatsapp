@@ -5,7 +5,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
+import { eraseContact } from "@/features/privacy/services/contact-erasure";
 
 const PatchContactSchema = z.object({
   name: z.string().min(1, "El nombre no puede estar vacío").optional(),
@@ -92,4 +95,49 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   }
 
   return NextResponse.json({ ok: true, contact: updated });
+}
+
+/**
+ * DELETE /api/contacts/[id]
+ * Erases the contact, its conversations and its files (Ley 25.326, art. 16).
+ * Managers and admins only. Cannot be undone.
+ */
+export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+  const { id: contactId } = await params;
+
+  // RLS: a contact from another workspace simply does not show up.
+  const supabase = await createClient();
+  const { data: found } = await supabase
+    .from("contacts")
+    .select("id, workspace_id")
+    .eq("id", contactId)
+    .maybeSingle();
+  if (!found) {
+    return NextResponse.json({ error: "Contacto no encontrado" }, { status: 404 });
+  }
+
+  const auth = await requireWorkspaceMember(found.workspace_id, { minRole: "manager" });
+  if (!auth.ok) return auth.response;
+
+  const db = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  try {
+    const erased = await eraseContact(db, found.workspace_id, contactId);
+    if (!erased) {
+      return NextResponse.json({ error: "Contacto no encontrado" }, { status: 404 });
+    }
+    // Who and when, without personal data: this record outlives the contact.
+    await db.from("events").insert({
+      workspace_id: found.workspace_id,
+      type: "contact_erased",
+      level: "info",
+      payload: { by: auth.userId },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[DELETE /api/contacts/:id]", err instanceof Error ? err.message : "unknown");
+    return NextResponse.json({ error: "No se pudo borrar el contacto" }, { status: 500 });
+  }
 }

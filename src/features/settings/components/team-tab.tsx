@@ -246,7 +246,7 @@ export function TeamTab({ workspaceId }: Props) {
         toast.success("Cuenta creada");
       } else {
         // Existing user added to the workspace.
-        toast.success(`${inviteEmail} agregado al workspace`);
+        toast.success(`${inviteEmail} agregado al equipo`);
         closeInvite();
       }
     } catch (err) {

@@ -65,18 +65,18 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
 const KNOCKOUT_ACTION_LABELS: Record<KnockoutAction, string> = {
   disqualify: "Descalificar",
   continue: "Continuar",
-  handoff: "Handoff a humano",
+  handoff: "Pasar a una persona",
 };
 
 const POST_ACTION_LABELS: Record<PostActionType, string> = {
   send_template: "Enviar template",
   create_hl_opportunity: "Crear oportunidad en HL",
-  handoff: "Handoff a humano",
+  handoff: "Pasar a una persona",
   add_tag: "Agregar etiqueta",
 };
 
 const DEFAULT_CONFIG: Omit<SetterConfig, "id"> = {
-  name: "Setter Ventas",
+  name: "Ventas",
   enabled: false,
   questions: [],
   knockout_rules: [],
@@ -522,7 +522,7 @@ export function SetterAdvancedConfig({ workspaceId }: Props) {
           <Input
             id="setter-name"
             value={draft?.name ?? ""}
-            placeholder="Setter Ventas"
+            placeholder="Ventas"
             onChange={(e) =>
               draft && setDraft({ ...draft, name: e.target.value })
             }

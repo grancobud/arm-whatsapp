@@ -88,7 +88,7 @@ export function JevPanel({
         return;
       }
       setEnabled(next);
-      toast.success(next ? "Jev prendido para este workspace" : "Jev apagado");
+      toast.success(next ? "Jev prendido para este cliente" : "Jev apagado");
     } catch {
       toast.error("Error de conexión");
     } finally {

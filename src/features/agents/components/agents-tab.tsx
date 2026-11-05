@@ -42,6 +42,7 @@ export function AgentsTab({
     sortAgents(initialAgents),
   );
   const [editing, setEditing] = useState<AgentDto | null>(null);
+  const [editingTab, setEditingTab] = useState<"identidad" | "prueba">("identidad");
   const [pending, setPending] = useState<AgentDto | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -90,6 +91,29 @@ export function AgentsTab({
 
   return (
     <div className="space-y-5">
+      <p className="text-sm text-muted-foreground">
+        Configurá tus 3 agentes. Solo uno puede estar activo a la vez.
+      </p>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {agents.map((a) => (
+          <AgentCard
+            key={a.id}
+            agent={a}
+            busy={busy}
+            onConfigure={(agent) => {
+              setEditingTab("identidad");
+              setEditing(agent);
+            }}
+            onTest={(agent) => {
+              setEditingTab("prueba");
+              setEditing(agent);
+            }}
+            onActivate={requestActivate}
+          />
+        ))}
+      </div>
+
       <LessonsCard workspaceId={workspaceId} canManage={canManage} />
 
       <JevPanel
@@ -101,27 +125,13 @@ export function AgentsTab({
         judgmentsToday={jev.judgmentsToday}
         canManage={canManage}
       />
-      <p className="text-sm text-muted-foreground">
-        Configurá tus 3 agentes. Solo uno puede estar activo a la vez.
-      </p>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {agents.map((a) => (
-          <AgentCard
-            key={a.id}
-            agent={a}
-            busy={busy}
-            onConfigure={setEditing}
-            onActivate={requestActivate}
-          />
-        ))}
-      </div>
 
       {editing && (
         <AgentConfigSheet
           key={editing.id}
           workspaceId={workspaceId}
           agent={editing}
+          initialTab={editingTab}
           open={!!editing}
           onOpenChange={(o) => {
             if (!o) setEditing(null);

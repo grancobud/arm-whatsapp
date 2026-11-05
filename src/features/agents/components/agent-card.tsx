@@ -15,16 +15,17 @@ interface Props {
   agent: AgentDto;
   busy: boolean;
   onConfigure: (agent: AgentDto) => void;
+  onTest: (agent: AgentDto) => void;
   onActivate: (agentId: string) => void;
 }
 
-export function AgentCard({ agent, busy, onConfigure, onActivate }: Props) {
+export function AgentCard({ agent, busy, onConfigure, onTest, onActivate }: Props) {
   const meta = AGENT_TYPE_META[agent.type];
   const cat = findCatalogModel(agent.model);
   const Logo = cat ? PROVIDER_LOGOS[cat.provider] : null;
   const modelLabel = cat
     ? cat.model.label
-    : (agent.model ?? "Modelo del workspace");
+    : (agent.model ?? "Modelo general");
 
   return (
     <Card
@@ -87,6 +88,14 @@ export function AgentCard({ agent, busy, onConfigure, onActivate }: Props) {
             Activar
           </Button>
         )}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="shrink-0"
+          onClick={() => onTest(agent)}
+        >
+          Probar
+        </Button>
         <Button
           size="sm"
           variant="ghost"

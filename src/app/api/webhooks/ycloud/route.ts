@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse, after } from "next/server";
 import { createClient as createSbClient } from "@supabase/supabase-js";
+import { sendPrivacyNoticeOnce } from "@/features/inbox/services/privacy-notice";
 import {
   verifyYCloudSignature,
   parseInbound,
@@ -320,6 +321,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (mediaJob) after(mediaJob);
       return NextResponse.json({ received: true, consent });
     }
+
+    await sendPrivacyNoticeOnce({
+      workspaceId,
+      contactId: contact.id,
+      conversationId: conversation.id,
+    });
 
     // AI is toggled off — still fetch the media so the human agent sees it.
     if (!conversation.ai_enabled) {

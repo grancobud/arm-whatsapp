@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DAILY_TASKS, FAQ, FIRST_STEPS, SCREENS } from "../../src/features/help/help-content.ts";
+import { DAILY_TASKS, FAQ, FIRST_STEPS, nextSetupStep, SCREENS } from "../../src/features/help/help-content.ts";
 import { buildSetupStatus, type SetupFacts } from "../../src/features/help/setup-status.ts";
 import { readSettingsTab, SETTINGS_TABS } from "../../src/features/settings/settings-tabs.ts";
 
@@ -53,4 +53,15 @@ test("una solapa desconocida en la URL abre Agentes", () => {
   assert.equal(readSettingsTab("datos"), "datos");
   assert.equal(readSettingsTab("cualquiera"), "agentes");
   assert.equal(readSettingsTab(undefined), "agentes");
+});
+
+test("el próximo paso es el primero obligatorio que falta", () => {
+  const status = buildSetupStatus(VACIO);
+  assert.equal(nextSetupStep(status)?.setupKey, "whatsapp");
+  assert.equal(nextSetupStep({ ...status, whatsapp: true, business: true })?.setupKey, "knowledge");
+});
+
+test("sin pasos obligatorios pendientes no hay próximo paso, aunque falte uno opcional", () => {
+  const listo = { whatsapp: true, business: true, knowledge: true, agent: true, template: true, team: false };
+  assert.equal(nextSetupStep(listo), null);
 });

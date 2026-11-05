@@ -42,7 +42,7 @@ export function SignupForm() {
           Crear cuenta
         </h1>
         <p className="text-sm text-muted-foreground">
-          Empieza a gestionar tu inbox con IA
+          Empezá a atender tu WhatsApp con IA
         </p>
       </div>
 
@@ -72,6 +72,17 @@ export function SignupForm() {
             required
           />
         </div>
+
+        <label className="flex items-start gap-2 text-xs text-muted-foreground">
+          <input type="checkbox" name="privacy" required className="mt-0.5" />
+          <span>
+            Leí y acepto la{" "}
+            <Link href="/privacidad" className="text-primary underline-offset-4 hover:underline">
+              política de privacidad
+            </Link>
+            .
+          </span>
+        </label>
 
         {state?.error && (
           <p className="text-sm text-destructive" role="alert">

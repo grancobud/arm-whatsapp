@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
+  ArrowLeft,
   Send,
   StickyNote,
   User,
@@ -108,7 +110,7 @@ export function ChatThread({
         toast.error(data.error ?? "Error al solicitar handoff");
         return;
       }
-      toast.success("Handoff solicitado");
+      toast.success("La conversación pasó a una persona");
       router.refresh();
     } catch {
       toast.error("Error de conexión");
@@ -197,7 +199,14 @@ export function ChatThread({
             "px-4 py-3 border-b border-border/50",
           )}
         >
-          <div className="space-y-0.5 min-w-0">
+          <Link
+            href="/inbox"
+            aria-label="Volver a la lista de conversaciones"
+            className="md:hidden mr-2 shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          </Link>
+          <div className="flex-1 space-y-0.5 min-w-0">
             <h2 className="font-display text-sm font-semibold text-foreground truncate">
               {conversation.contact.name ?? conversation.contact.phone}
             </h2>
@@ -216,11 +225,11 @@ export function ChatThread({
                   variant="outline"
                   onClick={handleHandoffRequest}
                   disabled={handoffLoading}
-                  aria-label="Solicitar handoff a humano"
+                  aria-label="Pasar la conversación a una persona"
                   className="h-8 gap-1.5 text-xs text-amber-400 border-amber-400/30 hover:bg-amber-400/10"
                 >
                   <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                  Handoff
+                  Pasar a una persona
                 </Button>
               </RoleGate>
             )}

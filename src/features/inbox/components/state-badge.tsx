@@ -31,12 +31,12 @@ const STATE_CONFIG: Record<
     Icon: Bot,
   },
   human_active: {
-    label: "Humano",
+    label: "Persona",
     className: "text-blue-400",
     Icon: User,
   },
   handoff_pending: {
-    label: "Handoff pendiente",
+    label: "Espera persona",
     className: "text-amber-400",
     Icon: AlertCircle,
   },

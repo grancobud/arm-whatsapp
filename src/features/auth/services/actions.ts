@@ -22,6 +22,8 @@ const loginSchema = z.object({
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
+const privacySchema = z.literal("on", { error: "Para crear la cuenta tenés que aceptar la política de privacidad" });
+
 const signupSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
@@ -66,11 +68,16 @@ export async function signup(
     return { error: parsed.error.issues[0].message };
   }
 
+  const privacy = privacySchema.safeParse(formData.get("privacy"));
+  if (!privacy.success) {
+    return { error: privacy.error.issues[0].message };
+  }
+
   // Invite-only: only the first user (agency super admin) may self-register.
   if (!(await isSignupOpen())) {
     return {
       error:
-        "El registro está cerrado. Pide al administrador que te invite a tu cuenta.",
+        "El registro está cerrado. Pedile al administrador que te invite a tu cuenta.",
     };
   }
 
@@ -78,6 +85,7 @@ export async function signup(
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
+    options: { data: { privacy_accepted_at: new Date().toISOString() } },
   });
 
   if (error) {

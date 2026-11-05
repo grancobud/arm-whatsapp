@@ -7,6 +7,7 @@
 
 import { Download, FileJson, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RetentionSetting } from "./retention-setting";
 
 interface Props {
   workspaceId: string;
@@ -24,11 +25,13 @@ export function DataExportTab({ workspaceId, canExport }: Props) {
           Exportar datos
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Los datos de este workspace son tuyos. Bajalos cuando quieras para
+          Los datos de este cliente son tuyos. Bajalos cuando quieras para
           tener una copia o llevarlos a otro sistema. Las claves y credenciales
           de las integraciones nunca se incluyen.
         </p>
       </div>
+
+      {canExport && <RetentionSetting workspaceId={workspaceId} />}
 
       {!canExport ? (
         <p className="text-sm text-muted-foreground">

@@ -6,6 +6,9 @@ import {
   ACTIVE_WORKSPACE_COOKIE,
 } from "@/features/workspace/services/active-workspace";
 import { InboxLayout } from "@/features/inbox/components/inbox-layout";
+import { NextStepCard } from "@/features/help/components/next-step-card";
+import { getSetupFacts } from "@/features/help/setup-facts";
+import { buildSetupStatus } from "@/features/help/setup-status";
 import type {
   ConversationWithContact,
   ConversationRow,
@@ -99,15 +102,39 @@ export default async function InboxPage() {
     last_message: lastMessageMap.get(conv.id) ?? null,
   }));
 
+  // Nothing to pick yet: say what to do instead of asking to touch an empty list.
+  const setupStatus =
+    enriched.length === 0
+      ? buildSetupStatus(await getSetupFacts(membership.workspace_id))
+      : null;
+
   return (
     <InboxLayout conversations={enriched} workspaceId={membership.workspace_id}>
-      <div className="flex flex-col items-center justify-center h-full text-center px-8">
-        <p className="text-sm font-medium text-foreground">
-          Elegí una conversación
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Tocá un contacto de la lista para ver el historial
-        </p>
+      <div className="flex flex-col items-center justify-center h-full text-center px-4 md:px-8">
+        {setupStatus ? (
+          <div className="w-full max-w-md space-y-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Todavía no hay conversaciones
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {setupStatus.whatsapp
+                  ? "Tu número está conectado: cuando alguien te escriba, aparece acá."
+                  : "Van a aparecer acá cuando conectes tu número y alguien te escriba."}
+              </p>
+            </div>
+            <NextStepCard status={setupStatus} />
+          </div>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-foreground">
+              Elegí una conversación
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tocá un contacto de la lista para ver el historial
+            </p>
+          </>
+        )}
       </div>
     </InboxLayout>
   );
