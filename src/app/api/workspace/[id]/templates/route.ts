@@ -1,5 +1,6 @@
 // G1: Templates CRUD API — list, create, update, delete workspace templates.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -112,7 +113,7 @@ export async function GET(
     const templates = await listTemplates(workspaceId);
     return NextResponse.json({ data: templates });
   } catch (err) {
-    console.error("[GET /api/workspace/[id]/templates]:", err);
+    console.error("[GET /api/workspace/[id]/templates]:", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -177,7 +178,7 @@ export async function POST(
     .single();
 
   if (error) {
-    console.error("[POST /api/workspace/[id]/templates]:", error);
+    console.error("[POST /api/workspace/[id]/templates]:", safeError(error));
     return NextResponse.json(
       { error: "Error al crear el template" },
       { status: 500 },
@@ -244,7 +245,7 @@ export async function PATCH(
     .single();
 
   if (error) {
-    console.error("[PATCH /api/workspace/[id]/templates]:", error);
+    console.error("[PATCH /api/workspace/[id]/templates]:", safeError(error));
     return NextResponse.json(
       { error: "Error al actualizar el template" },
       { status: 500 },
@@ -330,7 +331,7 @@ export async function DELETE(
     .eq("workspace_id", workspaceId);
 
   if (error) {
-    console.error("[DELETE /api/workspace/[id]/templates]:", error);
+    console.error("[DELETE /api/workspace/[id]/templates]:", safeError(error));
     return NextResponse.json(
       { error: "Error al eliminar el template" },
       { status: 500 },

@@ -1,5 +1,6 @@
 // F7: Business info loader — loads structured + free_text data to inject into system prompts.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 
 function svc() {
@@ -31,7 +32,7 @@ export async function getBusinessInfo(
     .maybeSingle();
 
   if (error) {
-    console.error("[business-info] getBusinessInfo error:", error);
+    console.error("[business-info] getBusinessInfo error:", safeError(error));
     return null;
   }
 
@@ -135,7 +136,7 @@ export async function upsertBusinessInfo(
     .upsert(payload, { onConflict: "workspace_id" });
 
   if (error) {
-    console.error("[business-info] upsertBusinessInfo error:", error);
+    console.error("[business-info] upsertBusinessInfo error:", safeError(error));
     throw new Error(`Failed to upsert business info: ${error.message}`);
   }
 }

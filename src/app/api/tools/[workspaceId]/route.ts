@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import {
   requireWorkspaceMember,
   readJsonBody,
@@ -68,7 +69,7 @@ export async function GET(
 
     return NextResponse.json({ data: result });
   } catch (err) {
-    console.error("[GET /api/tools/:workspaceId]", err);
+    console.error("[GET /api/tools/:workspaceId]", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -174,7 +175,7 @@ export async function PATCH(
 
     return NextResponse.json({ data: { toolKey, enabled, config } });
   } catch (err) {
-    console.error("[PATCH /api/tools/:workspaceId]", err);
+    console.error("[PATCH /api/tools/:workspaceId]", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },

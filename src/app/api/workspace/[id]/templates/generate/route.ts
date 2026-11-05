@@ -1,5 +1,6 @@
 // G1: AI template generation — uses OpenRouter to draft a WhatsApp template body.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -95,7 +96,7 @@ export async function POST(
 
     return NextResponse.json({ body: result.text.trim() });
   } catch (err) {
-    console.error("[POST /api/workspace/[id]/templates/generate]:", err);
+    console.error("[POST /api/workspace/[id]/templates/generate]:", safeError(err));
     return NextResponse.json(
       { error: "El modelo no pudo generar la plantilla. Probá de nuevo." },
       { status: 500 },

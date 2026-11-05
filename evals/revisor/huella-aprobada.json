@@ -1,5 +1,5 @@
 {
-  "total": "16e1b8a9dff9dd02032af2c53063148c3e519f4489c103c550bd42d6f92109e0",
+  "total": "d87fbe37dac9d2726c0818b68a3a41501d5f06be3c31260dadc84a0bf4298022",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
@@ -8,16 +8,17 @@
     "evals/revisor/casos.json": "6a3d481ef2f0d9160c3ef517c4154b017a040b20175163ba82af69648e383569",
     "evals/revisor/correr.ts": "62e7f510147be58b144627fe7020d9308afdd00dd3c2a54bb4c12ed8ebda383a",
     "src/features/agents/lib/starter-prompts.ts": "feb16ce1f229d577bb966ee2c41316e1161e2af93c2f23c01808aa4ffd0615b6",
-    "src/features/inbox/services/business-info.ts": "4d0730984ecd23b15b4b871da52a320826a01684cc9518ed5877e6df06bd545d",
+    "src/features/inbox/services/business-info.ts": "a36038f62574b33692fead4eede178b032189a327b5272bdcec905848bca5624",
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/prompt-builder.ts": "c291b1db7e0b20d322f1ffa65c59eeacc0c545fb0e075ebec79d5f35956a230e",
     "src/features/inbox/services/reply-guard.ts": "330480e45c8df979f5590f92fd5fa3256cff441e40962f18162df833f30703e8",
     "src/features/inbox/services/reply-review.ts": "7572dc14885e95a5ceec64864ea867a8c8dc4cd77c48a0bbf02edefed36eb1e2",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
+    "src/lib/safe-error.ts": "89b23f213b68c0268e375f92c2266802623095f4bdf5b7ea01d755949f6803fe",
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T19:36:57.243Z",
+  "fecha": "2026-11-05T20:45:44.848Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "nombre de la ficha en el prompt, seguimientos reemplazables y retoques finales; no cambian los casos"
+  "motivo": "logs sin el error completo y evento por turno; no cambian los casos"
 }

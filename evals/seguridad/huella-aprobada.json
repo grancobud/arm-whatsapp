@@ -1,5 +1,5 @@
 {
-  "total": "84b14783b19818708907327eb364912cb426925e50d2fa853de280ce6569c579",
+  "total": "68b6051c7c47a51d7d58b69de3a5990f69da9d27f0cc66075a272e99358d69e3",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
@@ -8,21 +8,22 @@
     "evals/seguridad/correr.ts": "419c8fb8d31d7aa72c6e38f03e6e5ff4bdf67535449dd371137162243c3f44f2",
     "src/features/agents/lib/starter-prompts.ts": "feb16ce1f229d577bb966ee2c41316e1161e2af93c2f23c01808aa4ffd0615b6",
     "src/features/arm/services/claims.ts": "eb468e5c627b07958781a6a62ac72c3b3454fb0b802fa780c1a923b728bcce8b",
-    "src/features/inbox/services/business-info.ts": "4d0730984ecd23b15b4b871da52a320826a01684cc9518ed5877e6df06bd545d",
+    "src/features/inbox/services/business-info.ts": "a36038f62574b33692fead4eede178b032189a327b5272bdcec905848bca5624",
     "src/features/inbox/services/inbound-text.ts": "c06a9cafc21fc14f1f23dd6229f274f14f8349846823e8a5c729a68eec1a6c64",
     "src/features/inbox/services/kb-chunking.ts": "f89ea23fc10cde7bc06ed54529b76a45eb2168a6fd009298009714ddb78328cc",
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/kb-rerank.ts": "a1a7607ad4dcafbf7806f5804a65c95876809ccbb69e53edbe377bd411d48f91",
-    "src/features/inbox/services/kb-service.ts": "964d51bd93857536d280abf7034a129148d5604b82d68e1eacd400b7d6e7a4b0",
+    "src/features/inbox/services/kb-service.ts": "08e7bf427fbc3e48c17f867d04ae25a8a53230f41b69f1b7e1011d1c3458f426",
     "src/features/inbox/services/prompt-builder.ts": "c291b1db7e0b20d322f1ffa65c59eeacc0c545fb0e075ebec79d5f35956a230e",
     "src/features/inbox/services/reply-guard.ts": "330480e45c8df979f5590f92fd5fa3256cff441e40962f18162df833f30703e8",
     "src/features/inbox/services/reply-review.ts": "7572dc14885e95a5ceec64864ea867a8c8dc4cd77c48a0bbf02edefed36eb1e2",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "src/features/tools/mcp/mcp-tools.ts": "d502720951c927fb36fb2d49606c3fdc4567c3ca21a6d7c5b495aa11e99fedf5",
+    "src/lib/safe-error.ts": "89b23f213b68c0268e375f92c2266802623095f4bdf5b7ea01d755949f6803fe",
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T19:37:01.532Z",
+  "fecha": "2026-11-05T20:45:49.312Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "nombre de la ficha en el prompt, seguimientos reemplazables y retoques finales; no cambian los casos"
+  "motivo": "logs sin el error completo y evento por turno; no cambian los casos"
 }

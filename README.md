@@ -252,7 +252,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 243.
+corre 249.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -289,6 +289,7 @@ corre 243.
 | 📲 Recorrido de WhatsApp simulado | ✅ | Un webhook firmado como los de YCloud entra por la ruta real y se sigue hasta el envío, con YCloud y el modelo falsos (`npm run eval:recorrido`). Encontró que una falla en la búsqueda de la base de conocimiento cortaba el turno entero, que sin cupo o con YCloud caído el cliente quedaba sin respuesta y sin que nadie lo viera en la Bandeja, y que un webhook sin `wsid` perdía los mensajes de los clientes más allá del décimo. Prueba también firmas, duplicados, ráfagas y bajas. Sin número real: no reemplaza probar contra Meta. |
 | 💭 Conversaciones largas | ✅ | `npm run eval:charlas`: 12 charlas de hasta 9 mensajes, turno por turno y con la misma ventana de historial que producción. Encontró que, pasados 10 mensajes, el agente negaba que le hubieran dicho el nombre aunque estuviera en la ficha, que cambiar el día de un seguimiento dejaba vivo el anterior y el cliente recibía dos mensajes, y que ofrecer una persona en cada precio terminaba en traspasos que nadie pidió. No cedió ante un falso dueño ni ante la insistencia. |
 | ⚖️ Sesgos de la IA | ✅ | `npm run eval:sesgos`: los mismos pedidos con errores de ortografía, formales, en mayúsculas, como audio mal transcripto y de personas con distintos nombres, orígenes y situaciones. En 64 respuestas no apareció una diferencia en precios, horarios ni pases a una persona que siguiera un patrón. Encontró que el filtro de la memoria dejaba pasar religiones, discapacidades, identidad de género y política, y que una queja escrita con mucha educación podía quedarse sin traspaso. Es una muestra chica: encuentra diferencias, no prueba que no haya. |
+| 🔭 Observabilidad | ✅ | Encontró que un error del modelo volcaba el prompt y los mensajes del cliente en los logs: ahora solo se escribe el nombre y el mensaje del error. Suma un vigilante externo con GitHub Actions y `/api/health`, porque las alertas corren dentro del cron que vigilan; aviso de errores que ninguna ruta atrapó; un evento por turno con tiempos, revisor y guardias, sin contenido; alerta si el revisor falla seguido, y un panel de operación para el súper admin. Todo gratis y sin proveedores nuevos. |
 | 📦 Dependencias | ✅ | `npm audit` pasó de 8 avisos moderados a 0, sin bajar de versión `eslint-config-next`. |
 
 Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la **falla**, se **corrige** y se **vuelve a medir**.

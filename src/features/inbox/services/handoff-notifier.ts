@@ -16,6 +16,7 @@
 // break or revert the handoff. Every path swallows its error and records it in
 // `events` instead.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { dispatchText } from "./dispatch";
 import { DEFAULT_HANDOFF_ACK } from "../types/handoff";
@@ -110,7 +111,7 @@ async function logEvent(
     });
   } catch (err) {
     // Logging must not become the thing that breaks the handoff either.
-    console.error("[handoff-notifier] failed to log event:", err);
+    console.error("[handoff-notifier] failed to log event:", safeError(err));
   }
 }
 

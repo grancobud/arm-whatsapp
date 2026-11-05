@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAllWorkspacesWithStats } from "@/features/agency/services/agency-actions";
 import { WorkspacesTable } from "@/features/agency/components/workspaces-table";
+import { OperationsPanel } from "@/features/agency/components/operations-panel";
+import { getOperationsSummary } from "@/features/agency/services/operations";
 import { Building2, Users, MessageCircle, Wifi } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +25,7 @@ export default async function AgencyWorkspacesPage() {
 
   if (!userRow?.is_super_admin) redirect("/inbox");
 
-  const result = await getAllWorkspacesWithStats();
+  const [result, operations] = await Promise.all([getAllWorkspacesWithStats(), getOperationsSummary()]);
 
   const workspaces = result.error ? [] : (result.workspaces ?? []);
 
@@ -87,6 +89,8 @@ export default async function AgencyWorkspacesPage() {
           </div>
         ))}
       </div>
+
+      <OperationsPanel data={operations} />
 
       {/* Error banner */}
       {result.error && (

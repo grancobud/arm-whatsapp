@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import type {
   Tool,
@@ -98,7 +99,7 @@ export async function createProposal(
     }
     return (data as { id: string }).id;
   } catch (err) {
-    console.warn("[registry] createProposal failed:", err);
+    console.warn("[registry] createProposal failed:", safeError(err));
     return null;
   }
 }

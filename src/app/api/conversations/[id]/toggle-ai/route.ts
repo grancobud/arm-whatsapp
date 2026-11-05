@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -74,7 +75,7 @@ export async function PATCH(
 
     return NextResponse.json({ ok: true, ai_enabled: data.ai_enabled });
   } catch (err) {
-    console.error("[toggle-ai] unhandled error:", err);
+    console.error("[toggle-ai] unhandled error:", safeError(err));
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

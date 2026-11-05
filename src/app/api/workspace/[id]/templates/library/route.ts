@@ -1,6 +1,7 @@
 // Phase 4: read the curated, global template library (RLS: published only).
 // Used by the "Biblioteca" tab to pre-fill the builder.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -42,7 +43,7 @@ export async function GET(
     .order("sort_order", { ascending: true });
 
   if (error) {
-    console.error("[GET /api/workspace/[id]/templates/library]:", error);
+    console.error("[GET /api/workspace/[id]/templates/library]:", safeError(error));
     return NextResponse.json(
       { error: "Error al cargar la biblioteca" },
       { status: 500 },

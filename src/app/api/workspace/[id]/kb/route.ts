@@ -1,5 +1,6 @@
 // F7: Knowledge base API — ingest documents and list KB for a workspace.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -65,7 +66,7 @@ export async function GET(
     const documents = await listKbDocuments(workspaceId);
     return NextResponse.json({ data: documents });
   } catch (err) {
-    console.error("[GET /api/workspace/[id]/kb]:", err);
+    console.error("[GET /api/workspace/[id]/kb]:", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -150,7 +151,7 @@ export async function POST(
 
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (err) {
-    console.error("[POST /api/workspace/[id]/kb]:", err);
+    console.error("[POST /api/workspace/[id]/kb]:", safeError(err));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },

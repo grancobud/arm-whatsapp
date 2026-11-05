@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url });
   } catch (error) {
-    console.error("[POST /api/inbox/media-url]:", error);
+    console.error("[POST /api/inbox/media-url]:", safeError(error));
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },

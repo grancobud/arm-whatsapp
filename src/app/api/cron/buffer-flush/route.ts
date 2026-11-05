@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import { NextResponse } from "next/server";
 import { processNextBatch } from "@/features/inbox/services/buffer";
 import { drainCampaignQueue } from "@/features/arm/services/campaigns";
@@ -46,7 +47,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   try {
     campaignSends = await drainCampaignQueue();
   } catch (err) {
-    console.error("[cron] drainCampaignQueue failed:", err);
+    console.error("[cron] drainCampaignQueue failed:", safeError(err));
   }
 
   // Automation rules (Configuración → Automatizaciones). Never throws.
@@ -56,7 +57,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const followUps = await runFollowUps();
 
   // Aprobaciones que se cortaron a mitad de camino. Un error acá no frena el resto.
-  await failStaleProposals().catch((err) => console.error("[cron] failStaleProposals failed:", err));
+  await failStaleProposals().catch((err) => console.error("[cron] failStaleProposals failed:", safeError(err)));
 
   // Email digest of new problems (every few minutes, with a cooldown). Never
   // throws, so it cannot break the reply loop either.

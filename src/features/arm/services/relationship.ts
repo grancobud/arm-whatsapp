@@ -6,6 +6,7 @@
 // scoreRelationship is pure and tested (evals/relacion). The weights are
 // simple on purpose so the reason shown to the owner matches the number.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 
 const DAY = 86_400_000;
@@ -238,7 +239,7 @@ export async function getSuggestions(workspaceId: string, now = new Date()): Pro
       .sort((a, b) => (STAGE_ORDER[a.stage] ?? 9) - (STAGE_ORDER[b.stage] ?? 9) || b.score - a.score)
       .slice(0, SUGGEST_LIMIT);
   } catch (err) {
-    console.error("[relationship] suggestions failed:", err);
+    console.error("[relationship] suggestions failed:", safeError(err));
     return [];
   }
 }

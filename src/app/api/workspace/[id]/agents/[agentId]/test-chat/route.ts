@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { reviewEnabled, reviewReply, type ReviewOutcome } from "@/features/inbox/services/reply-review";
 import { createReviewCompleter } from "@/features/inbox/services/openrouter";
@@ -243,7 +244,7 @@ export async function POST(
         reviewIn = r.inputTokens;
         reviewOut = r.outputTokens;
       } catch (err) {
-        console.error("[agents/test-chat] reply review failed:", err);
+        console.error("[agents/test-chat] reply review failed:", safeError(err));
       }
     }
 
@@ -285,7 +286,7 @@ export async function POST(
       timing: { replyMs, reviewMs },
     });
   } catch (err) {
-    console.error("[agents/test-chat]", err);
+    console.error("[agents/test-chat]", safeError(err));
     // Admin-only playground — surface the real reason so it's diagnosable
     // (model id, rate limit, upstream 502…) instead of a generic message.
     const detail = err instanceof Error ? err.message : String(err);

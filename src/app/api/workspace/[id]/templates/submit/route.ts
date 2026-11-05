@@ -4,6 +4,7 @@
 // at submit time, build the YCloud `components` from the stored rich fields, and
 // flip the row to status='submitted' on success.
 
+import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -202,7 +203,7 @@ export async function POST(
         { status: 502 },
       );
     }
-    console.error("[templates/submit] error:", err);
+    console.error("[templates/submit] error:", safeError(err));
     return NextResponse.json(
       { error: "Error al enviar la plantilla" },
       { status: 500 },

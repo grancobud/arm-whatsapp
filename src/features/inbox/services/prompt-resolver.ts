@@ -1,6 +1,7 @@
 // F7: Prompt resolver — hierarchy-based system prompt selection.
 // Resolves the most specific published prompt for a given context.
 
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import type { PromptGuardrails } from "./prompt-builder";
 
@@ -82,7 +83,7 @@ export async function resolveSystemPrompt(
     const { data, error } = await query.limit(1).maybeSingle();
 
     if (error) {
-      console.error(`[prompt-resolver] scope=${scope} query error:`, error);
+      console.error(`[prompt-resolver] scope=${scope} query error:`, safeError(error));
       continue;
     }
 

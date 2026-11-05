@@ -1,5 +1,6 @@
 "use server";
 
+import { safeError } from "@/lib/safe-error";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -131,7 +132,7 @@ export async function saveAutomationRule(
       .single();
 
     if (error) {
-      console.error("[saveAutomationRule update]:", error);
+      console.error("[saveAutomationRule update]:", safeError(error));
       return { error: "Error al actualizar la automatización" };
     }
 
@@ -147,7 +148,7 @@ export async function saveAutomationRule(
     .single();
 
   if (error) {
-    console.error("[saveAutomationRule create]:", error);
+    console.error("[saveAutomationRule create]:", safeError(error));
     return { error: "Error al crear la automatización" };
   }
 
@@ -175,7 +176,7 @@ export async function deleteAutomationRule(
     .eq("workspace_id", workspaceId);
 
   if (error) {
-    console.error("[deleteAutomationRule]:", error);
+    console.error("[deleteAutomationRule]:", safeError(error));
     return { error: "Error al eliminar la automatización" };
   }
 
@@ -206,7 +207,7 @@ export async function toggleAutomationRule(
     .single();
 
   if (error) {
-    console.error("[toggleAutomationRule]:", error);
+    console.error("[toggleAutomationRule]:", safeError(error));
     return { error: "Error al actualizar la automatización" };
   }
 

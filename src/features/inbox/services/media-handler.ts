@@ -1,3 +1,4 @@
+import { safeError } from "@/lib/safe-error";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 
 function svc() {
@@ -119,7 +120,7 @@ export async function downloadAndStoreMedia(
       headers: { "X-API-Key": opts.apiKey },
     });
   } catch (err) {
-    console.error("[media-handler] fetch failed:", err);
+    console.error("[media-handler] fetch failed:", safeError(err));
     return null;
   }
 

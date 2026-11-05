@@ -8,6 +8,7 @@
  * from the E2E audit) before touching anything with the service-role client.
  */
 
+import { safeError } from "@/lib/safe-error";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient as createSbClient } from "@supabase/supabase-js";
@@ -216,7 +217,7 @@ async function closeWithCustomer(
     }
   } catch (err) {
     // The decision already stands; this only logs.
-    console.error("[arm] closing with the customer failed:", err);
+    console.error("[arm] closing with the customer failed:", safeError(err));
   }
 }
 
