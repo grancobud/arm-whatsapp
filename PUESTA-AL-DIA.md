@@ -75,6 +75,8 @@ flowchart TB
 | `npm run eval:mcp -- --reps=2` | **28/28** |
 | `npm run test:unit` | **34/34** (no necesita modelos) |
 
+> Estos números se midieron antes de la huella del examen (ver `COLABORAR.md`) y con la cadena de 4 jueces, que rotaba según disponibilidad: son referencia, no una comparación controlada. Desde el 03/11/2026 `eval:agente` exige una huella aprobada.
+
 ---
 
 ## 3. El método (el mismo para todas las áreas)
