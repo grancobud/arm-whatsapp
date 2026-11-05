@@ -37,17 +37,19 @@ function plain(text: string): string {
     .toLowerCase();
 }
 
+/** Las oraciones que afirman algo: una pregunta o un "si querés" es solo una oferta. */
+function affirmedSentences(text: string): string[] {
+  return text.split(/(?<=[.!?\n])\s*/).filter((sentence) => {
+    const t = sentence.trim();
+    if (!t || t.endsWith("?")) return false;
+    // Antes de sacar tildes: "sí, ya le pasé" afirma, "si querés" no.
+    return !/(^|[\s,¿(])si\s/i.test(t);
+  });
+}
+
 /** Afirma que una persona se va a ocupar. Una pregunta o un "si querés" es solo una oferta. */
 export function promisesHandoff(text: string): boolean {
-  return text
-    .split(/(?<=[.!?\n])\s*/)
-    .filter((sentence) => {
-      const t = sentence.trim();
-      if (!t || t.endsWith("?")) return false;
-      // Antes de sacar tildes: "sí, ya le pasé" afirma, "si querés" no.
-      return !/(^|[\s,¿(])si\s/i.test(t);
-    })
-    .some((sentence) => PROMISES.some((re) => re.test(plain(sentence))));
+  return affirmedSentences(text).some((sentence) => PROMISES.some((re) => re.test(plain(sentence))));
 }
 
 // Medido el 05/11: una queja sin palabras como "persona" o "enojado" a veces se contesta
@@ -71,6 +73,18 @@ const NEEDS_PERSON = [
 export function asksForPerson(customerText: string): boolean {
   const t = plain(customerText);
   return NEEDS_PERSON.some((re) => re.test(t));
+}
+
+const FOLLOWUP_TOOL = "schedule_followup";
+const FOLLOWUP_PROMISE = /\bte (escribo|escribimos|escribire|escribiremos|aviso|avisamos|avisare|llamo|llamamos|contacto|contactamos)\b/;
+
+/**
+ * "Te escribo el viernes" sin seguimiento agendado es un mensaje que nunca sale.
+ * El examen del 05/11 lo encontró. Sin la fecha no se puede agendar acá, así que
+ * lo toma una persona, que ve el motivo.
+ */
+export function promisesFollowup(text: string): boolean {
+  return affirmedSentences(text).some((sentence) => FOLLOWUP_PROMISE.test(plain(sentence)));
 }
 
 export const HANDOFF_NOTICE = "Una persona del equipo te va a atender.";
@@ -99,8 +113,14 @@ export async function backHandoffPromise(params: {
   if (!tool || tool.sensitivity === "sensitive") return null;
   if (results.some((r) => r.name === HANDOFF_TOOL && r.status !== "failed")) return null;
   const promised = promisesHandoff(text);
-  if (!promised && !(customerText && asksForPerson(customerText))) return null;
-  const reason = promised ? "El agente prometió pasar la charla a una persona." : "El cliente se quejó o pidió hablar con una persona.";
+  const followupOwed =
+    promisesFollowup(text) && !results.some((r) => r.name === FOLLOWUP_TOOL && r.status !== "failed");
+  if (!promised && !followupOwed && !(customerText && asksForPerson(customerText))) return null;
+  const reason = promised
+    ? "El agente prometió pasar la charla a una persona."
+    : followupOwed
+      ? `El agente le prometió escribirle más adelante y no lo agendó: "${text.slice(0, 200)}"`
+      : "El cliente se quejó o pidió hablar con una persona.";
   try {
     const result = await tool.run({ reason }, ctx);
     return toolOutcome(HANDOFF_TOOL, result);

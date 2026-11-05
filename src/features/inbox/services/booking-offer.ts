@@ -17,10 +17,15 @@ const OFFERS = [
   /\b(puedo|podemos) (reservar|agendar|anotar|sacar)/,
   // "puedo ver la agenda", "podemos chequear la disponibilidad"
   /\b(puedo|podemos) (ver|chequear|mirar|consultar|ayudarte a (ver|sacar|agendar|reservar))\b[^.?!]*\b(turno|disponibilidad|agenda|lugar)\b/,
+  // "para mañana tenemos disponibilidad": sin agenda no lo puede saber
+  /(?<!no )\b(tenemos|hay|tengo) (disponibilidad|lugar|turnos?)\b/,
 ];
 
 /** Solo como pregunta: "para reservar hay que señar" informa, "¿querés reservar?" ofrece. */
-const ASKS = /\b(reservar|agendar|sacar (un )?turno|el turno|un turno|que dia|para que dia|dia y hora|que horario)\b/;
+const ASKS = /\b(reservar|agendar|coordinar|sacar (un )?turno|el turno|un turno|algun turno|que dia|para que dia|dia y hora|que horario|a que hora|te (la|lo) hago|te hago un)\b/;
+
+/** El cliente pide un turno: seguirle la charla sin agenda es hacerle perder el tiempo. */
+const WANTS_BOOKING = /\b(quiero|necesito|sacar|tenes|tienen|hay|dame|reservar|agendar)\b[^.?!]*\bturno\b/;
 
 const HANDS_OVER = /\b(te paso|te pase|persona|equipo|alguien)\b/;
 const DENIES = /\bno (te )?(puedo|podemos)\b/;
@@ -38,12 +43,25 @@ function offersBooking(sentence: string): boolean {
 }
 
 /** Si las herramientas no pueden agendar, cambia la oferta de turno por el pase a una persona. */
-export function removeBookingOffer(text: string, toolNames: string[]): { text: string; changed: boolean } {
+export function removeBookingOffer(
+  text: string,
+  toolNames: string[],
+  customerText = "",
+): { text: string; changed: boolean } {
   if (toolNames.some((name) => !NOT_BOOKING.has(name))) return { text, changed: false };
 
   const sentences = text.split(/(?<=[.!?\n])\s+/);
-  const kept = sentences.filter((sentence) => !offersBooking(sentence));
-  if (kept.length === sentences.length) return { text, changed: false };
+  const wantsBooking = WANTS_BOOKING.test(plain(customerText));
+  const alreadyHandsOver = sentences.some((sentence) => HANDS_OVER.test(plain(sentence)));
+  const kept = sentences.filter((sentence, i) => {
+    const drop = (s: string) =>
+      // "Claro, ¿qué servicio te gustaría?" sigue la reserva sin nombrarla.
+      offersBooking(s) || (wantsBooking && !alreadyHandsOver && s.trim().endsWith("?"));
+    if (drop(sentence)) return false;
+    // "¿Qué servicio querés? (corte, barba...)": la aclaración se va con su pregunta.
+    return !(sentence.trim().startsWith("(") && i > 0 && drop(sentences[i - 1]));
+  });
+  if (kept.length === sentences.length && (!wantsBooking || alreadyHandsOver)) return { text, changed: false };
 
   // Si lo que queda ya ofrece el pase a una persona, no se repite.
   const handsOver = kept.some((sentence) => HANDS_OVER.test(plain(sentence)));

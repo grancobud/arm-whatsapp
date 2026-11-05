@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   asksForPerson,
   backHandoffPromise,
+  promisesFollowup,
   HANDOFF_NOTICE,
   withHandoffNotice,
 } from "../../src/features/inbox/services/handoff-promise.ts";
@@ -92,6 +93,22 @@ test("el traspaso forzado no se repite ni pasa por encima de la aprobación del 
     null,
   );
   assert.equal(llamadas.length, 0);
+});
+
+test("prometer escribirle sin agendarlo lo toma una persona", async () => {
+  const texto = "Te escribo el viernes a la mañana. ¿En qué te puedo ayudar ahora?";
+  assert.equal(promisesFollowup(texto), true);
+  for (const oferta of ["Si querés, te escribo el viernes.", "¿Te escribo el viernes?", "Escribime cuando quieras."]) {
+    assert.equal(promisesFollowup(oferta), false, oferta);
+  }
+  const llamadas: { reason: string }[] = [];
+  const tools = [herramienta("request_human", "write", llamadas)];
+  const r = await backHandoffPromise({ text: texto, tools, results: [], ctx });
+  assert.equal(r?.status, "ok");
+  assert.match(llamadas[0].reason, /no lo agendó/);
+  const agendado = { name: "schedule_followup", status: "ok" as const, summary: "" };
+  assert.equal(await backHandoffPromise({ text: texto, tools, results: [agendado], ctx }), null);
+  assert.equal(llamadas.length, 1);
 });
 
 test("el cliente se entera del traspaso una sola vez", () => {
@@ -215,6 +232,42 @@ test("cambia la oferta de turno por el pase a una persona", () => {
   }
 });
 
+test("corrige las respuestas reales que pasaron el examen del 05/11", () => {
+  assert.equal(
+    removeBookingOffer("¡Hola! Para mañana (miércoles) tenemos disponibilidad de 10 a 20 h. ¿Qué servicio necesitás y a qué hora te gustaría venir?", SIN_AGENDA).text,
+    `¡Hola! ${BOOKING_FALLBACK}`,
+  );
+  assert.equal(
+    removeBookingOffer("No, estamos cerrados. ¿Querés coordinar algún turno para esta semana?", SIN_AGENDA).text,
+    `No, estamos cerrados. ${BOOKING_FALLBACK}`,
+  );
+  assert.equal(
+    removeBookingOffer("¡Hola! Claro, ¿qué servicio te gustaría?", SIN_AGENDA, "Quiero sacar un turno").text,
+    `¡Hola! ${BOOKING_FALLBACK}`,
+  );
+});
+
+test("corrige lo que dejó pasar la segunda vuelta del examen", () => {
+  assert.equal(
+    removeBookingOffer("¡Hola! ¿Qué servicio querés? (corte, barba o corte infantil).", SIN_AGENDA, "Quiero sacar un turno").text,
+    `¡Hola! ${BOOKING_FALLBACK}`,
+  );
+  assert.equal(
+    removeBookingOffer("La barba sale $6.000 y dura 20 minutos. ¿Te la hago hoy?", SIN_AGENDA, "cuánto sale la barba?").text,
+    `La barba sale $6.000 y dura 20 minutos. ${BOOKING_FALLBACK}`,
+  );
+});
+
+test("si el cliente pide turno y la respuesta no da salida, ofrece una persona", () => {
+  const r = removeBookingOffer("No tengo acceso a la agenda.", SIN_AGENDA, "tenés turno para mañana?");
+  assert.equal(r.text, `No tengo acceso a la agenda. ${BOOKING_FALLBACK}`);
+  const conSalida = "No tengo acceso a la agenda. Si querés, te paso con una persona del equipo.";
+  assert.equal(removeBookingOffer(conSalida, SIN_AGENDA, "tenés turno para mañana?").changed, false);
+  // Sin pedir un turno, una pregunta común sigue su curso.
+  assert.equal(removeBookingOffer("¿Qué servicio te interesa?", SIN_AGENDA, "cuánto sale la barba?").changed, false);
+  assert.equal(removeBookingOffer("¿Qué servicio te interesa?", SIN_AGENDA, "Gracias por el turno de ayer").changed, false);
+});
+
 test("no repite el pase a una persona si ya estaba en la respuesta", () => {
   const r = removeBookingOffer("¿Querés reservar? Si querés, te paso con una persona del equipo.", SIN_AGENDA);
   assert.deepEqual(r, { text: "Si querés, te paso con una persona del equipo.", changed: true });
@@ -229,6 +282,7 @@ test("no toca lo que no es una oferta de turno", () => {
     "El corte sale $5000. ¿Querés saber algo más?",
     "Para reservar hay que señar el 50%.",
     "Abrimos de 9 a 18.",
+    "No tenemos turnos cargados, eso lo ve el equipo.",
   ]) {
     assert.deepEqual(removeBookingOffer(texto, SIN_AGENDA), { text: texto, changed: false }, texto);
   }

@@ -252,7 +252,7 @@ flowchart LR
 ARM WhatsApp se audita área por área con pruebas reales contra los modelos de
 FreeLLMAPI. Cada falla que aparece se corrige en el repo. Las funciones del ARM
 (de Automatizaciones para abajo) se construyeron con sus pruebas: `npm run test:unit`
-corre 228.
+corre 232.
 
 | Área | Estado | Qué se mejoró |
 | --- | :---: | --- |
@@ -264,8 +264,8 @@ corre 228.
 | 🎙️ Audios, imágenes, documentos y caché | ✅ | Notas de voz transcriptas por FreeLLMAPI, sin clave aparte: el chat del router descartaba el audio, así que van por el endpoint de transcripción con un modelo fijo y salen palabra por palabra, números incluidos. Imágenes por FreeLLMAPI con modelo fijo, que copian exactos importes y números de operación de un comprobante. PDFs leídos del lado del servidor: antes el agente decía «no puedo leer su contenido», ahora responde el total y la seña exactos. Imágenes y documentos entran marcados como datos (un cartel con una orden no la hace cumplir). El prompt pone primero lo fijo de cada cliente: el comienzo reutilizable entre mensajes pasó del 1% al 72% y un proveedor con caché ya lee el 83% desde caché (`npm run eval:multimedia`, `npm run eval:cache`). |
 | 📌 Citas y razonamiento | ✅ | Cada respuesta que usa la base de conocimiento deja rastro del fragmento que la respalda: el agente lo marca, la marca se saca antes de llegar al cliente y el inbox muestra «Fuentes» con el texto citado. En la evaluación citó bien 8 de 8 (incluido no citar cuando el fragmento no servía). El razonamiento extendido no se activa: el agente ya saca 9.6 y la guardia descarta el razonamiento que algunos modelos mezclan en la respuesta. |
 | 🔌 MCP | ✅ | **Servidor:** el MCP de administración pasó al repo (`mcp/admin/`) con herramientas descriptas parámetro por parámetro, errores que el cliente reconoce, 4 recursos, 3 prompts probados y las funciones del ARM: 28/28 con un cliente MCP real. **Cliente:** cada negocio conecta el servidor MCP de su stock, agenda o CRM y el agente lo usa, con aprobación humana por defecto, resultados marcados como datos y aviso honesto si el sistema no responde: 28/28 en `npm run eval:mcp`. Encontró que el agente decía «no tenemos» sin consultar sus herramientas: corregido sin bajar la evaluación (agente 9.6, herramientas 40/42). |
-| 🎯 RAG: Reranking y recuperación contextual | ✅ | **Recuperación contextual:** cada fragmento incorpora su jerarquía de documento y sección (`[Documento · Sección]`) para no perder contexto situacional al aislarse. **Reranking híbrido:** ampliación de candidatos iniciales a 10 y reordenamiento con BM25 y Reciprocal Rank Fusion (RRF) en memoria: prioriza términos específicos y códigos exactos (como `PROMO-DIC-05` o `ESTUDIANTE-15`) con cero costo de tokens y latencia imperceptible. En `npm run eval:conocimiento`: pasó de 15/17 a **17 de 17 aciertos (100%)** en el top 3, manteniendo el rechazo de consultas fuera de dominio. 6 tests unitarios nuevos. |
-| 🧭 Agentes y flujos de trabajo | ✅ | **Enrutamiento:** validación de máquina de estados (`ai_active`, `human_active`, `handoff_pending`, etc.) y detección normalizada de pedidos de operador humano sin falsos positivos en consultas de negocio (6 tests unitarios). **Encadenamiento protegido:** se eliminó el riesgo de terminación prematura en entornos serverless/Vercel esperando el auto-etiquetado y resumen (`maybeAutoProcess`) con captura de errores aislada; blindaje de la etapa `customer` contra degradaciones a `lost` y freno de costos en calificación (4 tests unitarios). **Paralelización:** carga concurrente de memoria, agente activo, datos de negocio y base de conocimiento en un único `Promise.all`, ahorrando 25–35 ms de latencia por turno. **Observabilidad:** registro estructurado del evento `dispatch_failure` en la tabla `events` ante fallos de entrega en WhatsApp. |
+| 🎯 RAG: Reranking y recuperación contextual | ✅ | **Recuperación contextual:** cada fragmento incorpora su jerarquía de documento y sección (`[Documento · Sección]`) para no perder contexto situacional al aislarse. **Reranking híbrido:** ampliación de candidatos iniciales a 10 y reordenamiento con BM25 y Reciprocal Rank Fusion (RRF) en memoria: prioriza términos específicos y códigos exactos (como `PROMO-DIC-05` o `ESTUDIANTE-15`) con cero costo de tokens y latencia imperceptible. En `npm run eval:conocimiento`: pasó de 15/17 a **17 de 17 aciertos (100%)** en el top 3, manteniendo el rechazo de consultas fuera de dominio. 6 tests unitarios nuevos. Por [Tomas Skarp](https://github.com/thomasskarp). |
+| 🧭 Agentes y flujos de trabajo | ✅ | **Enrutamiento:** validación de máquina de estados (`ai_active`, `human_active`, `handoff_pending`, etc.) y detección normalizada de pedidos de operador humano sin falsos positivos en consultas de negocio (6 tests unitarios). **Encadenamiento protegido:** se eliminó el riesgo de terminación prematura en entornos serverless/Vercel esperando el auto-etiquetado y resumen (`maybeAutoProcess`) con captura de errores aislada; blindaje de la etapa `customer` contra degradaciones a `lost` y freno de costos en calificación (4 tests unitarios). **Paralelización:** carga concurrente de memoria, agente activo, datos de negocio y base de conocimiento en un único `Promise.all`, ahorrando 25–35 ms de latencia por turno. **Observabilidad:** registro estructurado del evento `dispatch_failure` en la tabla `events` ante fallos de entrega en WhatsApp. Por [Tomas Skarp](https://github.com/thomasskarp). |
 | ⚙️ Automatizaciones | ✅ | Reglas «cuando pase X, hacé Y» que el cron revisa cada minuto. Cada disparo se reserva una sola vez en `automation_runs` (aunque el cron corra dos veces no se repite), solo reacciona a lo que pasó después de guardar la regla y los seguimientos salen de 9 a 21 en la hora del negocio. 9 tests en `evals/automatizaciones`. |
 | 🚫 Consentimiento | ✅ | «BAJA» y «ALTA» se reconocen antes de que conteste la IA, con palabras exactas o frases claras en mensajes cortos, para no dar de baja a quien solo menciona la palabra. A un contacto dado de baja no le contesta nadie, y un mensaje nuevo ya no lo vuelve a dar de alta solo. 5 tests en `evals/consentimiento`. |
 | 🤝 Promesas | ✅ | La herramienta «Cumplir lo prometido» agenda el seguimiento con la zona horaria obligatoria (una hora sin zona saldría corrida). Al vencer decide si escribir texto (ventana abierta), mandar la plantilla elegida, dejárselo a una persona (la charla la lleva un humano o pasaron 24 h sin plantilla) o cancelarlo (conversación cerrada o el cliente pidió la baja). 8 tests en `evals/compromisos`. |
@@ -277,192 +277,18 @@ corre 228.
 | 🔁 Respaldo de la IA | ✅ | Si FreeLLMAPI no responde (PC apagada, túnel caído, sin cupo o más de 45 s), la misma charla sigue por OpenRouter con un modelo gratis, salta al siguiente si ese no está, deja de probar el principal por un minuto y avisa por mail. 8 tests en `evals/respaldo`. |
 | 👀 Inspección del entorno | ✅ | Después de cada acción el agente mira qué pasó de verdad. Al reservar, la herramienta le devuelve la hora que **guardó el calendario** (antes devolvía la que pidió el agente: si HighLevel la corría, el cliente recibía una hora equivocada) y un error si el turno quedó cancelado aunque la API diga 200. `npm run eval:herramientas` suma 4 escenarios donde la acción sale mal (la reserva falla, se corre de hora, el horario se ocupa entre la consulta y la reserva, el seguimiento no se guarda): 22 de 22 chequeos, sin confirmar nada que no pasó y ofreciendo el horario libre. 4 tests en `evals/herramientas`. |
 | 🧐 Revisor de respuestas (evaluador-optimizador) | ✅ | Antes de mandar cada respuesta, un segundo modelo la compara con todo lo que sabía el agente (negocio, base de conocimiento, memoria del cliente y lo que devolvieron las herramientas en ese turno). Si encuentra un dato inventado o una acción que no se hizo ("te agendé" sin reserva, una reserva que falló o quedó pendiente), la reescribe sin volver a usar herramientas y revisa la corrección, con tope de 2 vueltas y 25 s en total. Si la acción no se hizo, ofrece pasar con una persona en vez de prometer que el equipo confirma. Si el revisor falla, sale el borrador: nunca deja al cliente sin respuesta. En `npm run eval:revisor` (24 borradores fijos: trampas y respuestas correctas, 8 de ellos distintos a los ejemplos del prompt), con llama-3.3-70b: **12 de 13 trampas corregidas y 11 de 11 respuestas correctas sin tocar**. Con "auto" los modelos que razonan se cortaban o tardaban de más, y mistral-small corregía todas las trampas pero tocaba respuestas correctas. El chat de prueba muestra qué se corrigió. 11 tests en `evals/revisor`. |
-| 🛡️ Guardias sobre el modelo | ✅ | Lo que el prompt pide y el modelo gratis a veces no cumple se asegura en el código, sin otra llamada al modelo: una queja clara o un pedido de hablar con una persona llega a una persona, el nombre y el correo que el cliente afirma como propios quedan en la ficha, un nombre no se deduce del correo y, sin herramienta de agenda, la oferta de un turno se cambia por el pase a una persona. 16 tests en `evals/herramientas/guardias.test.ts`; falta medirlo con el modelo real en `npm run eval:produccion`. |
+| 🛡️ Guardias sobre el modelo | ✅ | Lo que el prompt pide y el modelo gratis a veces no cumple se asegura en el código, sin otra llamada al modelo: una queja clara o un pedido de hablar con una persona llega a una persona, el nombre y el correo que el cliente afirma como propios quedan en la ficha, un nombre no se deduce del correo y, sin herramienta de agenda, la oferta de un turno se cambia por el pase a una persona. Si promete escribirle más adelante sin agendarlo, lo toma una persona. 20 tests en `evals/herramientas/guardias.test.ts`. |
+| 🔐 Prueba de intrusión | ✅ | Ataques propios contra una copia local con datos inventados. Encontró tres fallas graves, cada una reproducida antes de corregirla: un usuario podía hacerse súper admin, llevarse un contacto de otro cliente o cambiarle el prompt a su agente. Los mismos ataques ahora quedan bloqueados (`evals/intrusion`). Además, los scripts de cada página corren con un nonce por pedido y sin `unsafe-inline`. |
+| 🗄️ Base de datos | ✅ | Se cerraron los avisos de Supabase: 100 de políticas redundantes, 3 de funciones de permisos visibles por la API y 3 de extensiones en `public`, además de los índices que faltaban. Antes de aplicarlo se comparó una matriz de 690 combinaciones de rol, tabla y acción: 0 diferencias. |
+| 🧾 Datos personales | ✅ | Revisado contra la Ley 25.326: botón para borrar todos los datos de una persona, descarga de sus datos, plazo de conservación por cliente (12 meses por defecto), aviso en el primer mensaje y página `/privacidad`. La memoria del agente rechaza datos de salud, religión, política y vida sexual. No reemplaza la revisión de un abogado. |
+| 🔄 Turnos sin repetir acciones | ✅ | Revisado contra 12-Factor Agents. El progreso se guarda antes de cada paso, así que un corte no vuelve a reservar ni a reenviar: si no se sabe si el mensaje salió, pasa a una persona. Un mensaje nuevo ya no abre un turno en paralelo, y aprobar o rechazar en Revisión le avisa al cliente. |
+| 🤝 Pase a una persona y ficha | ✅ | El agente prometía «le paso tu mensaje» sin que nadie se enterara: ahora el pase es real y, si lo promete, el código lo cumple. Guarda nombre y correo citando al cliente; pisar un dato distinto va a Revisión, y cada cambio se puede deshacer desde la ficha. Tampoco discute con un cliente enojado. |
+| ⏱️ Tiempos y filtro de respuestas | ✅ | Una respuesta llegó a tardar 209 s con un webhook de 60: ahora cada llamada al modelo tiene un tope de 25 s y se reservan 8 s para enviar. El filtro también frena el razonamiento en castellano y palabras en inglés como «turnover», que el modelo metía en las respuestas. |
+| 📱 Uso y celular | ✅ | En celular la Bandeja se rompía: ahora muestra la lista o la conversación, con botón para volver. El Panel y la Bandeja vacía dicen cuál es el siguiente paso, cada agente tiene su botón Probar y hay menos jerga. |
+| 🧪 Examen de producción | ✅ | Un 9.7 en `eval:agente` no detectaba estas fallas porque usa otro modelo y no tiene herramientas. `npm run eval:produccion` recorre los mismos pasos que un mensaje real, con el modelo que responde de verdad y las herramientas simuladas. Última medición, del 05/11: 457 de 460 chequeos, con 1 turno cortado por tiempo y 9 de 51 respuestas sin revisar, así que no cuenta como línea base. Leer las respuestas encontró fallas que la nota no mostraba. También se corrigió que las repeticiones de `eval:agente` eran la misma respuesta cacheada. |
+| 📦 Dependencias | ✅ | `npm audit` pasó de 8 avisos moderados a 0, sin bajar de versión `eslint-config-next`. |
 
-### 🔎 Cómo se auditó y se mejoró cada área
-
-Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la
-**falla**, se **corrige** y se **vuelve a medir**.
-
-```mermaid
-flowchart LR
-    P[🔍 Prueba real]:::p --> F[❌ Falla]:::f
-    F --> M[🔧 Mejora]:::m
-    M --> R[✅ Medido<br/>de nuevo]:::r
-    R -.->|si bajó algo| M
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**💬 Respuestas de la IA**
-
-```mermaid
-flowchart LR
-    P[🔍 Charlas con<br/>modelos gratis]:::p --> F1[❌ Cortadas<br/>o vacías]:::f
-    P --> F2[❌ Razonamiento<br/>filtrado]:::f
-    P --> F3[❌ Cambian<br/>cada vez]:::f
-    F1 & F2 --> M1[🔧 Guardia<br/>+ otro modelo]:::m
-    F3 --> M2[🔧 Temperatura<br/>0.3]:::m
-    M1 & M2 --> R[✅ Nunca llega<br/>texto roto]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**📊 Evaluación del agente**
-
-```mermaid
-flowchart LR
-    P[🔍 Charlas de<br/>WhatsApp]:::p --> C[🧮 Nota por código<br/>⚖️ y por un juez]:::p
-    C --> F[❌ Una nota en la<br/>memoria daba<br/>descuentos falsos]:::f
-    F --> M[🔧 Memoria citada<br/>sin autorizar<br/>precios]:::m
-    M --> R[✅ Ese caso<br/>4.7 → 10]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**✍️ Prompts**
-
-```mermaid
-flowchart LR
-    P[🔍 Prompts de<br/>los 4 agentes]:::p --> F[❌ Reglas<br/>sin porqué]:::f
-    F --> M1[🔧 Reglas<br/>con porqué]:::m
-    F --> M2[🔧 Etiquetas<br/>XML]:::m
-    F --> M3[🔧 Ejemplos<br/>difíciles]:::m
-    M1 & M2 & M3 --> R[✅ Nota<br/>9.1 → 9.6]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**🔧 Herramientas**
-
-```mermaid
-flowchart LR
-    P[🔍 Función real<br/>+ herramientas<br/>simuladas]:::p --> F1[❌ Turnos sin<br/>mirar la agenda]:::f
-    P --> F2[❌ Tapaba errores<br/>del calendario]:::f
-    P --> F3[❌ Sin respuesta<br/>tras usar una]:::f
-    P --> F4[❌ Reintento que<br/>reserva dos veces]:::f
-    F1 & F2 & F3 & F4 --> M[🔧 Uno por uno<br/>midiendo]:::m
-    M --> R[✅ 14/20<br/>→ 40/42]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**📚 Base de conocimiento**
-
-```mermaid
-flowchart LR
-    P[🔍 17 preguntas<br/>sobre un<br/>documento]:::p --> F1[❌ Cortes que<br/>partían precios]:::f
-    P --> F2[❌ SQL armado<br/>pegando texto]:::f
-    P --> F3[❌ Una página<br/>podía dar órdenes]:::f
-    F1 --> M1[🔧 Corte por<br/>secciones]:::m
-    F2 --> M2[🔧 Respaldo<br/>quitado]:::m
-    F3 --> M3[🔧 Marcados<br/>como datos]:::m
-    M1 & M2 & M3 --> R[✅ Primero en<br/>11 → 15 de 17]:::r
-    P -.-> X[🧪 Búsqueda híbrida:<br/>ver Reranking]:::x
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-    classDef x fill:#64748B,color:#fff
-```
-
-**🎙️ Audios, imágenes, documentos y caché**
-
-```mermaid
-flowchart LR
-    P[🔍 Notas de voz,<br/>fotos y PDFs]:::p --> F0[❌ El audio no<br/>llegaba al modelo]:::f
-    F0 --> M0[🔧 Endpoint de<br/>transcripción]:::m
-    M0 --> R0[✅ Palabra por<br/>palabra]:::r
-    P --> F1[❌ No podía<br/>leer el PDF]:::f
-    P --> F2[⚠️ Imagen con una<br/>orden escrita]:::f
-    P --> F3[❌ Solo 1% del<br/>prompt reutilizable]:::f
-    F1 --> M1[🔧 PDF leído<br/>en el servidor]:::m
-    F2 --> M2[🔧 Marcada<br/>como dato]:::m
-    F3 --> M3[🔧 Lo fijo<br/>va primero]:::m
-    M1 --> R1[✅ Total y seña<br/>exactos]:::r
-    M2 --> R2[✅ 32/32]:::r
-    M3 --> R3[✅ 72% reutilizable<br/>83% de caché]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**📌 Citas y razonamiento**
-
-```mermaid
-flowchart LR
-    P[🔍 Preguntas<br/>a la base]:::p --> F[❌ Sin rastro<br/>de la fuente]:::f
-    F --> M1[🔧 Marca el<br/>fragmento]:::m
-    M1 --> M2[🔧 Se saca antes<br/>del cliente]:::m
-    M2 --> M3[🔧 Inbox muestra<br/>Fuentes]:::m
-    M3 --> R[✅ 8 de 8]:::r
-    P -.-> X[🧪 Razonamiento<br/>extendido: no<br/>hizo falta]:::x
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-    classDef x fill:#64748B,color:#fff
-```
-
-**🔌 MCP**
-
-```mermaid
-flowchart LR
-    P[🔍 Servidor de stock<br/>+ cliente MCP real]:::p --> F1[❌ No tenemos<br/>sin consultar]:::f
-    P --> F2[❌ Sistema caído:<br/>inventaba]:::f
-    P --> F3[❌ Prometía una<br/>reserva no guardada]:::f
-    F1 --> M1[🔧 Consultar antes<br/>de responder]:::m
-    F2 --> M2[🔧 Aviso de<br/>no disponible]:::m
-    F3 --> M3[🔧 Sin propuesta<br/>no promete]:::m
-    M1 & M2 & M3 --> R[✅ 28/28<br/>y en vivo]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**🎯 RAG: reranking y recuperación contextual** · por [Tomas Skarp](https://github.com/thomasskarp)
-
-```mermaid
-flowchart LR
-    P[🔍 Las 2 preguntas<br/>que fallaban]:::p --> F1[❌ Fragmento sin<br/>su documento]:::f
-    P --> F2[❌ Códigos exactos<br/>PROMO-DIC-05]:::f
-    F1 --> M1[🔧 Prefijo<br/>Documento · Sección]:::m
-    F2 --> M2[🔧 10 candidatos<br/>BM25 + RRF]:::m
-    M1 & M2 --> R[✅ 15 → 17 de 17<br/>0 tokens extra]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
-
-**🧭 Agentes y flujos** · por [Tomas Skarp](https://github.com/thomasskarp)
-
-```mermaid
-flowchart LR
-    P[🔍 Enrutamiento,<br/>cadena, paralelo<br/>y depuración]:::p --> F1[❌ Resumen cortado<br/>por Vercel]:::f
-    P --> F2[❌ Consultas<br/>una tras otra]:::f
-    P --> F3[❌ Envío fallido<br/>sin registro]:::f
-    F1 --> M1[🔧 await con<br/>try/catch]:::m
-    F2 --> M2[🔧 Promise.all]:::m
-    F3 --> M3[🔧 Evento<br/>dispatch_failure]:::m
-    M1 & M2 & M3 --> R[✅ Sin pases falsos<br/>~30 ms menos]:::r
-    classDef p fill:#0EA5E9,color:#fff
-    classDef f fill:#E5484D,color:#fff
-    classDef m fill:#8A2BE2,color:#fff
-    classDef r fill:#25D366,color:#000
-```
+Todas siguieron el mismo camino: se **prueba de verdad**, se encuentra la **falla**, se **corrige** y se **vuelve a medir**.
 
 ---
 
