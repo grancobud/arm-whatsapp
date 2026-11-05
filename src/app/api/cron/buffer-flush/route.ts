@@ -21,6 +21,10 @@ export const schedule = "* * * * *";
 
 // Max batches to drain per cron tick — protects against burst accumulation
 const MAX_BATCHES_PER_RUN = 10;
+// Hobby corta la función a los 300 s. Con el modelo colgado cada lote puede tardar más
+// de un minuto: sin este tope, las campañas, seguimientos y alertas de abajo no corren.
+export const maxDuration = 300;
+const REPLY_BUDGET_MS = 180_000;
 
 export async function GET(request: Request): Promise<NextResponse> {
   // Verify Vercel cron auth header
@@ -31,8 +35,10 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const results: Array<{ processed: boolean; error?: string }> = [];
 
+  const startedAt = Date.now();
   for (let i = 0; i < MAX_BATCHES_PER_RUN; i++) {
-    const result = await processNextBatch();
+    if (Date.now() - startedAt > REPLY_BUDGET_MS) break;
+    const result = await processNextBatch({ deadlineAt: startedAt + (maxDuration - 20) * 1000 });
     results.push(result);
 
     // No more ready batches — stop early
