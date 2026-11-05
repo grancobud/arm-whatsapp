@@ -50,9 +50,41 @@ export function promisesHandoff(text: string): boolean {
     .some((sentence) => PROMISES.some((re) => re.test(plain(sentence))));
 }
 
+// Medido el 05/11: una queja sin palabras como "persona" o "enojado" a veces se contesta
+// sin avisarle a nadie. Lista corta a propósito: pasar de más le cuesta un rato a una
+// persona; una queja que nadie ve le cuesta el cliente al negocio.
+const NEEDS_PERSON = [
+  /(?<!no (quiero|necesito|hace falta) )\bhablar con (una persona|alguien|un humano|un asesor|un responsable|el dueno|la duena|el encargado|la encargada)\b/,
+  /\b(atencion humana|una persona real)\b/,
+  /\b(quiero|voy a) (hacer|dejar|presentar) (un|una) (reclamo|queja)\b/,
+  /\btengo (un|una) (reclamo|queja)\b/,
+  /\b(es una verguenza|una estafa|me estafaron|pesima atencion|pesimo servicio|malisimo)\b/,
+  /\bme (dejaron esperando|hicieron esperar|atendieron mal|trataron mal|arruinaron)\b/,
+  /(?<!\bno (me |te |le |nos |lo |la )?)\b(quedo|salio|esta|estaba|lo hicieron|lo dejaron) mal( hecho)?\b/,
+  /\bme cobraron (de mas|mal|dos veces)\b/,
+  /\bestoy (muy |re |bastante )?(enojad[oa]|harto|harta|indignad[oa]|furios[oa]|caliente)\b/,
+  /\bnadie me (responde|contesta|atiende|llama)\b/,
+  /\bno me (solucionaron|resolvieron|respondieron|contestaron|devolvieron)\b/,
+];
+
+/** El cliente se queja o pide a una persona con palabras que no dejan dudas. */
+export function asksForPerson(customerText: string): boolean {
+  const t = plain(customerText);
+  return NEEDS_PERSON.some((re) => re.test(t));
+}
+
+export const HANDOFF_NOTICE = "Una persona del equipo te va a atender.";
+
+/** El cliente tiene que saber que lo pasamos, aunque el modelo no lo haya dicho. */
+export function withHandoffNotice(text: string): string {
+  if (promisesHandoff(text)) return text;
+  return [text.trim(), HANDOFF_NOTICE].filter(Boolean).join(" ");
+}
+
 /**
- * Si el borrador promete un traspaso y la herramienta no corrió, la corre. Devuelve
- * su resultado para que el revisor lo vea, o null si no había nada que hacer.
+ * Si el borrador promete un traspaso o el cliente lo necesita, y la herramienta no
+ * corrió, la corre. Devuelve su resultado para que el revisor lo vea, o null si no
+ * había nada que hacer.
  * Si el dueño pidió aprobar esta herramienta, decide él: el revisor marca la promesa.
  */
 export async function backHandoffPromise(params: {
@@ -60,14 +92,17 @@ export async function backHandoffPromise(params: {
   tools: Tool[] | undefined;
   results: ToolOutcome[];
   ctx: ToolContext;
+  customerText?: string;
 }): Promise<ToolOutcome | null> {
-  const { text, tools, results, ctx } = params;
+  const { text, tools, results, ctx, customerText } = params;
   const tool = tools?.find((t) => t.name === HANDOFF_TOOL);
   if (!tool || tool.sensitivity === "sensitive") return null;
   if (results.some((r) => r.name === HANDOFF_TOOL && r.status !== "failed")) return null;
-  if (!promisesHandoff(text)) return null;
+  const promised = promisesHandoff(text);
+  if (!promised && !(customerText && asksForPerson(customerText))) return null;
+  const reason = promised ? "El agente prometió pasar la charla a una persona." : "El cliente se quejó o pidió hablar con una persona.";
   try {
-    const result = await tool.run({ reason: "El agente prometió pasar la charla a una persona." }, ctx);
+    const result = await tool.run({ reason }, ctx);
     return toolOutcome(HANDOFF_TOOL, result);
   } catch (err) {
     return toolOutcome(HANDOFF_TOOL, { ok: false, error: err instanceof Error ? err.message : String(err) });

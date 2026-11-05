@@ -27,7 +27,9 @@ import {
   DEFAULT_TIMEZONE,
 } from "@/features/inbox/services/business-info";
 import { getEnabledTools } from "@/features/tools/services/tool-configs";
-import { backHandoffPromise } from "@/features/inbox/services/handoff-promise";
+import { backHandoffPromise, withHandoffNotice } from "@/features/inbox/services/handoff-promise";
+import { backContactData, dropNameFromEmail } from "@/features/inbox/services/contact-capture";
+import { removeBookingOffer } from "@/features/inbox/services/booking-offer";
 import type { AgentConfig } from "@/features/agents/types";
 
 // POST /api/workspace/[id]/agents/[agentId]/test-chat
@@ -199,8 +201,20 @@ export async function POST(
       tools,
       results: toolResults,
       ctx: { workspaceId, conversationId: "", contactId: "" },
+      customerText: lastUserMessage,
     });
-    if (forcedHandoff) toolResults.push(forcedHandoff);
+    if (forcedHandoff) {
+      toolResults.push(forcedHandoff);
+      if (forcedHandoff.status === "ok") reply.text = withHandoffNotice(reply.text);
+    }
+    toolResults.push(
+      ...(await backContactData({
+        customerText: lastUserMessage,
+        tools,
+        results: toolResults,
+        ctx: { workspaceId, conversationId: "", contactId: "" },
+      })),
+    );
 
     // Same reply review as production (buffer.ts), so the playground shows
     // what the customer would get.
@@ -234,6 +248,11 @@ export async function POST(
 
     const reviewMs = Date.now() - reviewStartedAt;
 
+    // Los mismos últimos pasos que producción (buffer.ts).
+    text = dropNameFromEmail(text, lastUserMessage);
+    const withoutOffer = removeBookingOffer(text, tools.map((t) => t.name));
+    text = withoutOffer.text;
+
     // Best-effort observability — never blocks the response.
     void db
       .from("events")
@@ -262,6 +281,7 @@ export async function POST(
       // Lo que no se ve en el texto: qué herramientas corrieron y dónde se fue el tiempo.
       tools: toolResults.map((t) => ({ name: t.name, status: t.status })),
       forcedHandoff: Boolean(forcedHandoff),
+      bookingOfferRemoved: withoutOffer.changed,
       timing: { replyMs, reviewMs },
     });
   } catch (err) {
