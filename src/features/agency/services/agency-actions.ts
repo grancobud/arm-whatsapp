@@ -1,8 +1,8 @@
 "use server";
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { provisionWorkspaceUser } from "@/lib/auth/provision-user";
 import { removeStorageFolder } from "@/features/privacy/services/contact-erasure";
@@ -40,12 +40,6 @@ function generateSlug(name: string): string {
     .slice(0, 32);
 }
 
-function svc() {
-  return createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 async function assertSuperAdmin(): Promise<string | null> {
   const supabase = await createClient();

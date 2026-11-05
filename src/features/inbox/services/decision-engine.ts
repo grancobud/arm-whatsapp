@@ -1,8 +1,8 @@
 // F3-T4: Decision engine — orchestrates respond / handoff / abstain.
 // Uses service-role client for DB state transitions.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import {
   aiShouldRespond,
   canTransition,
@@ -13,12 +13,6 @@ import { checkRateLimits } from "./cost-tracker";
 import { getEnabledTools } from "@/features/tools/services/tool-configs";
 import type { Tool } from "@/features/tools/core/tool";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export type Decision = "respond" | "handoff" | "abstain" | "rate_limited";
 

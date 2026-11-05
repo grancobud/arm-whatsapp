@@ -6,8 +6,8 @@
 // scoreRelationship is pure and tested (evals/relacion). The weights are
 // simple on purpose so the reason shown to the owner matches the number.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 
 const DAY = 86_400_000;
 /** Cooling off: wrote before, silent for between these many days. */
@@ -117,12 +117,6 @@ export function scoreRelationship(input: RelationshipInput, now: number): Relati
 // I/O
 // ──────────────────────────────────────────────────────────────────────────────
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export interface Suggestion extends Relationship {
   contactId: string;

@@ -86,7 +86,7 @@ después del merge.
 
 ## 5. Las evaluaciones mandan
 
-Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo.
+Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo. Cada PR corre typecheck, lint, tests y build en GitHub Actions; los exámenes con modelo se corren a mano.
 
 | Comando | Qué mide | Necesita modelos |
 | --- | --- | :---: |

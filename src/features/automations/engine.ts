@@ -15,8 +15,8 @@
 //   - Templates go through dispatchTemplate (opt-out is checked there) and,
 //     for the 24h follow-up, only inside business hours.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { DEFAULT_TIMEZONE } from "@/features/inbox/services/business-info";
 import type { ConversationState } from "@/features/inbox/services/state-machine";
 
@@ -235,12 +235,6 @@ export function selectFirings(rules: Rule[], snap: Snapshot, now: Date): Firing[
 // I/O
 // ──────────────────────────────────────────────────────────────────────────────
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 type Db = ReturnType<typeof svc>;
 type Outcome = { status: "done" | "skipped" | "failed"; detail?: string };

@@ -1,10 +1,10 @@
 // G1: Templates CRUD API — list, create, update, delete workspace templates.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { listTemplates } from "@/features/inbox/services/templates";
 import {
   templateButtonSchema,
@@ -13,12 +13,6 @@ import {
 
 // ── Service-role client ───────────────────────────────────────────────────────
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // ── Shared auth helper ────────────────────────────────────────────────────────
 

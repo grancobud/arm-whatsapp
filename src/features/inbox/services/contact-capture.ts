@@ -5,6 +5,7 @@
 // que el cliente afirma de sí mismo: un correo suelto dentro de una frase puede ser
 // de otra persona ("les escribí a info@negocio.com"), así que eso lo decide el modelo.
 
+import { plainText as plain } from "@/lib/plain-text";
 import type { Tool, ToolContext } from "@/features/tools/core/tool";
 import { toolOutcome, type ToolOutcome } from "./reply-review";
 
@@ -90,12 +91,6 @@ export async function backContactData(params: {
 
 /** Casillas de un negocio, no nombres de personas. */
 const NOT_A_PERSON = new Set(["info", "ventas", "turnos", "reservas", "contacto", "hola", "admin", "consultas", "soporte", "administracion"]);
-
-const plain = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
 
 /**
  * Saca del texto un nombre que solo salió del correo: "mi mail es juan@x.com" no dice

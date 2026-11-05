@@ -1,0 +1,28 @@
+# Hasta acá nada corría las pruebas en un PR: el único chequeo era que Vercel compilara.
+# Gratis en un repo público. No usa secretos ni llama a ningún modelo.
+name: Pruebas
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://ejemplo.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: clave-de-ejemplo
+      SUPABASE_SERVICE_ROLE_KEY: clave-de-ejemplo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:unit
+      - run: npm run build

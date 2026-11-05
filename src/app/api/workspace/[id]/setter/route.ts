@@ -1,10 +1,10 @@
 // G5: Setter mode API — CRUD for setter_configs table.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSvcClient } from "@supabase/supabase-js";
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -58,12 +58,6 @@ const PatchSchema = z.object({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function svc() {
-  return createSvcClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 async function resolveWorkspaceMember(
   supabase: Awaited<ReturnType<typeof createClient>>,

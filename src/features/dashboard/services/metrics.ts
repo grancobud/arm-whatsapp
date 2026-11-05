@@ -1,14 +1,8 @@
 // Dashboard metrics — service role queries (no RLS needed for aggregates)
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import type { ConversationState } from "@/features/inbox/types";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export interface WorkspaceMetrics {
   messagesToday: number;

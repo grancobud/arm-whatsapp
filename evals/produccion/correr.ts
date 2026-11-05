@@ -12,8 +12,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { generateWithTools, createReviewCompleter } from "../../src/features/inbox/services/openrouter.ts";
-import { backHandoffPromise, withHandoffNotice } from "../../src/features/inbox/services/handoff-promise.ts";
-import { backContactData } from "../../src/features/inbox/services/contact-capture.ts";
+import { applyTurnGuards } from "../../src/features/inbox/services/turn-guards.ts";
 import { dropNameFromEmail } from "../../src/features/inbox/services/contact-capture.ts";
 import { finishReply } from "../../src/features/inbox/services/reply-finish.ts";
 import { reviewEnabled, reviewReply, type ToolOutcome } from "../../src/features/inbox/services/reply-review.ts";
@@ -264,23 +263,12 @@ async function correr(c: Caso, rep: number) {
 
     const toolResults: ToolOutcome[] = [...reply.toolResults];
     const borrador = reply.text;
-    const forzado = await backHandoffPromise({
-      text: reply.text,
-      tools: herramientas,
-      results: toolResults,
-      ctx,
-      customerText: c.mensaje,
-    });
-    if (forzado) {
-      toolResults.push(forzado);
-      llamadas.push({ nombre: "request_human", args: {}, forzada: true });
-      if (forzado.status === "ok") reply.text = withHandoffNotice(reply.text);
-    }
-    const datosForzados = await backContactData({ customerText: c.mensaje, tools: herramientas, results: toolResults, ctx });
-    for (const d of datosForzados) {
-      toolResults.push(d);
-      llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
-    }
+    const guardias = await applyTurnGuards({ text: reply.text, customerText: c.mensaje, tools: herramientas, results: toolResults, ctx });
+    reply.text = guardias.text;
+    const forzado = guardias.forcedHandoff;
+    const datosForzados = guardias.savedContactData;
+    if (forzado) llamadas.push({ nombre: "request_human", args: {}, forzada: true });
+    for (const d of datosForzados) llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
 
     let texto = reply.text;
     let revision = "apagado";

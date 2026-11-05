@@ -2,8 +2,7 @@
 // Si buffer.ts suma un paso, va también acá.
 
 import { generateWithTools, createReviewCompleter } from "../../src/features/inbox/services/openrouter.ts";
-import { backHandoffPromise, withHandoffNotice } from "../../src/features/inbox/services/handoff-promise.ts";
-import { backContactData } from "../../src/features/inbox/services/contact-capture.ts";
+import { applyTurnGuards } from "../../src/features/inbox/services/turn-guards.ts";
 import { finishReply } from "../../src/features/inbox/services/reply-finish.ts";
 import { reviewEnabled, reviewReply, type ToolOutcome } from "../../src/features/inbox/services/reply-review.ts";
 import { registry } from "../../src/features/tools/index.ts";
@@ -102,16 +101,10 @@ export async function correrCharla(c: Pick<Charla, "mensajes" | "herramientas" |
         history: historia.slice(-VENTANA),
       });
       const resultados: ToolOutcome[] = [...reply.toolResults];
-      const forzado = await backHandoffPromise({ text: reply.text, tools: herramientas, results: resultados, ctx, customerText: mensaje });
-      if (forzado) {
-        resultados.push(forzado);
-        llamadas.push({ nombre: "request_human", args: {}, forzada: true });
-        if (forzado.status === "ok") reply.text = withHandoffNotice(reply.text);
-      }
-      for (const d of await backContactData({ customerText: mensaje, tools: herramientas, results: resultados, ctx })) {
-        resultados.push(d);
-        llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
-      }
+      const guardias = await applyTurnGuards({ text: reply.text, customerText: mensaje, tools: herramientas, results: resultados, ctx });
+      reply.text = guardias.text;
+      if (guardias.forcedHandoff) llamadas.push({ nombre: "request_human", args: {}, forzada: true });
+      for (const d of guardias.savedContactData) llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
       texto = reply.text;
       if (reviewEnabled() && reply.text) {
         const r = await reviewReply({

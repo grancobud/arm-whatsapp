@@ -1,7 +1,7 @@
 // F7: Knowledge base service — ingest documents, chunk, embed, and search with pgvector.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createOpenAI } from "@ai-sdk/openai";
 import { embed, embedMany } from "ai";
 import { chunkDocument } from "./kb-chunking";
@@ -9,12 +9,6 @@ import { fragmentId } from "./kb-citations";
 import { rerankHybrid } from "./kb-rerank";
 import { stripBlockTags } from "./untrusted-text";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // kb_chunks.embedding is vector(1536): every model must output 1536 dims.
 const EMBEDDING_DIMENSIONS = 1536;

@@ -1,4 +1,4 @@
-import { createClient as svcClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { generateChatReply } from "@/features/inbox/services/openrouter";
 import type { AgentConfig } from "@/features/agents/types";
 
@@ -8,12 +8,6 @@ import type { AgentConfig } from "@/features/agents/types";
 
 const CHEAP_MODEL = "openai/gpt-4o-mini";
 
-function svc() {
-  return svcClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 function safeParseJson(text: string): Record<string, unknown> | null {
   try {

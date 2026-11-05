@@ -5,16 +5,10 @@
 // it is a hunch. Grounding is resolved here, server-side, by matching the quote
 // against the contact's real inbound messages — never from an id the LLM sends.
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import type { ClaimKind, ClaimRow } from "../types";
 import { stripBlockTags } from "@/features/inbox/services/untrusted-text";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 const SOURCE_SEARCH_LIMIT = 50;
 const PROMPT_CLAIMS_LIMIT = 20;

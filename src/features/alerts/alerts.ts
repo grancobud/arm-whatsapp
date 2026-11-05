@@ -14,8 +14,8 @@
 //
 // Disabled unless RESEND_API_KEY and ALERT_EMAIL_TO are set.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { redactSensitivePayload } from "@/features/inbox/services/observability";
 
 /** Minutes between checks (the cron ticks every minute). */
@@ -143,9 +143,6 @@ ${filas}
   return { subject, html };
 }
 
-function svc() {
-  return createSbClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-}
 
 async function sendEmail(subject: string, html: string): Promise<boolean> {
   const res = await fetch("https://api.resend.com/emails", {

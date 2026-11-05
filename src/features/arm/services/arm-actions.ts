@@ -8,10 +8,10 @@
  * from the E2E audit) before touching anything with the service-role client.
  */
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
 import { canRevertChange } from "./contact-update-rules";
@@ -24,12 +24,6 @@ import { resolveMcpTool } from "@/features/tools/mcp/mcp-servers";
 import { createCampaign, resolveSegment } from "./campaigns";
 import type { ClaimRow } from "../types";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 type Result<T = null> = { ok: true; data: T } | { ok: false; error: string };
 

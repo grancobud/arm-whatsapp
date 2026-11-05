@@ -1,13 +1,7 @@
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import type { NormalizedInbound } from "./ycloud-webhook-handler";
 import type { ContactRow, ConversationRow, MessageRow } from "../types/index";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 /** Default country code when a workspace hasn't configured one (Argentina). */
 export const DEFAULT_COUNTRY_CODE = "54";

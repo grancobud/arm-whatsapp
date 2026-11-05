@@ -1,7 +1,7 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as svcClient } from "@supabase/supabase-js";
 import { listAgents } from "@/features/agents/services/agent-queries";
 
 // GET  /api/workspace/[id]/agents          → list the workspace's agents
@@ -37,12 +37,6 @@ const PatchSchema = z
     { message: "Nada que actualizar" },
   );
 
-function svc() {
-  return svcClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export async function GET(
   _req: NextRequest,

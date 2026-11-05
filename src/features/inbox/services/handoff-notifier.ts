@@ -16,19 +16,13 @@
 // break or revert the handoff. Every path swallows its error and records it in
 // `events` instead.
 
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
-import { createClient as createSbClient } from "@supabase/supabase-js";
 import { dispatchText } from "./dispatch";
 import { DEFAULT_HANDOFF_ACK } from "../types/handoff";
 
 export { DEFAULT_HANDOFF_ACK };
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 /** Don't send a second acknowledgement within this window. */
 const ACK_DEDUPE_MINUTES = 15;

@@ -1,14 +1,8 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 // F8-D2: Observability service — query events per conversation, compute cost/token metrics.
 // SEC-09: All payloads are redacted before leaving this module.
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 export interface ConversationMetrics {
   totalInputTokens: number;

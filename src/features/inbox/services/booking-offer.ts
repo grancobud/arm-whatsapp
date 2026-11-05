@@ -4,6 +4,7 @@
 // agendar para otro día?". Se corrige sobre el texto final, sin otra llamada al modelo:
 // sale la oración que ofrece y queda la salida honesta, pasarlo con una persona.
 // Módulo puro: se prueba sin base ni red.
+import { plainText as plain } from "@/lib/plain-text";
 
 /** Herramientas propias que no agendan. Una MCP o un webhook podrían hacerlo: ahí no se toca. */
 const NOT_BOOKING = new Set(["echo", "remember_fact", "request_human", "schedule_followup", "update_contact"]);
@@ -29,12 +30,6 @@ const WANTS_BOOKING = /\b(quiero|necesito|sacar|tenes|tienen|hay|dame|reservar|a
 
 const HANDS_OVER = /\b(te paso|te pase|persona|equipo|alguien)\b/;
 const DENIES = /\bno (te )?(puedo|podemos)\b/;
-
-const plain = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
 
 function offersBooking(sentence: string): boolean {
   const t = plain(sentence);

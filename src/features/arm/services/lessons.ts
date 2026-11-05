@@ -1,3 +1,4 @@
+import { createServiceClient as svc } from "@/lib/supabase/service";
 // Learning from corrections. When a person rejects something the agent
 // proposed or corrects one of its replies, they can say what it should have
 // done. That becomes a rule of the workspace and goes into the agent's prompt
@@ -5,7 +6,6 @@
 //
 // formatLessonsContext is pure (evals/correcciones).
 
-import { createClient as createSbClient } from "@supabase/supabase-js";
 
 /** Newest rules win; the prompt stays short. */
 export const MAX_LESSONS_IN_PROMPT = 15;
@@ -37,12 +37,6 @@ export function formatLessonsContext(lessons: LessonRow[]): string {
   ].join("\n");
 }
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 /** Active lessons of a workspace, as a prompt block ("" if none). Never throws. */
 export async function getLessonsContext(workspaceId: string): Promise<string> {

@@ -1,15 +1,9 @@
-import { createClient as createSbClient } from "@supabase/supabase-js";
+import { createServiceClient as svc } from "@/lib/supabase/service";
 import { registry } from "../registry";
 import type { Tool } from "../core/tool";
 import { getWorkspaceMcpTools } from "../mcp/mcp-servers";
 import { effectiveSensitivity, parseAutonomy } from "../lib/autonomy";
 
-function svc() {
-  return createSbClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 interface ToolConfigRow {
   tool: { key?: string } | null;
