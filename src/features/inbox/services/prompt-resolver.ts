@@ -122,10 +122,21 @@ export async function resolveSystemPrompt(
  * and marks all other versions of that prompt as draft.
  */
 export async function publishPromptVersion(
+  workspaceId: string,
   promptId: string,
   versionId: string,
-): Promise<void> {
+): Promise<boolean> {
   const supabase = svc();
+
+  // The caller only proved membership of workspaceId: both ids must belong to it.
+  const { data: version } = await supabase
+    .from("prompt_versions")
+    .select("id")
+    .eq("id", versionId)
+    .eq("prompt_id", promptId)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  if (!version) return false;
 
   // Mark the target version as published
   const { error: versionError } = await supabase
@@ -135,7 +146,8 @@ export async function publishPromptVersion(
       published_at: new Date().toISOString(),
     })
     .eq("id", versionId)
-    .eq("prompt_id", promptId);
+    .eq("prompt_id", promptId)
+    .eq("workspace_id", workspaceId);
 
   if (versionError) {
     throw new Error(
@@ -147,7 +159,8 @@ export async function publishPromptVersion(
   const { error: promptError } = await supabase
     .from("prompts")
     .update({ active_version_id: versionId })
-    .eq("id", promptId);
+    .eq("id", promptId)
+    .eq("workspace_id", workspaceId);
 
   if (promptError) {
     throw new Error(
@@ -169,6 +182,7 @@ export async function publishPromptVersion(
       demoteError,
     );
   }
+  return true;
 }
 
 /**

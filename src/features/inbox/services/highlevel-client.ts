@@ -195,6 +195,7 @@ export async function syncContactToHL(
     .from("contacts")
     .select("id, name, phone, email, tags, hl_contact_id")
     .eq("id", contactId)
+    .eq("workspace_id", workspaceId)
     .single();
 
   if (contactError || !contactData) {
