@@ -141,7 +141,8 @@ export async function POST(
     [...parsed.data.messages].reverse().find((m) => m.role === "user")
       ?.content ?? "";
   const [kbResults, kbLinks] = await Promise.all([
-    searchKb(workspaceId, lastUserMessage, 3),
+    // Como en buffer.ts: sin búsqueda, el agente responde igual.
+    searchKb(workspaceId, lastUserMessage, 3).catch(() => []),
     listKbSourceLinks(workspaceId),
   ]);
   const kbContext = [
