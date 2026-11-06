@@ -21,6 +21,9 @@ export const schedule = "* * * * *";
 
 // Max batches to drain per cron tick — protects against burst accumulation
 const MAX_BATCHES_PER_RUN = 10;
+// Una charla ocupada o un lote que falla no cuentan como atendidos, pero tampoco pueden
+// frenar la cola: cada uno vuelve a esperar y el siguiente intento toma a otro cliente.
+const MAX_ATTEMPTS_PER_RUN = 30;
 // Hobby corta la función a los 300 s. Con el modelo colgado cada lote puede tardar más
 // de un minuto: sin este tope, las campañas, seguimientos y alertas de abajo no corren.
 export const maxDuration = 300;
@@ -36,13 +39,26 @@ export async function GET(request: Request): Promise<NextResponse> {
   const results: Array<{ processed: boolean; error?: string }> = [];
 
   const startedAt = Date.now();
-  for (let i = 0; i < MAX_BATCHES_PER_RUN; i++) {
-    if (Date.now() - startedAt > REPLY_BUDGET_MS) break;
+  // Por qué terminó la pasada: queda en la respuesta para poder medirlo.
+  let stoppedBy = "limit";
+  let attended = 0;
+  for (let i = 0; i < MAX_ATTEMPTS_PER_RUN && attended < MAX_BATCHES_PER_RUN; i++) {
+    if (Date.now() - startedAt > REPLY_BUDGET_MS) {
+      stoppedBy = "budget";
+      break;
+    }
     const result = await processNextBatch({ deadlineAt: startedAt + (maxDuration - 20) * 1000 });
     results.push(result);
 
-    // No more ready batches — stop early
-    if (!result.processed) break;
+    if (result.processed) {
+      attended++;
+      continue;
+    }
+    // Sin conversación no se tomó ningún lote: la cola está vacía o falló la consulta.
+    if (!result.conversationId) {
+      stoppedBy = result.error ? "error" : "empty";
+      break;
+    }
   }
 
   const processedCount = results.filter((r) => r.processed).length;
@@ -72,6 +88,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   return NextResponse.json({
     ok: true,
     processed: processedCount,
+    stopped_by: stoppedBy,
     campaign_sends: campaignSends,
     automations,
     follow_ups: followUps,

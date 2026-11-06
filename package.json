@@ -16,6 +16,7 @@
     "eval:herramientas": "node --import ./evals/registrar.mjs evals/herramientas/correr.ts",
     "eval:produccion": "node --import ./evals/registrar.mjs evals/produccion/correr.ts",
     "eval:recorrido": "node --import ./evals/registrar.mjs evals/recorrido/correr.mjs",
+    "eval:volumen": "node --import ./evals/registrar.mjs evals/volumen/correr.mjs",
     "eval:charlas": "node --import ./evals/registrar.mjs evals/charlas/correr.ts",
     "eval:sesgos": "node --import ./evals/registrar.mjs evals/sesgos/correr.ts",
     "eval:jev": "node --import ./evals/registrar.mjs evals/jev/correr.ts",

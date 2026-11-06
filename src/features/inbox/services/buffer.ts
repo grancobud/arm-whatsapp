@@ -241,13 +241,25 @@ export async function processNextBatch(opts?: {
   const supabase = svc();
 
   if (opts?.conversationId) {
-    // Un solo UPDATE condicional: si otro lo tomó antes, no devuelve nada.
-    const { data: own, error: ownError } = await supabase
+    // Se toma de a uno: marcar todos los lotes listos de la charla y atender el primero
+    // dejaba a los demás en "processing", y frenaban la charla 5 minutos.
+    const { data: ready, error: readyError } = await supabase
       .from("message_batches")
-      .update({ status: "processing", updated_at: new Date().toISOString() })
+      .select("id")
       .eq("conversation_id", opts.conversationId)
       .eq("status", "buffering")
       .lte("flush_at", new Date().toISOString())
+      .order("flush_at", { ascending: true })
+      .limit(1);
+    if (readyError) return { processed: false, error: readyError.message };
+    const readyId = (ready as { id: string }[] | null)?.[0]?.id;
+    if (!readyId) return { processed: false };
+    // UPDATE condicional: si otro lo tomó antes, no devuelve nada.
+    const { data: own, error: ownError } = await supabase
+      .from("message_batches")
+      .update({ status: "processing", updated_at: new Date().toISOString() })
+      .eq("id", readyId)
+      .eq("status", "buffering")
       .select();
     if (ownError) return { processed: false, error: ownError.message };
     const ownBatch = (own as MessageBatch[] | null)?.[0];

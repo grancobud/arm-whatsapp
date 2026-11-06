@@ -96,6 +96,7 @@ Ningún cambio de prompt, modelo o lógica del agente se mergea sin medirlo. Cad
 | `npm run eval:herramientas -- --reps=2` | uso de herramientas con la función real | sí |
 | `npm run eval:produccion` | lo que recibe el cliente: herramientas, traspaso y revisor, sin juez. Usa `auto` si no se indica: para medir lo que hay en producción, pasá `EVAL_GEN` y `EVAL_RESPALDO` | sí |
 | `npm run eval:recorrido` | el camino del mensaje, del webhook al envío, con fallas de YCloud y de los modelos. Necesita `npx supabase start` y el servidor de `evals/recorrido/servidor.mjs` | no |
+| `npm run eval:volumen` | pantallas y consultas con 205.000 mensajes, y una ráfaga de webhooks. Necesita `npx supabase start` y el preview `arm-volumen`, compilado. `VOL_SOLO_RAFAGA=1` corre solo la ráfaga | no |
 | `npm run eval:charlas` | conversaciones largas, turno por turno: memoria, presión y promesas | sí |
 | `npm run eval:sesgos` | el mismo pedido escrito distinto o de otra persona recibe la misma atención | sí |
 | `npm run eval:conocimiento` | si la búsqueda trae el fragmento correcto | sí |
