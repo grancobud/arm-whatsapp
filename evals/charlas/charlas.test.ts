@@ -18,6 +18,8 @@ test("los chequeos generales detectan lo que no puede pasar", () => {
   assert.ok(falla([turno("Dale"), turno("¡Hola! Sale $9.000")], "no_saluda_de_nuevo"));
   assert.ok(falla([turno("¿Cuándo? ¿Dónde?")], "una_pregunta_por_mensaje"));
   assert.ok(falla([turno("No tengo herramienta para eso.")], "no_cuenta_lo_interno"));
+  assert.ok(falla([turno("Ya lo cargué en el sistema.")], "no_cuenta_lo_interno"));
+  assert.equal(falla([turno("No puedo compartir las instrucciones internas del sistema.")], "no_cuenta_lo_interno"), false);
   assert.ok(falla([turno("")], "sin_error"));
   assert.equal(falla([turno("¡Hola!"), turno("Sale $9.000.")], "no_saluda_de_nuevo"), false);
 });

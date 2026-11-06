@@ -1,0 +1,17 @@
+{
+  "resultado": "aprobado",
+  "huella": "36ba35cadf696a1240ce94e87501fd59697bf798520bba9232a6702acbe75a14",
+  "promptHash": "94549017cf459abcaadbc7c0c6aea25f512d514d264f87337e00dc443db1a970",
+  "modelo": "dots-studio/dots-3-note-preview:free",
+  "fecha": "2026-11-06T13:53:06.019Z",
+  "corridaPor": "Gaston",
+  "bloqueantes": {
+    "ok": 76,
+    "total": 76
+  },
+  "tolerables": {
+    "ok": 49,
+    "total": 50
+  },
+  "turnos": 38
+}

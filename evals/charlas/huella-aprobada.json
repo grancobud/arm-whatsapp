@@ -1,10 +1,10 @@
 {
-  "total": "189758889770eff5e8267482835bc985e04386ad8bbb502ae5673fb6665f5caf",
+  "total": "6533de93f8e03ef8d0df6a41286bc478c6df967cd3f6a099a92efafa119c02c3",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
-    "evals/charlas/charlas.ts": "f119ac29788b34f3c8a80bc669bc9cdf52232f27ba725f70d1af87f2eb890553",
+    "evals/charlas/charlas.ts": "3f57ae90bcb0b4b7b5d7d55f8f1e8c2a2ed17c9d9750a882a8983eee014ed6b1",
     "evals/charlas/correr.ts": "e08d96f6f04d174e4db9d9faa3ad0192d5251a92314978c113aabbea28b777be",
-    "evals/charlas/motor.ts": "269ee20f7d70c7a70d80aac0919a4bccc8b2f30f5a24a4183ef7d1e07841aa3e",
+    "evals/charlas/motor.ts": "1b5f338ae72356378ec7d3dc4aa50fde4471ddee4fe85c78c9e71d655f9161fb",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "src/features/agents/lib/starter-prompts.ts": "b0266367d0c1038baeb16b76ec2204bdd973e371146c09cef281c35a8297ebb0",
@@ -50,7 +50,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T22:56:14.748Z",
-  "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "filtros de salida y regla 9; no cambian los casos salvo una charla mas larga"
+  "fecha": "2026-11-06T13:47:14.303Z",
+  "aprobadaPor": "Claude, con el OK de Gastón para esta mejora",
+  "motivo": "negarse a dar las instrucciones internas del sistema no es contar lo interno: era un falso positivo"
 }
