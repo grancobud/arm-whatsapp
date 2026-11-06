@@ -74,6 +74,7 @@ flowchart LR
 El agente corre con **FreeLLMAPI**, un router
 local que reparte cada pedido entre proveedores con cupo gratis y salta al
 siguiente cuando uno se agota (modelo `auto`). **Costo de IA: cero.**
+Producción usa `dots-3-note` como modelo principal y `auto` de respaldo, porque fue el que mejor usó las herramientas en las pruebas.
 
 Corre en tu PC y la app en Vercel lo alcanza por un **túnel de Cloudflare dentro
 de Docker**, que arranca solo junto con Docker:
@@ -103,7 +104,7 @@ flowchart LR
    | --- | --- |
    | `LLM_BASE_URL` | `https://llm.tu-dominio.com/v1` |
    | `LLM_API_KEY` | la clave de FreeLLMAPI |
-   | `OPENROUTER_DEFAULT_MODEL` | `auto` |
+   | `OPENROUTER_DEFAULT_MODEL` | `dots-studio/dots-3-note-preview:free` (es una versión preview: si tu FreeLLMAPI no lo ofrece, usá `auto`) |
    | `OPENROUTER_FALLBACK_MODELS` | `auto,auto:fast` |
 
 3. 🚀 Redeploy.
@@ -285,7 +286,7 @@ corre 251.
 | 🤝 Pase a una persona y ficha | ✅ | El agente prometía «le paso tu mensaje» sin que nadie se enterara: ahora el pase es real y, si lo promete, el código lo cumple. Guarda nombre y correo citando al cliente; pisar un dato distinto va a Revisión, y cada cambio se puede deshacer desde la ficha. Tampoco discute con un cliente enojado. |
 | ⏱️ Tiempos y filtro de respuestas | ✅ | Una respuesta llegó a tardar 209 s con un webhook de 60: ahora cada llamada al modelo tiene un tope de 25 s y se reservan 8 s para enviar. El filtro también frena el razonamiento en castellano y palabras en inglés como «turnover», que el modelo metía en las respuestas. |
 | 📱 Uso y celular | ✅ | En celular la Bandeja se rompía: ahora muestra la lista o la conversación, con botón para volver. El Panel y la Bandeja vacía dicen cuál es el siguiente paso, cada agente tiene su botón Probar y hay menos jerga. |
-| 🧪 Examen de producción | ✅ | Un 9.7 en `eval:agente` no detectaba estas fallas porque usa otro modelo y no tiene herramientas. `npm run eval:produccion` recorre los mismos pasos que un mensaje real, con el modelo que responde de verdad y las herramientas simuladas. Última medición, del 05/11: con `dots-3-note`, 447 de 453 chequeos y la agenda consultada siempre; con `qwen3.8-27b`, que es donde puede caer `auto`, 435 de 459 y a veces ni consulta. Con turnos cortados y hasta 13 de 51 respuestas sin revisar, no cuenta como línea base. Leer las respuestas encontró fallas que la nota no mostraba. También se corrigió que las repeticiones de `eval:agente` eran la misma respuesta cacheada. |
+| 🧪 Examen de producción | ✅ | Un 9.7 en `eval:agente` no detectaba estas fallas porque usa otro modelo y no tiene herramientas. `npm run eval:produccion` recorre los mismos pasos que un mensaje real, con el modelo que responde de verdad y las herramientas simuladas. Última medición, del 05/11: con `dots-3-note`, 447 de 453 chequeos y la agenda consultada siempre; con `qwen3.8-27b`, que es donde puede caer `auto`, 435 de 459 y a veces ni consulta. Con turnos cortados y hasta 13 de 51 respuestas sin revisar, no cuenta como línea base. Por esta comparación, producción pasó a `dots-3-note`, con `auto` de respaldo. Leer las respuestas encontró fallas que la nota no mostraba. También se corrigió que las repeticiones de `eval:agente` eran la misma respuesta cacheada. |
 | 📲 Recorrido de WhatsApp simulado | ✅ | Un webhook firmado como los de YCloud entra por la ruta real y se sigue hasta el envío, con YCloud y el modelo falsos (`npm run eval:recorrido`). Encontró que una falla en la búsqueda de la base de conocimiento cortaba el turno entero, que sin cupo o con YCloud caído el cliente quedaba sin respuesta y sin que nadie lo viera en la Bandeja, y que un webhook sin `wsid` perdía los mensajes de los clientes más allá del décimo. Prueba también firmas, duplicados, ráfagas y bajas. Sin número real: no reemplaza probar contra Meta. |
 | 💭 Conversaciones largas | ✅ | `npm run eval:charlas`: 12 charlas de hasta 9 mensajes, turno por turno y con la misma ventana de historial que producción. Encontró que, pasados 10 mensajes, el agente negaba que le hubieran dicho el nombre aunque estuviera en la ficha, que cambiar el día de un seguimiento dejaba vivo el anterior y el cliente recibía dos mensajes, y que ofrecer una persona en cada precio terminaba en traspasos que nadie pidió. No cedió ante un falso dueño ni ante la insistencia. |
 | ⚖️ Sesgos de la IA | ✅ | `npm run eval:sesgos`: los mismos pedidos con errores de ortografía, formales, en mayúsculas, como audio mal transcripto y de personas con distintos nombres, orígenes y situaciones. Última corrida: 64 de 64 sin falla. En otra anterior, contar un dato de salud llegó a dejar a alguien sin el precio, y se corrigió la regla del agente. Encontró que el filtro de la memoria dejaba pasar religiones, discapacidades, identidad de género y política, y que una queja escrita con mucha educación podía quedarse sin traspaso. Es una muestra chica: encuentra diferencias, no prueba que no haya. |
