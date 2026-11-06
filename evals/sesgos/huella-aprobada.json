@@ -1,8 +1,8 @@
 {
-  "total": "bdd378c4789fbb2d9eba0925212c7a6c386e06314192af1338bfac76f2c38a34",
+  "total": "67e17c36ba481a6343bb23a192f08cc0d9028f17bdaaa9efd582a00062cb7c43",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
-    "evals/charlas/motor.ts": "8ba77f823c74f63d22275a18c013cbb2b11f5707a2a51a0d5d581ed52c3943c3",
+    "evals/charlas/motor.ts": "1ca207827efb1d61d31b55e8db6e2f41790268e0054f10d7c1630850f0a274df",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/sesgos/casos.ts": "d186499eb2d491f4250802437e252abee3a185b74411b556f6962b98cff765b5",
@@ -51,7 +51,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-06T16:15:14.517Z",
+  "fecha": "2026-11-06T16:35:47.058Z",
   "aprobadaPor": "Gaston",
-  "motivo": "el motor guarda por que el revisor no pudo revisar"
+  "motivo": "examen: revisor con 60 s por llamada y un reintento si falta revisar, sin borrar fallas de conducta"
 }

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { casosDelExamen } from "./casos.ts";
-import { esBloqueante, evaluar, puedeHaberExcepcion, TOLERABLES, verificarConstancia, type Constancia, type ResultadoCaso } from "./puerta.ts";
+import { esBloqueante, evaluar, puedeHaberExcepcion, quedoSinRevisar, TOLERABLES, unirConReintento, verificarConstancia, type Constancia, type ResultadoCaso } from "./puerta.ts";
 
 const turno = (o: Partial<ResultadoCaso["turnos"][number]> = {}) => ({ error: null, revision: "approved", ...o });
 const caso = (chequeos: [string, boolean][], turnos = [turno()]): ResultadoCaso => ({
@@ -54,6 +54,52 @@ test("una respuesta sin revisar no alcanza para aprobar", () => {
   for (const revision of ["review_failed", "rewrite_failed", "apagado"]) {
     assert.equal(evaluar([caso([["no_inventa_precios", true]], [turno({ revision })])]).estado, "no_concluyente");
   }
+});
+
+const sinRevisar = [turno({ revision: "review_failed" })];
+
+test("el reintento completa lo que quedó sin revisar", () => {
+  const primero = caso([["no_inventa_precios", true]], sinRevisar);
+  assert.equal(quedoSinRevisar(primero), true);
+  const unido = unirConReintento(primero, caso([["no_inventa_precios", true]]));
+  assert.equal(quedoSinRevisar(unido), false);
+  assert.equal(evaluar([unido]).estado, "aprobado");
+});
+
+test("un error del modelo no dispara el reintento por falta de revisión", () => {
+  assert.equal(quedoSinRevisar(caso([["sin_error", false]], [turno({ error: "429", revision: "apagado" })])), false);
+});
+
+test("si el reintento tampoco se revisó, sigue sin concluir", () => {
+  const unido = unirConReintento(caso([["no_inventa_precios", true]], sinRevisar), caso([["no_inventa_precios", true]], sinRevisar));
+  assert.equal(evaluar([unido]).estado, "no_concluyente");
+});
+
+test("una falla del primer intento bloquea aunque el reintento salga bien", () => {
+  const unido = unirConReintento(caso([["no_inventa_precios", false]], sinRevisar), caso([["no_inventa_precios", true]]));
+  const e = evaluar([unido]);
+  assert.equal(e.estado, "reprobado");
+  assert.deepEqual(e.bloqueantes, { ok: 0, total: 1 });
+});
+
+test("una falla del primer intento sigue contando aunque el reintento no tenga ese chequeo", () => {
+  const unido = unirConReintento(caso([["no_inventa_precios", false]], sinRevisar), caso([["sin_error", true]]));
+  assert.equal(evaluar([unido]).estado, "reprobado");
+});
+
+test("una falla nueva del reintento también cuenta", () => {
+  const unido = unirConReintento(caso([["no_inventa_precios", true]], sinRevisar), caso([["no_inventa_precios", false]]));
+  assert.equal(evaluar([unido]).estado, "reprobado");
+});
+
+test("un tolerable que falló en el primer intento también se conserva", () => {
+  const unido = unirConReintento(caso([["no_saluda_de_nuevo", false]], sinRevisar), caso([["no_saluda_de_nuevo", true], ["no_inventa_precios", true]]));
+  assert.deepEqual(evaluar([unido]).tolerables, { ok: 0, total: 1 });
+});
+
+test("un primer intento con error del modelo no midió nada: solo vale el segundo", () => {
+  const unido = unirConReintento(caso([["sin_error", false]], [turno({ error: "429" })]), caso([["sin_error", true]]));
+  assert.equal(evaluar([unido]).estado, "aprobado");
 });
 
 test("sin nada medido no se aprueba", () => {

@@ -1,10 +1,10 @@
 {
-  "total": "d621d549a1e5bb1046fc362e6921697eaa2e16d80d365333fba956131a02bd4e",
+  "total": "7cca325ed9e795720438d01e54b0e44276555f79ba99e855478d4f94b6a53b58",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/charlas/charlas.ts": "d1465a2888400f23f921820450f3ea3dd88aca0360a7c2f9603c3cce82d8a11e",
     "evals/charlas/correr.ts": "e08d96f6f04d174e4db9d9faa3ad0192d5251a92314978c113aabbea28b777be",
-    "evals/charlas/motor.ts": "8ba77f823c74f63d22275a18c013cbb2b11f5707a2a51a0d5d581ed52c3943c3",
+    "evals/charlas/motor.ts": "1ca207827efb1d61d31b55e8db6e2f41790268e0054f10d7c1630850f0a274df",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "src/features/agents/lib/starter-prompts.ts": "b0266367d0c1038baeb16b76ec2204bdd973e371146c09cef281c35a8297ebb0",
@@ -51,7 +51,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-06T16:15:12.603Z",
+  "fecha": "2026-11-06T16:35:45.069Z",
   "aprobadaPor": "Gaston",
-  "motivo": "el motor guarda por que el revisor no pudo revisar"
+  "motivo": "examen: revisor con 60 s por llamada y un reintento si falta revisar, sin borrar fallas de conducta"
 }

@@ -16,12 +16,15 @@ import { correrCharla } from "../charlas/motor.ts";
 import { starterPrompt } from "../../src/features/agents/lib/starter-prompts.ts";
 import { reviewEnabled } from "../../src/features/inbox/services/reply-review.ts";
 import { casosDelExamen } from "./casos.ts";
-import { evaluar, type Constancia, type ResultadoCaso } from "./puerta.ts";
+import { evaluar, quedoSinRevisar, unirConReintento, type Constancia, type ResultadoCaso } from "./puerta.ts";
 
 // El que responde en producción. Sin respaldo: si cae, el examen no concluye; con respaldo,
 // la nota podría salir de otro modelo sin que nadie lo note.
 const MODELO = "dots-studio/dots-3-note-preview:free";
 const REPS = 2;
+// Más que en producción, solo acá: con el modelo gratis el revisor se pasa de los 20 s por llamada,
+// y el examen mide la conducta, no si llega a tiempo. Producción no cambia; eso se mide aparte.
+const TIEMPO_REVISION_MS = 60_000;
 
 exigirHuella(import.meta.url);
 
@@ -42,22 +45,37 @@ const hora = 11 + Math.floor(Math.random() * 8);
 
 const inicio = Date.now();
 let reintentos = 0;
+let reintentosRevision = 0;
+const opciones = { modelo: MODELO, promptBase, tiempoRevisionMs: TIEMPO_REVISION_MS };
+const mostrarFallas = (chequeos: ResultadoCaso["chequeos"]) => {
+  for (const c of chequeos.filter((x) => !x.ok)) console.log(`  ❌ ${c.nombre}${c.detalle ? `: ${String(c.detalle).slice(0, 160)}` : ""}`);
+};
 const resultados: (ResultadoCaso & { turnos: Awaited<ReturnType<typeof correrCharla>>["turnos"] })[] = [];
 for (const caso of casosDelExamen()) {
   for (let rep = 1; rep <= REPS; rep++) {
     console.log(`\n── ${caso.id} #${rep}`);
-    let r = await correrCharla(caso, rep, { modelo: MODELO, promptBase, hora });
+    let r = await correrCharla(caso, rep, { ...opciones, hora });
     // Un solo reintento y solo si el modelo falló: eso no dice nada de la conducta. Una falla
     // de conducta nunca se reintenta. Otra hora, para no repetir un pedido cacheado.
     if (r.turnos.some((t) => t.error)) {
       console.log(`  ↻ el modelo dio error, reintento una vez`);
       reintentos++;
-      r = await correrCharla(caso, rep, { modelo: MODELO, promptBase, hora: hora + 1 });
+      r = await correrCharla(caso, rep, { ...opciones, hora: hora + 1 });
+    }
+    mostrarFallas(r.chequeos);
+    // Un reintento si faltó revisar: completa lo no medido, pero sus fallas y las del primer
+    // intento cuentan todas (unirConReintento).
+    if (quedoSinRevisar(r)) {
+      console.log(`  ↻ el revisor no pudo revisar: ${r.turnos.find((t) => t.errorRevision)?.errorRevision ?? "sin motivo"}. Reintento una vez`);
+      reintentosRevision++;
+      const segundo = await correrCharla(caso, rep, { ...opciones, hora: hora + 2 });
+      mostrarFallas(segundo.chequeos);
+      r = unirConReintento(r, segundo);
     }
     resultados.push(r);
-    for (const c of r.chequeos.filter((x) => !x.ok)) console.log(`  ❌ ${c.nombre}${c.detalle ? `: ${String(c.detalle).slice(0, 160)}` : ""}`);
-    if (resultados.length === 2 && resultados.every((x) => x.turnos.every((t) => t.error))) {
-      console.error("\nLas primeras charlas fallaron enteras: es la configuración o el cupo. No hay resultado.");
+    // Dos charlas seguidas caídas enteras: seguir solo gastaría el cupo que queda.
+    if (resultados.length >= 2 && resultados.slice(-2).every((x) => x.turnos.every((t) => t.error))) {
+      console.error("\nDos charlas seguidas fallaron enteras: es la configuración o el cupo. No hay resultado.");
       process.exit(2);
     }
   }
@@ -66,7 +84,7 @@ for (const caso of casosDelExamen()) {
 const e = evaluar(resultados);
 const minutos = ((Date.now() - inicio) / 60000).toFixed(1);
 console.log(`\n=== Examen de conducta: ${e.estado.toUpperCase()} (${minutos} min, ${e.turnos} turnos) ===`);
-console.log(`Bloqueantes ${e.bloqueantes.ok}/${e.bloqueantes.total} · tolerables ${e.tolerables.ok}/${e.tolerables.total} · reintentos por error del modelo ${reintentos}`);
+console.log(`Bloqueantes ${e.bloqueantes.ok}/${e.bloqueantes.total} · tolerables ${e.tolerables.ok}/${e.tolerables.total} · reintentos por error del modelo ${reintentos} · por falta de revisión ${reintentosRevision}`);
 for (const f of e.fallasBloqueantes) console.log(`  ❌ ${f}`);
 for (const s of e.sinMedir) console.log(`  ⚠️  ${s}`);
 

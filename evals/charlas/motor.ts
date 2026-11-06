@@ -59,7 +59,7 @@ const biz = buildBusinessInfoContext(NEGOCIO);
 export async function correrCharla(
   c: Pick<Charla, "mensajes" | "memoria" | "herramientas" | "chequear"> & { id: string },
   rep: number,
-  opciones: { modelo?: string; promptBase?: string; hora?: number } = {},
+  opciones: { modelo?: string; promptBase?: string; hora?: number; tiempoRevisionMs?: number } = {},
 ) {
   const gen = opciones.modelo ?? GEN;
   process.env.OPENROUTER_FALLBACK_MODELS = gen;
@@ -120,12 +120,16 @@ export async function correrCharla(
       for (const d of guardias.savedContactData) llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
       texto = reply.text;
       if (reviewEnabled() && reply.text) {
+        const completar = await createReviewCompleter("eval", gen);
+        const tiempo = opciones.tiempoRevisionMs;
         const r = await reviewReply({
           draft: reply.text,
           customerMessage: mensaje,
           agentSystemPrompt: system,
           sources: { business: biz, memory: memoriaDelTurno, contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
-          complete: await createReviewCompleter("eval", gen),
+          // reviewReply limita cada llamada a 20 s: acá se reemplaza ese tope solo para esta corrida.
+          complete: tiempo ? (req) => completar({ ...req, timeoutMs: tiempo }) : completar,
+          budgetMs: tiempo ? tiempo * 3 : undefined,
         });
         texto = r.text;
         revision = r.outcome;
