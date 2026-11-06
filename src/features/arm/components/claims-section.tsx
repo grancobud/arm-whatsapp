@@ -11,12 +11,14 @@ import { Brain, ChevronDown, ChevronUp, Quote, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { listContactClaims, retractClaim } from "../services/arm-actions";
+import { isClaimExpired } from "../services/claim-expiry";
 import { CLAIM_KIND_LABELS, type ClaimRow } from "../types";
 
 export function ClaimsSection({ contactId }: { contactId: string }) {
   const [open, setOpen] = useState(true);
   const [claims, setClaims] = useState<ClaimRow[] | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +89,15 @@ export function ClaimsSection({ contactId }: { contactId: string }) {
                         title="Ningún mensaje del cliente lo respalda"
                       >
                         corazonada
+                      </Badge>
+                    )}
+                    {isClaimExpired(c, now) && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] text-muted-foreground"
+                        title="El agente ya no lo usa por antigüedad"
+                      >
+                        vencido
                       </Badge>
                     )}
                   </div>

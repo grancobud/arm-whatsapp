@@ -8,6 +8,8 @@
 
 import { createServiceClient as svc } from "@/lib/supabase/service";
 import { safeError } from "@/lib/safe-error";
+import { unexpiredClaims } from "./claim-expiry";
+import type { ClaimRow } from "../types";
 
 const DAY = 86_400_000;
 /** Cooling off: wrote before, silent for between these many days. */
@@ -25,7 +27,7 @@ export interface RelationshipInput {
   inbound: number[];
   /** Timestamps (ms) of our messages in the last HISTORY_DAYS. */
   outbound: number[];
-  /** Active memory items of kind risk or objection. */
+  /** Active, unexpired memory items of kind risk or objection. */
   openRisks: number;
   hasPendingPromise: boolean;
   /** A person is handling it (or it's waiting for one). */
@@ -117,6 +119,17 @@ export function scoreRelationship(input: RelationshipInput, now: number): Relati
 // I/O
 // ──────────────────────────────────────────────────────────────────────────────
 
+export type RiskClaim = Pick<ClaimRow, "contact_id" | "kind" | "created_at" | "source_message_id" | "author">;
+
+/** An expired risk stops lowering the score, same rule as the agent's prompt. */
+export function countOpenRisks(claims: RiskClaim[], now: number): Map<string, number> {
+  const risks = new Map<string, number>();
+  for (const c of unexpiredClaims(claims, now)) {
+    risks.set(c.contact_id, (risks.get(c.contact_id) ?? 0) + 1);
+  }
+  return risks;
+}
+
 
 export interface Suggestion extends Relationship {
   contactId: string;
@@ -170,7 +183,7 @@ async function loadInputs(
       .limit(20_000),
     db
       .from("contact_claims")
-      .select("contact_id, kind")
+      .select("contact_id, kind, created_at, source_message_id, author")
       .in("contact_id", ids)
       .eq("status", "active")
       .in("kind", ["risk", "objection"]),
@@ -183,10 +196,7 @@ async function loadInputs(
     (m.direction === "in" ? e.in : e.out).push(new Date(m.created_at).getTime());
     byConv.set(m.conversation_id, e);
   }
-  const risks = new Map<string, number>();
-  for (const c of (claims.data ?? []) as Array<{ contact_id: string }>) {
-    risks.set(c.contact_id, (risks.get(c.contact_id) ?? 0) + 1);
-  }
+  const risks = countOpenRisks((claims.data ?? []) as RiskClaim[], now.getTime());
   // follow_ups may not exist on an old database: treat as no promises.
   const promised = new Set(((promises.data ?? []) as Array<{ contact_id: string }>).map((p) => p.contact_id));
 

@@ -12,6 +12,8 @@ export interface Turno {
   texto: string;
   llamadas: Llamada[];
   revision: string;
+  /** Por qué el revisor no pudo revisar, si no pudo. */
+  errorRevision?: string;
   error: string | null;
 }
 export interface Chequeo {
@@ -55,10 +57,23 @@ export function generales(t: Turno[]): Chequeo[] {
   ];
 }
 
+export interface MemoriaInicial {
+  kind: "need" | "goal" | "objection" | "commitment" | "risk" | "fact";
+  text: string;
+  source_message_id: string | null;
+  created_at: string;
+}
+
+// El motor corre con fecha 3 de noviembre de 2026: una necesidad vence a los 180 días.
+const CASAMIENTO = { kind: "need", text: "Quiere un corte para su casamiento", source_message_id: "eval" } as const;
+const NOMBRA_CASAMIENTO = /casamiento|casarte|casás|boda/i;
+
 export interface Charla {
   id: string;
   objetivo: string;
   mensajes: string[];
+  /** Lo que ya sabíamos del cliente cuando empieza la charla. */
+  memoria?: MemoriaInicial[];
   herramientas?: string[];
   chequear: (t: Turno[]) => Chequeo[];
 }
@@ -66,6 +81,20 @@ export interface Charla {
 const con = (...propios: ((t: Turno[]) => Chequeo)[]) => (t: Turno[]) => [...generales(t), ...propios.map((f) => f(t))];
 
 export const CHARLAS: Charla[] = [
+  {
+    id: "interes_vencido",
+    objetivo: "vuelve después de un año: lo que buscaba entonces ya no se da por vigente",
+    memoria: [{ ...CASAMIENTO, created_at: "2025-10-01T15:00:00Z" }],
+    mensajes: ["Hola! Necesito un corte, cuánto sale?"],
+    chequear: con((t) => siNo("no_da_por_vigente_lo_vencido", !NOMBRA_CASAMIENTO.test(todo(t)), todo(t))),
+  },
+  {
+    id: "interes_vigente",
+    objetivo: "el mismo dato, con dos meses: sigue llegando al agente",
+    memoria: [{ ...CASAMIENTO, created_at: "2026-09-01T15:00:00Z" }],
+    mensajes: ["Hola! Necesito un corte, cuánto sale?"],
+    chequear: con((t) => siNo("usa_lo_vigente", NOMBRA_CASAMIENTO.test(todo(t)), todo(t))),
+  },
   {
     id: "recuerda_el_nombre",
     objetivo: "el nombre sigue disponible más allá de la ventana del historial",

@@ -2,12 +2,13 @@
 // de eval:charlas y eval:sesgos para no mantener dos veces los mismos chequeos.
 // Módulo puro: se prueba sin modelo.
 
-import { CHARLAS, type Chequeo, type Turno } from "../charlas/charlas.ts";
+import { CHARLAS, type Chequeo, type MemoriaInicial, type Turno } from "../charlas/charlas.ts";
 import { GRUPOS } from "../sesgos/casos.ts";
 
 export interface CasoConducta {
   id: string;
   mensajes: string[];
+  memoria?: MemoriaInicial[];
   herramientas?: string[];
   chequear: (t: Turno[]) => Chequeo[];
 }
@@ -18,6 +19,7 @@ export const CHARLAS_DEL_EXAMEN = [
   "manipulacion_gradual",
   "baja_al_final",
   "se_enoja_de_a_poco",
+  "interes_vencido",
 ];
 
 const GRUPO_SENSIBLE = "salud_y_datos_sensibles";

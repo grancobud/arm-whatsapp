@@ -1,18 +1,19 @@
 {
-  "total": "36ba35cadf696a1240ce94e87501fd59697bf798520bba9232a6702acbe75a14",
+  "total": "4012143c2059b3b9c9ffa6e5e7059b80efd45b7a7b999983c524b1f89153e107",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
-    "evals/charlas/charlas.ts": "3f57ae90bcb0b4b7b5d7d55f8f1e8c2a2ed17c9d9750a882a8983eee014ed6b1",
-    "evals/charlas/motor.ts": "1b5f338ae72356378ec7d3dc4aa50fde4471ddee4fe85c78c9e71d655f9161fb",
-    "evals/conducta/casos.ts": "cef66d317e4d991b099c1d4e10bc36693eae4a7b6cdb9aa8e13b70851dea00c4",
-    "evals/conducta/correr.ts": "2bea06761974fb116f8902b628ee2ba50ff7677acc42a796766206ffce599aba",
-    "evals/conducta/puerta.ts": "63aa29ca3ecdc300798dec955afc30dd42572bd0da0757fca6d38ea3cd136c4c",
+    "evals/charlas/charlas.ts": "d1465a2888400f23f921820450f3ea3dd88aca0360a7c2f9603c3cce82d8a11e",
+    "evals/charlas/motor.ts": "eb5fed120ec5bbe83be5a7d81a98c28363a5e653c5f8d62f42f49726ee5b1b96",
+    "evals/conducta/casos.ts": "79432cc2bc5e1f288944c7c2cdd2f5ed9fba6f98e1b8940cfa944b796145383c",
+    "evals/conducta/correr.ts": "03eb3ecaabb20b2764c5d6bbb2c23cf15a2632b488835631e49d5c32e03e8294",
+    "evals/conducta/puerta.ts": "edadf35d94ef78e49271ff56fe3f51d80fc20a89c990714a3ae4fdaf77012dd8",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/sesgos/casos.ts": "d186499eb2d491f4250802437e252abee3a185b74411b556f6962b98cff765b5",
     "src/features/agents/lib/starter-prompts.ts": "b0266367d0c1038baeb16b76ec2204bdd973e371146c09cef281c35a8297ebb0",
     "src/features/agents/services/active-agent.ts": "609ab6ac625ab39a56d7228c5a574ad0148010b2ada87bad7f61dab9c8b362b4",
-    "src/features/arm/services/claims.ts": "bb25aff4db470738d4472782cf1cd016fc4257b51e91b43558b09e8a39739b76",
+    "src/features/arm/services/claim-expiry.ts": "2cd081eab4b846312cce1121b03831928cbb8ba8fd3fc103e2a1d8803bff85d7",
+    "src/features/arm/services/claims.ts": "8244f91776fd5e645162762981415949c11ffb7d3cf7ce0be5bbb812e984050a",
     "src/features/arm/services/contact-update-rules.ts": "f35d09f48a070b918091156e711155acb6132013f8a96655b930502ac3aa5a2d",
     "src/features/inbox/services/booking-offer.ts": "00ae4e33751ba0d56e53f697c541363c28176148e81b3051662b9ea440661680",
     "src/features/inbox/services/business-info.ts": "2b025d83b1ea5b732594a224973bcfb65868528800a9203397278d672ed11ddd",
@@ -53,7 +54,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-06T13:47:16.066Z",
-  "aprobadaPor": "Claude, con el OK de Gastón para esta mejora",
-  "motivo": "reintento único si el modelo da error y corrección de un falso positivo en no_cuenta_lo_interno"
+  "fecha": "2026-11-06T17:21:57.335Z",
+  "aprobadaPor": "Gaston",
+  "motivo": "examen: el revisor tiene 5000 tokens para no quedar cortado antes del veredicto"
 }
