@@ -67,5 +67,9 @@ const env = {
   RECORRIDO_LOG: log,
   NODE_OPTIONS: `--import ${pathToFileURL(join(aqui, "laboratorio-fetch.mjs")).href}`,
 };
-const hijo = spawn("npx", ["next", "dev", "--turbopack", "--port", "3101"], { cwd: raiz, env, stdio: "inherit", shell: true });
+// --compilado usa la app compilada: para medir tiempos, `next dev` no vale.
+const comando = process.argv.includes("--compilado")
+  ? "npx next build && npx next start --port 3101"
+  : "npx next dev --turbopack --port 3101";
+const hijo = spawn(comando, [], { cwd: raiz, env, stdio: "inherit", shell: true });
 hijo.on("exit", (code) => process.exit(code ?? 0));
