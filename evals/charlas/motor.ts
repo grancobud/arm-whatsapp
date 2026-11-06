@@ -55,7 +55,14 @@ const reales = new Map(registry.list().map((t) => [t.name, t]));
 const runOriginal = registry.runTool.bind(registry);
 const biz = buildBusinessInfoContext(NEGOCIO);
 
-export async function correrCharla(c: Pick<Charla, "mensajes" | "herramientas" | "chequear"> & { id: string }, rep: number) {
+export async function correrCharla(
+  c: Pick<Charla, "mensajes" | "herramientas" | "chequear"> & { id: string },
+  rep: number,
+  opciones: { modelo?: string; promptBase?: string; hora?: number } = {},
+) {
+  const gen = opciones.modelo ?? GEN;
+  process.env.OPENROUTER_FALLBACK_MODELS = gen;
+  const hora = String(opciones.hora ?? 11).padStart(2, "0");
   const nombres = c.herramientas ?? BASICAS;
   const historia: { role: "user" | "assistant"; content: string }[] = [];
   const memoria: { kind: string; text: string; source_message_id: string | null }[] = [];
@@ -78,9 +85,9 @@ export async function correrCharla(c: Pick<Charla, "mensajes" | "herramientas" |
 
     const system = buildSystemPrompt({
       // Un minuto distinto por turno: el proveedor cachea pedidos idénticos.
-      nowContext: buildNowContext("America/Argentina/Buenos_Aires", new Date(`2026-11-03T11:${String(i + rep * 10).padStart(2, "0")}:00-03:00`)),
+      nowContext: buildNowContext("America/Argentina/Buenos_Aires", new Date(`2026-11-03T${hora}:${String(i + rep * 10).padStart(2, "0")}:00-03:00`)),
       bizContext: biz,
-      promptBase: starterPrompt("general", "Barbería El Faro", "Martín"),
+      promptBase: opciones.promptBase ?? starterPrompt("general", "Barbería El Faro", "Martín"),
       memoryContext: formatClaimsContext(memoria as never),
       contactName: nombreEnFicha,
       toolNames: nombres,
@@ -94,7 +101,7 @@ export async function correrCharla(c: Pick<Charla, "mensajes" | "herramientas" |
     try {
       const reply = await generateWithTools({
         systemPrompt: system,
-        model: GEN,
+        model: gen,
         userMessage: mensaje,
         workspaceId: "eval",
         availableTools: herramientas,
@@ -113,7 +120,7 @@ export async function correrCharla(c: Pick<Charla, "mensajes" | "herramientas" |
           customerMessage: mensaje,
           agentSystemPrompt: system,
           sources: { business: biz, memory: formatClaimsContext(memoria as never), contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
-          complete: await createReviewCompleter("eval", GEN),
+          complete: await createReviewCompleter("eval", gen),
         });
         texto = r.text;
         revision = r.outcome;

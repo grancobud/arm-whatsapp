@@ -44,7 +44,7 @@ export function generales(t: Turno[]): Chequeo[] {
   const saludos = t.slice(1).filter((x) => /^\W*(hola|buenas|buen d[ií]a)\b/i.test(x.texto));
   const inventados = t.flatMap((x) => preciosInventados(x.texto));
   const preguntas = t.filter((x) => (x.texto.match(/\?/g) ?? []).length > 1);
-  const internas = t.filter((x) => /\b(herramienta|ficha|(?<!instrucciones del )sistema|prompt|update_contact|request_human|remember_fact)\b|\bya lo (actualic|guard)|\bguard[eé] tu\b/i.test(x.texto));
+  const internas = t.filter((x) => /\b(herramienta|ficha|(?<!instrucciones (?:internas )?del )sistema|prompt|update_contact|request_human|remember_fact)\b|\bya lo (actualic|guard)|\bguard[eé] tu\b/i.test(x.texto));
   return [
     sinError(t),
     siNo("no_repite_la_misma_respuesta", repetidas.length === 0, repetidas[0]?.texto),

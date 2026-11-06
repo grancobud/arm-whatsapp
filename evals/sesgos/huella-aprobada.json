@@ -1,8 +1,8 @@
 {
-  "total": "e7c8e4dc67a29471ad6d5f9f3950a55c0d58725f8ab78e5fe3cac8a145a10c99",
+  "total": "449f4522b2add8315a406897bb325db89b828dd6f98a5486283d8caced50254f",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
-    "evals/charlas/motor.ts": "269ee20f7d70c7a70d80aac0919a4bccc8b2f30f5a24a4183ef7d1e07841aa3e",
+    "evals/charlas/motor.ts": "1b5f338ae72356378ec7d3dc4aa50fde4471ddee4fe85c78c9e71d655f9161fb",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/sesgos/casos.ts": "d186499eb2d491f4250802437e252abee3a185b74411b556f6962b98cff765b5",
@@ -50,7 +50,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T22:56:11.188Z",
-  "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "filtros de salida y regla 9; no cambian los casos salvo una charla mas larga"
+  "fecha": "2026-11-06T13:40:16.534Z",
+  "aprobadaPor": "Claude, con el OK de Gastón para esta mejora",
+  "motivo": "el motor acepta modelo, prompt y hora opcionales para el examen de conducta; sin opciones se comporta igual"
 }

@@ -14,6 +14,7 @@ import {
 } from "../../src/features/inbox/services/contact-capture.ts";
 import { BOOKING_FALLBACK, removeBookingOffer } from "../../src/features/inbox/services/booking-offer.ts";
 import { dropInternalTalk } from "../../src/features/inbox/services/reply-finish.ts";
+import { applyTurnGuards } from "../../src/features/inbox/services/turn-guards.ts";
 import { checkReply } from "../../src/features/inbox/services/reply-guard.ts";
 import { hasSpecialCategoryData } from "../../src/features/privacy/privacy-rules.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
@@ -363,4 +364,36 @@ test("con una herramienta que puede agendar, no toca nada", () => {
   for (const herramienta of ["check_availability", "schedule_highlevel", "schedule_link", "mcp_agenda", "custom_webhook"]) {
     assert.equal(removeBookingOffer(texto, [...SIN_AGENDA, herramienta]).changed, false, herramienta);
   }
+});
+
+// Las piezas tenían tests, pero desactivar una guardia en applyTurnGuards no hacía fallar ninguno.
+test("el turno hace el traspaso que el cliente necesita y se lo avisa", async () => {
+  const llamadas: unknown[] = [];
+  const results: Parameters<typeof applyTurnGuards>[0]["results"] = [];
+  const r = await applyTurnGuards({
+    text: "Uy, qué mal.",
+    customerText: "Me atendieron mal",
+    tools: [herramienta("request_human", "write", llamadas)],
+    results,
+    ctx,
+  });
+  assert.equal(r.forcedHandoff?.status, "ok");
+  assert.equal(llamadas.length, 1);
+  assert.ok(results.some((x) => x.name === "request_human"), "el revisor tiene que ver el traspaso");
+  assert.ok(r.text.includes(HANDOFF_NOTICE));
+});
+
+test("el turno guarda el correo que el modelo no guardó", async () => {
+  const llamadas: unknown[] = [];
+  const results: Parameters<typeof applyTurnGuards>[0]["results"] = [];
+  const r = await applyTurnGuards({
+    text: "¡Gracias!",
+    customerText: "Mi correo es ana@mail.com",
+    tools: [herramienta("update_contact", "write", llamadas)],
+    results,
+    ctx,
+  });
+  assert.equal(r.savedContactData.length, 1);
+  assert.equal(llamadas.length, 1);
+  assert.ok(results.some((x) => x.name === "update_contact"), "el revisor tiene que ver lo guardado");
 });
