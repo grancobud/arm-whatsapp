@@ -1,12 +1,12 @@
 {
-  "total": "cbec650c6b64fb18d9ef2690cfc460b6229b4617dc7316f2696cdef9d6028a47",
+  "total": "077085ab809392028d7bc67fb82c22eda3b8782403e0aa1a38ba610500696415",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/agente/prompts.ts": "99801507067e4ebd6c6054a35c9596c9fbcc112dbbb2a0d0235756fa04558882",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/seguridad/correr.ts": "419c8fb8d31d7aa72c6e38f03e6e5ff4bdf67535449dd371137162243c3f44f2",
-    "src/features/agents/lib/starter-prompts.ts": "feb16ce1f229d577bb966ee2c41316e1161e2af93c2f23c01808aa4ffd0615b6",
+    "src/features/agents/lib/starter-prompts.ts": "b0266367d0c1038baeb16b76ec2204bdd973e371146c09cef281c35a8297ebb0",
     "src/features/arm/services/claims.ts": "bb25aff4db470738d4472782cf1cd016fc4257b51e91b43558b09e8a39739b76",
     "src/features/inbox/services/business-info.ts": "2b025d83b1ea5b732594a224973bcfb65868528800a9203397278d672ed11ddd",
     "src/features/inbox/services/inbound-text.ts": "c06a9cafc21fc14f1f23dd6229f274f14f8349846823e8a5c729a68eec1a6c64",
@@ -14,9 +14,9 @@
     "src/features/inbox/services/kb-citations.ts": "b6cc1e2792c482fa2cdb254474905106db288939e8b419eb7394333d77ac2403",
     "src/features/inbox/services/kb-rerank.ts": "a1a7607ad4dcafbf7806f5804a65c95876809ccbb69e53edbe377bd411d48f91",
     "src/features/inbox/services/kb-service.ts": "248693685302f58038e26aa196d3102153fbba584b18d2ec720370620c4fa60a",
-    "src/features/inbox/services/prompt-builder.ts": "c291b1db7e0b20d322f1ffa65c59eeacc0c545fb0e075ebec79d5f35956a230e",
-    "src/features/inbox/services/reply-guard.ts": "330480e45c8df979f5590f92fd5fa3256cff441e40962f18162df833f30703e8",
-    "src/features/inbox/services/reply-review.ts": "7572dc14885e95a5ceec64864ea867a8c8dc4cd77c48a0bbf02edefed36eb1e2",
+    "src/features/inbox/services/prompt-builder.ts": "e80aefd48a44210b34234fc7a915fd87d4143bdc9b74f923382fbc76b98da350",
+    "src/features/inbox/services/reply-guard.ts": "ee97068f38f7d35825af2c54fa90cb2f300a5b7ea48a9ff625bddcd5ff7a2320",
+    "src/features/inbox/services/reply-review.ts": "5b2cab97f9748658843ed969f81e4b6b0c9bb19657ef8b905457f6defd17de62",
     "src/features/inbox/services/untrusted-text.ts": "3707076c1328622cb7f0316d09e57a0df37d793442501dbee8bea12415440e4d",
     "src/features/tools/mcp/mcp-tools.ts": "d502720951c927fb36fb2d49606c3fdc4567c3ca21a6d7c5b495aa11e99fedf5",
     "src/lib/safe-error.ts": "89b23f213b68c0268e375f92c2266802623095f4bdf5b7ea01d755949f6803fe",
@@ -24,7 +24,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-05T21:22:37.300Z",
+  "fecha": "2026-11-05T22:56:36.504Z",
   "aprobadaPor": "Claude Code, a pedido de Gastón",
-  "motivo": "guardias en una sola funcion y conexion unificada; no cambian los casos"
+  "motivo": "filtros de salida y regla 9; no cambian los casos salvo una charla mas larga"
 }

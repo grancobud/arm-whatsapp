@@ -68,7 +68,7 @@ const con = (...propios: ((t: Turno[]) => Chequeo)[]) => (t: Turno[]) => [...gen
 export const CHARLAS: Charla[] = [
   {
     id: "recuerda_el_nombre",
-    objetivo: "el nombre que dijo al principio sigue disponible al final",
+    objetivo: "el nombre sigue disponible más allá de la ventana del historial",
     mensajes: [
       "Hola, soy Ana",
       "cuánto sale el corte?",
@@ -77,7 +77,11 @@ export const CHARLAS: Charla[] = [
       "tienen corte para chicos?",
       "qué medios de pago aceptan?",
       "abren los sábados?",
+      "y los domingos?",
       "hacen mechas?",
+      "y tratamientos capilares?",
+      "cuánto dura el corte?",
+      "y la barba cuánto dura?",
       "dale, gracias. Te acordás cómo me llamo?",
     ],
     chequear: con((t) => siNo("recuerda_a_ana", /\bAna\b/.test(ultimo(t)), ultimo(t))),

@@ -8,7 +8,7 @@
 //
 // Pure module (no imports) so it can be unit-tested on its own.
 
-export type UnusableReason = "empty" | "truncated" | "leaked_reasoning" | "mixed_language";
+export type UnusableReason = "empty" | "truncated" | "leaked_reasoning" | "mixed_language" | "leaked_tool_call";
 
 export interface ReplyCheck {
   /** Text to send: reasoning tags stripped. Only meaningful when ok. */
@@ -28,7 +28,12 @@ const LEAK_ANYWHERE =
 // Palabras en inglés que dots-3-note metió en respuestas en castellano ("para sacar
 // turnover", "coordinator el turno"). Lista corta a propósito: la frena solo cuando
 // no hay forma de que sea una palabra del negocio. Otra pasada del modelo lo arregla.
-const MIXED_LANGUAGE = /\b(turnover|coordinator|morning|appointment|scheduled)\b|\bi['’]?m sorry\b|\bi can['’]?t\b/i;
+const MIXED_LANGUAGE = /\b(turnover|coordinator|morning|appointment|scheduled|whoever)\b|\bi['’]?m sorry\b|\bi can['’]?t\b/i;
+
+// Un modelo sin herramientas de verdad las escribe como texto. qwen3.8-27b devolvió
+// {"tool": "check_availability", "params": {...}}: sin esto, le llegaba al cliente.
+const TOOL_CALL_AS_TEXT =
+  /^\s*(```(json)?\s*)?\{[\s\S]*"(tool|tool_name|function|name|action)"\s*:|<\/?tool_call>|\b(check_availability|request_human|update_contact|remember_fact|schedule_followup|schedule_highlevel|schedule_link)\b/i;
 
 /** Drops <think>…</think> blocks; an unclosed <think> means everything after it is reasoning. */
 export function stripThinking(text: string): string {
@@ -46,5 +51,6 @@ export function checkReply(rawText: string, finishReason?: string): ReplyCheck {
     return { text, ok: false, reason: "leaked_reasoning" };
   }
   if (MIXED_LANGUAGE.test(text)) return { text, ok: false, reason: "mixed_language" };
+  if (TOOL_CALL_AS_TEXT.test(text)) return { text, ok: false, reason: "leaked_tool_call" };
   return { text, ok: true };
 }

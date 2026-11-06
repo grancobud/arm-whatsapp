@@ -22,6 +22,7 @@
 // tested in evals/revisor; `npm run eval:revisor` measures it against real
 // models with trap drafts and legit ones.
 
+import { stripBlockTags } from "./untrusted-text";
 import { checkReply } from "./reply-guard";
 import { splitCitations } from "./kb-citations";
 
@@ -72,6 +73,8 @@ export interface ReviewSources {
   knowledge?: string;
   /** Customer memory as given to the agent (formatClaimsContext). */
   memory?: string;
+  /** Nombre de la ficha, que el agente también recibe. */
+  contactName?: string | null;
   /** What the tools returned this turn, in order. */
   toolResults?: ToolOutcome[];
   /** Tools the agent can use (what it may promise to do). */
@@ -99,7 +102,9 @@ export function buildReviewInput(customerMessage: string, draft: string, sources
     cut(sources.knowledge, MAX_SOURCE_CHARS) || "(sin fragmentos para este mensaje)",
     "</base_de_conocimiento>",
     "<memoria_del_cliente>",
-    cut(sources.memory, 2000) || "(sin datos guardados del cliente)",
+    [sources.contactName ? `Nombre en la ficha: ${stripBlockTags(sources.contactName).slice(0, 80)}` : "", cut(sources.memory, 2000)]
+      .filter(Boolean)
+      .join("\n") || "(sin datos guardados del cliente)",
     "</memoria_del_cliente>",
     "<herramientas_de_este_turno>",
     toolLines,

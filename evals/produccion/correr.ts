@@ -41,7 +41,8 @@ import {
 
 exigirHuella(import.meta.url);
 
-const GEN = "auto";
+// Para comparar modelos sin cambiar el examen. Por defecto, lo mismo que producción.
+const GEN = process.env.EVAL_GEN || "auto";
 const REPS = 3;
 // Las que tiene prendidas un cliente nuevo (ver migración agent_handoff_contact_changes).
 const BASICAS = ["request_human", "update_contact", "remember_fact", "schedule_followup"];
@@ -208,7 +209,7 @@ function simular(nombre: string, a: Record<string, unknown>): ToolResult {
   return { ok: true, output: { saved: true } };
 }
 
-process.env.OPENROUTER_FALLBACK_MODELS = GEN;
+process.env.OPENROUTER_FALLBACK_MODELS = process.env.EVAL_RESPALDO || GEN;
 // Como en producción: FreeLLMAPI es el proveedor. Sin esto la app va directo a OpenRouter.
 process.env.LLM_BASE_URL ||= process.env.EVAL_BASE_URL || "http://localhost:31415/v1";
 process.env.LLM_API_KEY ||= process.env.EVAL_API_KEY || process.env.FREELLMAPI_KEY;
