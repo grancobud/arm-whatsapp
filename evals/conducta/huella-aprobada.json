@@ -1,12 +1,12 @@
 {
-  "total": "4595396f4a7c0aa5b6443ebe33d5492a6108cc649b383a8cb83c58f8d8e6a104",
+  "total": "4012143c2059b3b9c9ffa6e5e7059b80efd45b7a7b999983c524b1f89153e107",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/charlas/charlas.ts": "d1465a2888400f23f921820450f3ea3dd88aca0360a7c2f9603c3cce82d8a11e",
-    "evals/charlas/motor.ts": "1ca207827efb1d61d31b55e8db6e2f41790268e0054f10d7c1630850f0a274df",
+    "evals/charlas/motor.ts": "eb5fed120ec5bbe83be5a7d81a98c28363a5e653c5f8d62f42f49726ee5b1b96",
     "evals/conducta/casos.ts": "79432cc2bc5e1f288944c7c2cdd2f5ed9fba6f98e1b8940cfa944b796145383c",
-    "evals/conducta/correr.ts": "6c20aff3150a5fda1f5b8755074bb610c586600af3e01a8b1f42745e4a89ef53",
-    "evals/conducta/puerta.ts": "b9b33c14ecb26848e98c219da5ff400dc5b2a831d3ec230da7025a99ddaa5907",
+    "evals/conducta/correr.ts": "03eb3ecaabb20b2764c5d6bbb2c23cf15a2632b488835631e49d5c32e03e8294",
+    "evals/conducta/puerta.ts": "edadf35d94ef78e49271ff56fe3f51d80fc20a89c990714a3ae4fdaf77012dd8",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/sesgos/casos.ts": "d186499eb2d491f4250802437e252abee3a185b74411b556f6962b98cff765b5",
@@ -54,7 +54,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-06T16:35:49.309Z",
+  "fecha": "2026-11-06T17:21:57.335Z",
   "aprobadaPor": "Gaston",
-  "motivo": "examen: revisor con 60 s por llamada y un reintento si falta revisar, sin borrar fallas de conducta"
+  "motivo": "examen: el revisor tiene 5000 tokens para no quedar cortado antes del veredicto"
 }

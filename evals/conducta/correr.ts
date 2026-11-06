@@ -25,6 +25,8 @@ const REPS = 2;
 // Más que en producción, solo acá: con el modelo gratis el revisor se pasa de los 20 s por llamada,
 // y el examen mide la conducta, no si llega a tiempo. Producción no cambia; eso se mide aparte.
 const TIEMPO_REVISION_MS = 60_000;
+// El revisor razona en voz alta y con 1.500 tokens lo cortan antes del veredicto («sin JSON»).
+const TOKENS_REVISION = 5_000;
 
 exigirHuella(import.meta.url);
 
@@ -46,7 +48,7 @@ const hora = 11 + Math.floor(Math.random() * 8);
 const inicio = Date.now();
 let reintentos = 0;
 let reintentosRevision = 0;
-const opciones = { modelo: MODELO, promptBase, tiempoRevisionMs: TIEMPO_REVISION_MS };
+const opciones = { modelo: MODELO, promptBase, tiempoRevisionMs: TIEMPO_REVISION_MS, tokensRevision: TOKENS_REVISION };
 const mostrarFallas = (chequeos: ResultadoCaso["chequeos"]) => {
   for (const c of chequeos.filter((x) => !x.ok)) console.log(`  ❌ ${c.nombre}${c.detalle ? `: ${String(c.detalle).slice(0, 160)}` : ""}`);
 };

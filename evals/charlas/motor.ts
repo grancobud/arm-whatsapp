@@ -59,7 +59,7 @@ const biz = buildBusinessInfoContext(NEGOCIO);
 export async function correrCharla(
   c: Pick<Charla, "mensajes" | "memoria" | "herramientas" | "chequear"> & { id: string },
   rep: number,
-  opciones: { modelo?: string; promptBase?: string; hora?: number; tiempoRevisionMs?: number } = {},
+  opciones: { modelo?: string; promptBase?: string; hora?: number; tiempoRevisionMs?: number; tokensRevision?: number } = {},
 ) {
   const gen = opciones.modelo ?? GEN;
   process.env.OPENROUTER_FALLBACK_MODELS = gen;
@@ -127,8 +127,10 @@ export async function correrCharla(
           customerMessage: mensaje,
           agentSystemPrompt: system,
           sources: { business: biz, memory: memoriaDelTurno, contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
-          // reviewReply limita cada llamada a 20 s: acá se reemplaza ese tope solo para esta corrida.
-          complete: tiempo ? (req) => completar({ ...req, timeoutMs: tiempo }) : completar,
+          // reviewReply limita cada llamada en tiempo y en tokens: acá se reemplazan esos topes solo para esta corrida.
+          complete: tiempo
+            ? (req) => completar({ ...req, timeoutMs: tiempo, maxOutputTokens: opciones.tokensRevision ?? req.maxOutputTokens })
+            : completar,
           budgetMs: tiempo ? tiempo * 3 : undefined,
         });
         texto = r.text;
