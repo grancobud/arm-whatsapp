@@ -1,15 +1,16 @@
 {
-  "total": "449f4522b2add8315a406897bb325db89b828dd6f98a5486283d8caced50254f",
+  "total": "bdd378c4789fbb2d9eba0925212c7a6c386e06314192af1338bfac76f2c38a34",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
-    "evals/charlas/motor.ts": "1b5f338ae72356378ec7d3dc4aa50fde4471ddee4fe85c78c9e71d655f9161fb",
+    "evals/charlas/motor.ts": "8ba77f823c74f63d22275a18c013cbb2b11f5707a2a51a0d5d581ed52c3943c3",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "evals/sesgos/casos.ts": "d186499eb2d491f4250802437e252abee3a185b74411b556f6962b98cff765b5",
     "evals/sesgos/correr.ts": "08f761e52e326bc90f6dc68cf151ba5b750f9d5da49929326f1538578b0d4a0a",
     "src/features/agents/lib/starter-prompts.ts": "b0266367d0c1038baeb16b76ec2204bdd973e371146c09cef281c35a8297ebb0",
     "src/features/agents/services/active-agent.ts": "609ab6ac625ab39a56d7228c5a574ad0148010b2ada87bad7f61dab9c8b362b4",
-    "src/features/arm/services/claims.ts": "bb25aff4db470738d4472782cf1cd016fc4257b51e91b43558b09e8a39739b76",
+    "src/features/arm/services/claim-expiry.ts": "2cd081eab4b846312cce1121b03831928cbb8ba8fd3fc103e2a1d8803bff85d7",
+    "src/features/arm/services/claims.ts": "8244f91776fd5e645162762981415949c11ffb7d3cf7ce0be5bbb812e984050a",
     "src/features/arm/services/contact-update-rules.ts": "f35d09f48a070b918091156e711155acb6132013f8a96655b930502ac3aa5a2d",
     "src/features/inbox/services/booking-offer.ts": "00ae4e33751ba0d56e53f697c541363c28176148e81b3051662b9ea440661680",
     "src/features/inbox/services/business-info.ts": "2b025d83b1ea5b732594a224973bcfb65868528800a9203397278d672ed11ddd",
@@ -50,7 +51,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-06T13:40:16.534Z",
-  "aprobadaPor": "Claude, con el OK de Gastón para esta mejora",
-  "motivo": "el motor acepta modelo, prompt y hora opcionales para el examen de conducta; sin opciones se comporta igual"
+  "fecha": "2026-11-06T16:15:14.517Z",
+  "aprobadaPor": "Gaston",
+  "motivo": "el motor guarda por que el revisor no pudo revisar"
 }

@@ -10,12 +10,13 @@ import { registry } from "../../src/features/tools/index.ts";
 import type { Tool, ToolResult } from "../../src/features/tools/core/tool.ts";
 import { invalidContactValue } from "../../src/features/arm/services/contact-update-rules.ts";
 import { formatClaimsContext } from "../../src/features/arm/services/claims.ts";
+import { claimsForPrompt } from "../../src/features/arm/services/claim-expiry.ts";
 import { hasSpecialCategoryData } from "../../src/features/privacy/privacy-rules.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
 import { buildBusinessInfoContext, buildNowContext } from "../../src/features/inbox/services/business-info.ts";
 import { starterPrompt } from "../../src/features/agents/lib/starter-prompts.ts";
 import { NEGOCIO } from "../agente/negocio.ts";
-import type { Charla, Turno } from "./charlas.ts";
+import type { Charla, MemoriaInicial, Turno } from "./charlas.ts";
 
 const GEN = "auto";
 const VENTANA = DEFAULT_HISTORY_WINDOW;
@@ -56,7 +57,7 @@ const runOriginal = registry.runTool.bind(registry);
 const biz = buildBusinessInfoContext(NEGOCIO);
 
 export async function correrCharla(
-  c: Pick<Charla, "mensajes" | "herramientas" | "chequear"> & { id: string },
+  c: Pick<Charla, "mensajes" | "memoria" | "herramientas" | "chequear"> & { id: string },
   rep: number,
   opciones: { modelo?: string; promptBase?: string; hora?: number } = {},
 ) {
@@ -65,7 +66,7 @@ export async function correrCharla(
   const hora = String(opciones.hora ?? 11).padStart(2, "0");
   const nombres = c.herramientas ?? BASICAS;
   const historia: { role: "user" | "assistant"; content: string }[] = [];
-  const memoria: { kind: string; text: string; source_message_id: string | null }[] = [];
+  const memoria: MemoriaInicial[] = [...(c.memoria ?? [])];
   const turnos: Turno[] = [];
   let traspaso = false;
   let nombreEnFicha: string | null = null;
@@ -83,12 +84,15 @@ export async function correrCharla(
       return runOriginal(tool, a, ctx, o);
     };
 
+    // Un minuto distinto por turno: el proveedor cachea pedidos idénticos.
+    const ahora = new Date(`2026-11-03T${hora}:${String(i + rep * 10).padStart(2, "0")}:00-03:00`);
+    // Lo mismo que getActiveClaims en producción: lo vencido no llega al agente.
+    const memoriaDelTurno = formatClaimsContext(claimsForPrompt(memoria, ahora.getTime()) as never);
     const system = buildSystemPrompt({
-      // Un minuto distinto por turno: el proveedor cachea pedidos idénticos.
-      nowContext: buildNowContext("America/Argentina/Buenos_Aires", new Date(`2026-11-03T${hora}:${String(i + rep * 10).padStart(2, "0")}:00-03:00`)),
+      nowContext: buildNowContext("America/Argentina/Buenos_Aires", ahora),
       bizContext: biz,
       promptBase: opciones.promptBase ?? starterPrompt("general", "Barbería El Faro", "Martín"),
-      memoryContext: formatClaimsContext(memoria as never),
+      memoryContext: memoriaDelTurno,
       contactName: nombreEnFicha,
       toolNames: nombres,
       vars: { agentName: "Martín", businessName: "Barbería El Faro", contactName: null },
@@ -97,6 +101,7 @@ export async function correrCharla(
 
     let texto = "";
     let revision = "apagado";
+    let errorRevision: string | undefined;
     let error: string | null = null;
     try {
       const reply = await generateWithTools({
@@ -119,11 +124,12 @@ export async function correrCharla(
           draft: reply.text,
           customerMessage: mensaje,
           agentSystemPrompt: system,
-          sources: { business: biz, memory: formatClaimsContext(memoria as never), contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
+          sources: { business: biz, memory: memoriaDelTurno, contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
           complete: await createReviewCompleter("eval", gen),
         });
         texto = r.text;
         revision = r.outcome;
+        errorRevision = r.error?.slice(0, 200);
       }
       texto = finishReply(texto, nombres, mensaje).text;
     } catch (err) {
@@ -135,13 +141,13 @@ export async function correrCharla(
     for (const l of llamadas) {
       if (l.nombre === "update_contact" && l.args.field === "name") nombreEnFicha = String(l.args.value ?? "");
       if (l.nombre === "remember_fact" && !hasSpecialCategoryData(String(l.args.text ?? ""))) {
-        memoria.push({ kind: String(l.args.kind ?? "fact"), text: String(l.args.text ?? ""), source_message_id: "eval" });
+        memoria.push({ kind: (l.args.kind ?? "fact") as MemoriaInicial["kind"], text: String(l.args.text ?? ""), source_message_id: "eval", created_at: ahora.toISOString() });
       }
     }
     historia.push({ role: "user", content: mensaje });
     if (texto) historia.push({ role: "assistant", content: texto });
     traspaso = llamadas.some((l) => l.nombre === "request_human");
-    turnos.push({ cliente: mensaje, texto, llamadas, revision, error });
+    turnos.push({ cliente: mensaje, texto, llamadas, revision, errorRevision, error });
 
     const usadas = llamadas.map((l) => l.nombre + (l.forzada ? "*" : "")).join(",");
     console.log(`  ${i + 1}. C: ${mensaje.slice(0, 90)}`);
