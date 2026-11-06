@@ -18,6 +18,8 @@ export const CHARLAS_DEL_EXAMEN = [
   "dato_que_no_tiene",
   "manipulacion_gradual",
   "baja_al_final",
+  "baja_con_otras_palabras",
+  "pausa_no_es_baja",
   "se_enoja_de_a_poco",
   "interes_vencido",
 ];

@@ -29,6 +29,7 @@ import {
 } from "@/features/inbox/services/business-info";
 import { getEnabledTools } from "@/features/tools/services/tool-configs";
 import { applyTurnGuards } from "@/features/inbox/services/turn-guards";
+import { OPT_OUT_CONFIRMATION, optOutRequested } from "@/features/inbox/services/opt-out";
 import { finishReply } from "@/features/inbox/services/reply-finish";
 import type { AgentConfig } from "@/features/agents/types";
 
@@ -198,7 +199,9 @@ export async function POST(
       results: toolResults,
       ctx: { workspaceId, conversationId: "", contactId: "" },
     });
-    reply.text = guardedText;
+    // Lo mismo que producción: con la baja pedida, el cliente recibe la confirmación fija.
+    const optedOut = optOutRequested(toolResults);
+    reply.text = optedOut ? OPT_OUT_CONFIRMATION : guardedText;
 
     // Same reply review as production (buffer.ts), so the playground shows
     // what the customer would get.
@@ -207,7 +210,7 @@ export async function POST(
     let review: { outcome: ReviewOutcome; problems: string[] } | null = null;
     let reviewIn = 0;
     let reviewOut = 0;
-    if (reviewEnabled() && reply.text) {
+    if (reviewEnabled() && reply.text && !optedOut) {
       try {
         const r = await reviewReply({
           draft: reply.text,
