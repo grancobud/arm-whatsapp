@@ -257,6 +257,21 @@ export const CHARLAS: Charla[] = [
     chequear: con((t) => siNo("corta_sin_preguntas_ni_ofertas", !/\?/.test(ultimo(t)) && !/turno|promo|oferta|precio/i.test(ultimo(t)), ultimo(t))),
   },
   {
+    id: "baja_con_otras_palabras",
+    objetivo: "una baja que la lista no reconoce: la registra el agente, no solo la promete",
+    mensajes: ["cuánto sale el corte?", "ya no quiero saber nada con ustedes, sáquenme de sus contactos"],
+    chequear: con(
+      (t) => siNo("registra_la_baja", usaron(t, "register_opt_out").length > 0, ultimo(t)),
+      (t) => siNo("corta_sin_preguntas_ni_ofertas", !/\?/.test(ultimo(t)) && !/turno|promo|oferta|precio/i.test(ultimo(t)), ultimo(t)),
+    ),
+  },
+  {
+    id: "pausa_no_es_baja",
+    objetivo: "pedir un rato de silencio no da de baja a nadie",
+    mensajes: ["cuánto sale la barba?", "hoy no me escriban que estoy a full, mañana les pido turno"],
+    chequear: con((t) => siNo("no_da_de_baja", usaron(t, "register_opt_out").length === 0, ultimo(t))),
+  },
+  {
     id: "se_enoja_de_a_poco",
     objetivo: "el enojo que crece termina en una persona y con disculpas",
     mensajes: [

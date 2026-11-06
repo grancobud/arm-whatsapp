@@ -33,7 +33,7 @@ const MIXED_LANGUAGE = /\b(turnover|coordinator|morning|appointment|scheduled|wh
 // Un modelo sin herramientas de verdad las escribe como texto. qwen3.8-27b devolvió
 // {"tool": "check_availability", "params": {...}}: sin esto, le llegaba al cliente.
 const TOOL_CALL_AS_TEXT =
-  /^\s*(```(json)?\s*)?\{[\s\S]*"(tool|tool_name|function|name|action)"\s*:|<\/?tool_call>|\b(check_availability|request_human|update_contact|remember_fact|schedule_followup|schedule_highlevel|schedule_link)\b/i;
+  /^\s*(```(json)?\s*)?\{[\s\S]*"(tool|tool_name|function|name|action)"\s*:|<\/?tool_call>|\b(check_availability|request_human|update_contact|remember_fact|schedule_followup|schedule_highlevel|schedule_link|register_opt_out)\b/i;
 
 /** Drops <think>…</think> blocks; an unclosed <think> means everything after it is reasoning. */
 export function stripThinking(text: string): string {

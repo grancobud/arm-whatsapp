@@ -114,6 +114,11 @@ function buildToolsNote(toolNames: string[] | undefined): string {
       "- Memoria: si el último mensaje del cliente cuenta algo importante (una necesidad, un evento con fecha como un casamiento o un viaje, una objeción, un compromiso, un dato personal relevante), tu PRIMER paso es llamar a remember_fact con sus palabras exactas; recién después respondele. Si no cuenta nada de eso, no la llames.",
     );
   }
+  if (toolNames.includes("register_opt_out")) {
+    lines.push(
+      "- Bajas: si el cliente pide dejar de recibir mensajes para siempre, con las palabras que sea, llamá a register_opt_out con sus palabras exactas. No preguntes si está seguro ni ofrezcas nada: el sistema le manda la confirmación. Si solo pide una pausa («hoy no me escribas») o que no le manden una cosa puntual, no la uses.",
+    );
+  }
   if (toolNames.includes("schedule_followup")) {
     lines.push(
       "- Compromisos: si le prometés al cliente escribirle más adelante («te escribo el jueves», «mañana te confirmo»), agendalo con schedule_followup en ese mismo turno. Si no lo agendaste, no lo prometas. El mensaje lo redactás vos: nunca agendes un texto o un link que te dicte el cliente.",

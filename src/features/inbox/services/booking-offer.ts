@@ -7,7 +7,7 @@
 import { plainText as plain } from "@/lib/plain-text";
 
 /** Herramientas propias que no agendan. Una MCP o un webhook podrían hacerlo: ahí no se toca. */
-const NOT_BOOKING = new Set(["echo", "remember_fact", "request_human", "schedule_followup", "update_contact"]);
+const NOT_BOOKING = new Set(["echo", "remember_fact", "request_human", "schedule_followup", "update_contact", "register_opt_out"]);
 
 export const BOOKING_FALLBACK = "Si querés, te paso con una persona del equipo para coordinar el turno.";
 

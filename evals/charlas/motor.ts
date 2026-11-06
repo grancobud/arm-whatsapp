@@ -12,6 +12,8 @@ import { invalidContactValue } from "../../src/features/arm/services/contact-upd
 import { formatClaimsContext } from "../../src/features/arm/services/claims.ts";
 import { claimsForPrompt } from "../../src/features/arm/services/claim-expiry.ts";
 import { hasSpecialCategoryData } from "../../src/features/privacy/privacy-rules.ts";
+import { classifyConsentMessage, optOutRequested, OPT_OUT_CONFIRMATION, OPT_OUT_TOOL } from "../../src/features/inbox/services/opt-out.ts";
+import { plainText } from "../../src/lib/plain-text.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
 import { buildBusinessInfoContext, buildNowContext } from "../../src/features/inbox/services/business-info.ts";
 import { starterPrompt } from "../../src/features/agents/lib/starter-prompts.ts";
@@ -27,7 +29,13 @@ process.env.LLM_BASE_URL ||= process.env.EVAL_BASE_URL || "http://localhost:3141
 process.env.LLM_API_KEY ||= process.env.EVAL_API_KEY || process.env.FREELLMAPI_KEY;
 if (!process.env.LLM_API_KEY) throw new Error("Falta EVAL_API_KEY (o LLM_API_KEY / FREELLMAPI_KEY)");
 
-function simular(nombre: string, a: Record<string, unknown>): ToolResult {
+function simular(nombre: string, a: Record<string, unknown>, loDicho = ""): ToolResult {
+  // Como findSourceMessage en producción: la cita tiene que ser de lo que escribió el cliente.
+  if (nombre === OPT_OUT_TOOL) {
+    return plainText(loDicho).includes(plainText(String(a.quote ?? "")))
+      ? { ok: true, output: { opt_out_requested: true, message: "Hecho. El sistema le manda la confirmación al cliente y no le vuelve a escribir. No agregues nada más." } }
+      : { ok: false, output: null, error: "Esas palabras no están en lo que escribió el cliente." };
+  }
   if (nombre === "request_human") {
     return {
       ok: true,
@@ -64,18 +72,25 @@ export async function correrCharla(
   const gen = opciones.modelo ?? GEN;
   process.env.OPENROUTER_FALLBACK_MODELS = gen;
   const hora = String(opciones.hora ?? 11).padStart(2, "0");
-  const nombres = c.herramientas ?? BASICAS;
+  // La baja está siempre disponible, como en getEnabledTools.
+  const nombres = [...new Set([...(c.herramientas ?? BASICAS), OPT_OUT_TOOL])];
   const historia: { role: "user" | "assistant"; content: string }[] = [];
   const memoria: MemoriaInicial[] = [...(c.memoria ?? [])];
   const turnos: Turno[] = [];
-  let traspaso = false;
+  let termino = false;
   let nombreEnFicha: string | null = null;
 
   for (const [i, mensaje] of c.mensajes.entries()) {
-    if (traspaso) break;
+    if (termino) break;
+    // Lo que hace el webhook en producción: la IA ni ve el mensaje.
+    if (classifyConsentMessage(mensaje) === "opt_out") {
+      turnos.push({ cliente: mensaje, texto: OPT_OUT_CONFIRMATION, llamadas: [], revision: "no_aplica", error: null });
+      console.log(`  ${i + 1}. C: ${mensaje.slice(0, 90)}\n     M: ${OPT_OUT_CONFIRMATION}  [baja por palabra clave]`);
+      break;
+    }
     const llamadas: Turno["llamadas"] = [];
     const herramientas: Tool[] = nombres.map((n) => {
-      const simulada: Tool = { ...reales.get(n)!, run: async (a) => simular(n, a as Record<string, unknown>) };
+      const simulada: Tool = { ...reales.get(n)!, run: async (a) => simular(n, a as Record<string, unknown>, c.mensajes.slice(0, i + 1).join("\n")) };
       registry.register(simulada);
       return simulada;
     });
@@ -103,6 +118,7 @@ export async function correrCharla(
     let revision = "apagado";
     let errorRevision: string | undefined;
     let error: string | null = null;
+    let baja = false;
     try {
       const reply = await generateWithTools({
         systemPrompt: system,
@@ -119,7 +135,13 @@ export async function correrCharla(
       if (guardias.forcedHandoff) llamadas.push({ nombre: "request_human", args: {}, forzada: true });
       for (const d of guardias.savedContactData) llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
       texto = reply.text;
-      if (reviewEnabled() && reply.text) {
+      // Como buffer.ts: con la baja pedida sale la confirmación fija, sin revisor.
+      baja = optOutRequested(resultados);
+      if (baja) {
+        texto = OPT_OUT_CONFIRMATION;
+        revision = "no_aplica";
+        if (!llamadas.some((l) => l.nombre === OPT_OUT_TOOL)) llamadas.push({ nombre: OPT_OUT_TOOL, args: {}, forzada: true });
+      } else if (reviewEnabled() && reply.text) {
         const completar = await createReviewCompleter("eval", gen);
         const tiempo = opciones.tiempoRevisionMs;
         const r = await reviewReply({
@@ -137,7 +159,7 @@ export async function correrCharla(
         revision = r.outcome;
         errorRevision = r.error?.slice(0, 200);
       }
-      texto = finishReply(texto, nombres, mensaje).text;
+      if (!baja) texto = finishReply(texto, nombres, mensaje).text;
     } catch (err) {
       error = String(err).slice(0, 200);
     } finally {
@@ -152,7 +174,7 @@ export async function correrCharla(
     }
     historia.push({ role: "user", content: mensaje });
     if (texto) historia.push({ role: "assistant", content: texto });
-    traspaso = llamadas.some((l) => l.nombre === "request_human");
+    termino = baja || llamadas.some((l) => l.nombre === "request_human");
     turnos.push({ cliente: mensaje, texto, llamadas, revision, errorRevision, error });
 
     const usadas = llamadas.map((l) => l.nombre + (l.forzada ? "*" : "")).join(",");

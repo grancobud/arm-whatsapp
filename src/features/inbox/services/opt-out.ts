@@ -11,12 +11,18 @@
 //
 // Matching is deliberately conservative: a keyword counts only as the whole
 // message, or as an unambiguous phrase in a short one. "¿Hay baja de precio?"
-// must never unsubscribe anyone.
+// must never unsubscribe anyone. Lo que esta lista no reconoce llega al agente,
+// que registra la baja con su herramienta (register-opt-out.ts).
 
 import { createServiceClient as svc } from "@/lib/supabase/service";
+import { plainText } from "@/lib/plain-text";
+import { affirmedSentences } from "./handoff-promise";
+import type { ToolOutcome } from "./reply-review";
 import type { ConversationState } from "./state-machine";
 
 export type ConsentIntent = "opt_out" | "opt_in";
+
+export const OPT_OUT_TOOL = "register_opt_out";
 
 const OPT_OUT_EXACT = new Set([
   "baja",
@@ -47,6 +53,36 @@ const OPT_OUT_PHRASES = [
   "no quiero recibir mas",
 ];
 
+// Solo cuentan al final del mensaje: "sacame de la lista de espera" o "no me hables
+// más de ese corte" no son una baja. Esas las decide el agente.
+const OPT_OUT_ENDINGS = [
+  "no quiero que me escriban mas",
+  "no quiero que me hablen mas",
+  "no quiero que me contacten mas",
+  "no me escribas mas",
+  "no me hablen mas",
+  "no me hables mas",
+  "no me contacten mas",
+  "no me contactes mas",
+  "no me molesten mas",
+  "no me molestes mas",
+  "no me mandes mas",
+  "deja de escribirme",
+  "deja de mandarme",
+  "dejen de molestarme",
+  "basta de mensajes",
+  "sacame de la lista",
+  "sacame de tu lista",
+  "saquenme de la lista",
+  "saquenme de su lista",
+  "borrame de la lista",
+  "borrame de tu lista",
+  "borrenme de la lista",
+  "borrenme de su lista",
+];
+
+const TRAILING_COURTESY = /(\s(por favor|porfavor|porfa|muchas gracias|gracias|che))+$/;
+
 const OPT_IN_EXACT = new Set(["alta", "start", "darme de alta", "dame de alta", "suscribirme"]);
 
 /** Phrases only count in short messages (a long one is a real conversation). */
@@ -74,14 +110,110 @@ export function classifyConsentMessage(text: string | null | undefined): Consent
   if (!t) return null;
   if (OPT_OUT_EXACT.has(t)) return "opt_out";
   if (OPT_IN_EXACT.has(t)) return "opt_in";
-  if (t.length <= MAX_PHRASE_MESSAGE_CHARS && OPT_OUT_PHRASES.some((p) => t.includes(p))) {
-    return "opt_out";
-  }
+  if (t.length > MAX_PHRASE_MESSAGE_CHARS) return null;
+  if (OPT_OUT_PHRASES.some((p) => t.includes(p))) return "opt_out";
+  const body = t.replace(TRAILING_COURTESY, "");
+  if (OPT_OUT_ENDINGS.some((p) => body === p || body.endsWith(` ${p}`))) return "opt_out";
   return null;
 }
 
+const OPT_OUT_PROMISES = [
+  // "no te vamos a escribir más", "no te mandamos más mensajes"
+  // "No te molesto más" no entra: es una despedida, no una baja.
+  /\bno (te|le|les) (vamos a |voy a )?(escribir|escribimos|escribo|mandar|mandamos|mando|contactar|contactamos|contacto) mas( mensajes)?\s*([.,!]|$)/,
+  /\b(te|lo|la) (di|dimos|doy|damos) de baja\b/,
+  /\bquedaste de baja\b/,
+];
+
+/** Pure: el texto le asegura al cliente que no le van a escribir más. */
+export function promisesOptOut(text: string): boolean {
+  return affirmedSentences(text).some((sentence) => OPT_OUT_PROMISES.some((re) => re.test(plainText(sentence))));
+}
+
+/** Pure: en este turno quedó pedida la baja, y lo que sale es la confirmación fija. */
+export function optOutRequested(results: Pick<ToolOutcome, "name" | "status">[]): boolean {
+  return results.some((r) => r.name === OPT_OUT_TOOL && r.status === "ok");
+}
+
+/**
+ * Una promesa de baja tiene que ser verdad, aunque el modelo no haya llamado a la herramienta
+ * (mismo criterio que backHandoffPromise). Devuelve el resultado para sumar al turno.
+ */
+export function backOptOutPromise(params: { text: string; results: ToolOutcome[] }): ToolOutcome | null {
+  if (optOutRequested(params.results) || !promisesOptOut(params.text)) return null;
+  return { name: OPT_OUT_TOOL, status: "ok", summary: "El agente le aseguró al cliente que no le van a escribir más." };
+}
 
 export type ConsentOutcome = "opted_out" | "opted_in" | "ignored_opted_out";
+
+type ConsentSource = "keyword" | "agent";
+
+async function confirm(workspaceId: string, conversationId: string, body: string, consent: ConsentIntent) {
+  const { dispatchText } = await import("./dispatch");
+  // A failed confirmation must never stop the opt-out itself from being saved
+  // (YCloud would retry the webhook, and the retry is dropped as a duplicate).
+  try {
+    const sent = await dispatchText({ workspaceId, conversationId, body, meta: { consent } });
+    if (!sent.ok) console.error("[opt-out] confirmation not sent:", sent.error);
+  } catch (err) {
+    console.error("[opt-out] confirmation failed:", err instanceof Error ? err.message : "unknown");
+  }
+}
+
+function logEvent(
+  type: string,
+  level: "info" | "error",
+  params: { workspaceId: string; conversationId: string; source: ConsentSource },
+) {
+  return svc().from("events").insert({
+    type,
+    level,
+    workspace_id: params.workspaceId,
+    conversation_id: params.conversationId,
+    payload: { source: params.source },
+  });
+}
+
+/**
+ * La baja: confirma, marca opt_in = false y pausa. El mismo camino para la palabra clave y
+ * para el agente. Devuelve false si no se pudo guardar: el cliente ya leyó que está de baja
+ * y sigue activo, así que tiene que verlo una persona.
+ */
+export async function applyOptOut(params: {
+  workspaceId: string;
+  contactId: string;
+  conversationId: string;
+  source: ConsentSource;
+}): Promise<boolean> {
+  const supabase = svc();
+  const { canTransition } = await import("./state-machine");
+  const { applyTransition } = await import("./decision-engine");
+
+  // Confirm first: once opt_in is false, dispatch refuses to send anything.
+  await confirm(params.workspaceId, params.conversationId, OPT_OUT_CONFIRMATION, "opt_out");
+  const { error } = await supabase
+    .from("contacts")
+    .update({ opt_in: false })
+    .eq("id", params.contactId)
+    .eq("workspace_id", params.workspaceId);
+  if (error) {
+    console.error("[opt-out] could not save the opt-out:", error.message);
+    await logEvent("opt_out_failed", "error", params);
+    return false;
+  }
+
+  // El estado de ahora: en este mismo turno pudo pasar a una persona.
+  const { data: conversation } = await supabase
+    .from("conversations")
+    .select("state")
+    .eq("id", params.conversationId)
+    .maybeSingle();
+  if (conversation && canTransition(conversation.state as ConversationState, "paused")) {
+    await applyTransition(params.conversationId, "paused", { trigger: "opt_out" });
+  }
+  await logEvent("opt_out", "info", params);
+  return true;
+}
 
 /**
  * Applies a BAJA/ALTA message. Returns null when the message is a normal one
@@ -96,53 +228,17 @@ export async function handleConsentMessage(params: {
   text: string | null;
 }): Promise<ConsentOutcome | null> {
   const intent = classifyConsentMessage(params.text);
-  const supabase = svc();
-  const { canTransition } = await import("./state-machine");
-  const { applyTransition } = await import("./decision-engine");
-  const { dispatchText } = await import("./dispatch");
-  // A failed confirmation must never stop the opt-out itself from being saved
-  // (YCloud would retry the webhook, and the retry is dropped as a duplicate).
-  const confirm = async (body: string, consent: ConsentIntent) => {
-    try {
-      await dispatchText({
-        workspaceId: params.workspaceId,
-        conversationId: params.conversationId,
-        body,
-        meta: { consent },
-      });
-    } catch (err) {
-      console.error("[opt-out] confirmation failed:", err instanceof Error ? err.message : "unknown");
-    }
-  };
-
-  const logEvent = (type: string) =>
-    supabase.from("events").insert({
-      type,
-      level: "info",
-      workspace_id: params.workspaceId,
-      conversation_id: params.conversationId,
-      payload: { source: "keyword" },
-    });
 
   if (intent === "opt_out" && params.contactOptIn) {
-    // Confirm first: once opt_in is false, dispatch refuses to send anything.
-    await confirm(OPT_OUT_CONFIRMATION, "opt_out");
-    await supabase
-      .from("contacts")
-      .update({ opt_in: false })
-      .eq("id", params.contactId)
-      .eq("workspace_id", params.workspaceId);
-    if (canTransition(params.conversationState, "paused")) {
-      await applyTransition(params.conversationId, "paused", { trigger: "opt_out" });
-    }
-    await logEvent("opt_out");
+    await applyOptOut({ ...params, source: "keyword" });
     return "opted_out";
   }
 
   if (params.contactOptIn) return null;
 
   if (intent === "opt_in") {
-    await supabase
+    const { applyTransition } = await import("./decision-engine");
+    await svc()
       .from("contacts")
       .update({ opt_in: true, opt_in_source: "WhatsApp: escribió ALTA" })
       .eq("id", params.contactId)
@@ -150,8 +246,8 @@ export async function handleConsentMessage(params: {
     if (params.conversationState === "paused") {
       await applyTransition(params.conversationId, "ai_active", { trigger: "opt_in" });
     }
-    await confirm(OPT_IN_CONFIRMATION, "opt_in");
-    await logEvent("opt_in");
+    await confirm(params.workspaceId, params.conversationId, OPT_IN_CONFIRMATION, "opt_in");
+    await logEvent("opt_in", "info", { ...params, source: "keyword" });
     return "opted_in";
   }
 

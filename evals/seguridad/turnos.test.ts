@@ -38,6 +38,7 @@ test("qué herramientas impiden reintentar", () => {
   assert.equal(blocksRetry({ name: "custom_webhook", sensitivity: "sensitive" }), true);
   assert.equal(blocksRetry({ name: "check_availability", sensitivity: "read" }), false);
   assert.equal(blocksRetry({ name: "remember_fact", sensitivity: "write" }), false);
+  assert.equal(blocksRetry({ name: "register_opt_out", sensitivity: "write" }), false);
 });
 
 test("un mensaje gigante se corta y lo avisa", () => {
