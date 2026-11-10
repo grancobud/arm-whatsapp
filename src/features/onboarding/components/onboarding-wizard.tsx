@@ -126,7 +126,7 @@ function Step1({
             type="button"
             onClick={() => onSelect(uc.id)}
             className={[
-              "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all",
+              "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98]",
               "hover:border-primary/60 hover:bg-primary/5",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               selected === uc.id

@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  // En pantallas táctiles el hover queda "pegado" después de tocar: solo con mouse.
+  future: { hoverOnlyWhenSupported: true },
   darkMode: "class",
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
@@ -91,6 +93,12 @@ const config: Config = {
           "sans-serif",
         ],
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+      },
+      // Las curvas de CSS son flojas: estas arrancan rápido y se sienten al instante.
+      transitionTimingFunction: {
+        out: "cubic-bezier(0.23, 1, 0.32, 1)",
+        "in-out": "cubic-bezier(0.77, 0, 0.175, 1)",
+        drawer: "cubic-bezier(0.32, 0.72, 0, 1)",
       },
       keyframes: {
         "accordion-down": {

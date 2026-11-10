@@ -296,7 +296,7 @@ function WebhookForm({
                       onClick={() => insertVariable(v.token)}
                       title={`${v.label} (ej. ${v.example})`}
                       className={cn(
-                        "rounded border border-dashed border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary transition-all hover:border-primary hover:bg-primary/20",
+                        "rounded border border-dashed border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary transition-colors duration-150 hover:border-primary hover:bg-primary/20",
                         flashed === v.token && "scale-105 ring-2 ring-primary",
                       )}
                     >

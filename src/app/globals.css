@@ -169,6 +169,28 @@
   }
 }
 
+/*
+ * Quien pidió menos movimiento conserva los fundidos (ayudan a entender qué
+ * cambió) pero pierde los desplazamientos y los cambios de tamaño.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    --tw-enter-translate-x: 0 !important;
+    --tw-enter-translate-y: 0 !important;
+    --tw-enter-scale: 1 !important;
+    --tw-exit-translate-x: 0 !important;
+    --tw-exit-translate-y: 0 !important;
+    --tw-exit-scale: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .active\:scale-\[0\.97\]:active {
+    transform: none;
+  }
+}
+
 @layer utilities {
   /* Se desplaza igual (rueda, dedo, teclado) pero sin dibujar la barra. */
   .no-scrollbar {
