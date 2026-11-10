@@ -31,9 +31,9 @@ export const FIRST_STEPS: HelpStep[] = [
     title: "Conectá tu número de WhatsApp",
     why: "Sin esto no entran ni salen mensajes. La conexión se hace con YCloud, sobre un número de WhatsApp Business.",
     how: [
-      "En YCloud, conseguí tu API Key y tu Webhook Signing Secret.",
-      "En Integraciones, completá la API Key, el número con código de país (por ejemplo +5491123456789) y el Signing Secret.",
-      "Copiá la Webhook URL que te muestra esta pantalla y pegala en la configuración de webhooks de YCloud.",
+      "En YCloud, conseguí tu API Key.",
+      "En Integraciones, pegá la API Key y tocá «Conectar WhatsApp»: la app busca tu número y deja lista la conexión con YCloud.",
+      "Si tu cuenta tiene más de un número, elegí cuál conectar. Si el botón falla, abrí «Cargar los datos a mano» en esa misma pantalla.",
       "En el perfil del número, cargá un mail, una web o un teléfono de atención: WhatsApp lo pide.",
       "Revisá que tu rubro esté permitido: WhatsApp no admite, entre otros, drogas, alcohol, tabaco, armas ni productos médicos.",
       "Por ahora no lo uses en rubros de salud: esas charlas contienen datos sensibles y tienen reglas más estrictas.",

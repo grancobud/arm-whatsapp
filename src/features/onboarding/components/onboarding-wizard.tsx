@@ -248,17 +248,6 @@ function Step3({
   isTesting: boolean;
   onTest: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
-
-  const webhookPlaceholder =
-    "[Se generará al guardar — podrás copiarlo desde Configuración]";
-
-  function handleCopy() {
-    navigator.clipboard.writeText(webhookPlaceholder).catch(() => null);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -266,7 +255,8 @@ function Step3({
           Conectar YCloud
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Opcional. Lo podés completar más tarde desde Configuración →
+          Opcional. Con la clave alcanza: buscamos tu número y dejamos lista
+          la conexión. Lo podés completar más tarde desde Configuración →
           Integraciones.
         </p>
       </div>
@@ -285,7 +275,9 @@ function Step3({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="ycloud-phone">Número de WhatsApp, con código de país</Label>
+          <Label htmlFor="ycloud-phone">
+            Número de WhatsApp (solo si tu cuenta de YCloud tiene más de uno)
+          </Label>
           <Input
             id="ycloud-phone"
             type="tel"
@@ -293,47 +285,6 @@ function Step3({
             value={state.ycloudPhone}
             onChange={(e) => onChange({ ycloudPhone: e.target.value })}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="ycloud-secret">Clave de firma del webhook (Webhook Signing Secret)</Label>
-          <Input
-            id="ycloud-secret"
-            type="password"
-            placeholder="whsec_..."
-            value={state.ycloudSigningSecret}
-            onChange={(e) => onChange({ ycloudSigningSecret: e.target.value })}
-            autoComplete="off"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Webhook URL</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              readOnly
-              value={webhookPlaceholder}
-              className="font-mono text-xs text-muted-foreground"
-              aria-label="Webhook URL — se generará al finalizar"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleCopy}
-              aria-label="Copiar texto"
-            >
-              {copied ? (
-                <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />
-              ) : (
-                <Copy className="h-4 w-4" aria-hidden />
-              )}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            La URL real se mostrará en Configuración → Integraciones una vez
-            creado el workspace.
-          </p>
         </div>
 
         {state.ycloudApiKey && (
@@ -360,10 +311,10 @@ function Step3({
 
 function Step4({
   state,
-  workspaceId,
+  whatsappConnected,
 }: {
   state: WizardState;
-  workspaceId: string;
+  whatsappConnected: boolean;
 }) {
   const useCaseLabel =
     USE_CASES.find((u) => u.id === state.useCase)?.label ?? state.useCase ?? "";
@@ -388,13 +339,15 @@ function Step4({
         <Row label="Tipo de agente" value={useCaseLabel} />
         <Row label="Instrucciones iniciales" value="Generado automáticamente" />
         {state.ycloudApiKey && (
-          <Row label="YCloud" value="Credenciales guardadas" />
+          <Row
+            label="WhatsApp"
+            value={
+              whatsappConnected
+                ? "Conectado"
+                : "Clave guardada. Terminá la conexión en Configuración → Integraciones"
+            }
+          />
         )}
-        <Row
-          label="Webhook URL"
-          value={`/api/webhooks/ycloud?wsid=${workspaceId}`}
-          mono
-        />
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
@@ -442,6 +395,7 @@ export function OnboardingWizard() {
   const [completedWorkspaceId, setCompletedWorkspaceId] = useState<
     string | null
   >(null);
+  const [whatsappConnected, setWhatsappConnected] = useState(false);
 
   const [state, setState] = useState<WizardState>({
     useCase: null,
@@ -486,7 +440,6 @@ export function OnboardingWizard() {
         description: state.description.trim() || undefined,
         ycloudApiKey: state.ycloudApiKey.trim() || undefined,
         ycloudPhone: state.ycloudPhone.trim() || undefined,
-        ycloudSigningSecret: state.ycloudSigningSecret.trim() || undefined,
       };
 
       const result = await completeOnboarding(input);
@@ -497,6 +450,7 @@ export function OnboardingWizard() {
       }
 
       setCompletedWorkspaceId(result.workspaceId ?? null);
+      setWhatsappConnected(result.whatsappConnected === true);
       setStep(3);
     } catch (err) {
       console.error("[OnboardingWizard] handleFinalize error:", err);
@@ -562,7 +516,7 @@ export function OnboardingWizard() {
         />
       )}
       {step === 3 && completedWorkspaceId && (
-        <Step4 state={state} workspaceId={completedWorkspaceId} />
+        <Step4 state={state} whatsappConnected={whatsappConnected} />
       )}
 
       <div className="flex items-center justify-between mt-8">

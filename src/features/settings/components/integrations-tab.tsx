@@ -139,6 +139,40 @@ function YCloudSection({
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [numbers, setNumbers] = useState<{ phoneNumber: string; verifiedName: string | null }[]>([]);
+
+  // Con la clave sola, el servidor encuentra el número y crea el webhook en YCloud.
+  async function handleConnect(chosen?: string) {
+    setConnecting(true);
+    try {
+      const res = await fetch(`/api/workspace/${workspaceId}/integrations/ycloud/connect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey, phone: chosen }),
+      });
+      const json = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        phone?: string;
+        numbers?: { phoneNumber: string; verifiedName: string | null }[];
+      };
+      if (json.ok) {
+        setNumbers([]);
+        setPhone(json.phone ?? "");
+        toast.success(`WhatsApp conectado: ${json.phone}`);
+        onSaved();
+      } else if (json.numbers) {
+        setNumbers(json.numbers);
+      } else {
+        toast.error(json.error ?? "No se pudo conectar");
+      }
+    } catch {
+      toast.error("Error de red al conectar");
+    } finally {
+      setConnecting(false);
+    }
+  }
 
   const webhookUrl =
     typeof window !== "undefined"
@@ -237,55 +271,102 @@ function YCloudSection({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="ycloud-phone">Número de WhatsApp, con código de país</Label>
-          <Input
-            id="ycloud-phone"
-            type="tel"
-            placeholder="+521234567890"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="ycloud-secret">Clave de firma del webhook (Webhook Signing Secret)</Label>
-          <Input
-            id="ycloud-secret"
-            type="password"
-            placeholder="whsec_..."
-            value={secret}
-            onChange={(e) => setSecret(e.target.value)}
-            autoComplete="off"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Webhook URL</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              readOnly
-              value={webhookUrl}
-              className="font-mono text-xs text-muted-foreground"
-              aria-label="Webhook URL (solo lectura)"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleCopy}
-              aria-label="Copiar URL del webhook"
-            >
-              {copied ? (
-                <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />
-              ) : (
-                <Copy className="h-4 w-4" aria-hidden />
-              )}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => handleConnect()}
+            disabled={connecting || !apiKey}
+            aria-busy={connecting}
+          >
+            {connecting && <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden />}
+            Conectar WhatsApp
+          </Button>
           <p className="text-xs text-muted-foreground">
-            Pegá esta URL en la configuración de webhooks de YCloud.
+            {phone
+              ? `Número conectado: ${phone}. Tocá de nuevo solo si cambiaste la clave o el número.`
+              : "Con la clave alcanza: buscamos tu número y dejamos lista la conexión con YCloud."}
           </p>
         </div>
+
+        {numbers.length > 0 && (
+          <div className="space-y-2">
+            <Label>Tu cuenta tiene más de un número. ¿Cuál conectamos?</Label>
+            <div className="flex flex-wrap gap-2">
+              {numbers.map((n) => (
+                <Button
+                  key={n.phoneNumber}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={connecting}
+                  onClick={() => handleConnect(n.phoneNumber)}
+                >
+                  {n.phoneNumber}
+                  {n.verifiedName ? ` · ${n.verifiedName}` : ""}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <details className="rounded-lg border border-border/60 p-3">
+          <summary className="cursor-pointer text-sm text-muted-foreground">
+            Cargar los datos a mano (avanzado)
+          </summary>
+          <div className="grid gap-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="ycloud-phone">Número de WhatsApp, con código de país</Label>
+              <Input
+                id="ycloud-phone"
+                type="tel"
+                placeholder="+5491123456789"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ycloud-secret">Clave de firma del webhook (Webhook Signing Secret)</Label>
+              <Input
+                id="ycloud-secret"
+                type="password"
+                placeholder="whsec_..."
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Webhook URL</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  readOnly
+                  value={webhookUrl}
+                  className="font-mono text-xs text-muted-foreground"
+                  aria-label="Webhook URL (solo lectura)"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopy}
+                  aria-label="Copiar URL del webhook"
+                >
+                  {copied ? (
+                    <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />
+                  ) : (
+                    <Copy className="h-4 w-4" aria-hidden />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Solo si el botón de arriba no funcionó: pegá esta URL en la
+                configuración de webhooks de YCloud.
+              </p>
+            </div>
+          </div>
+        </details>
 
         <div className="space-y-2">
           <Label htmlFor="ycloud-buffer">

@@ -3,7 +3,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { headers } from "next/headers";
 import { encryptCredentials } from "@/shared/lib/integration-secrets";
+import { ensureWebhook, listNumbers, pickNumber, ycloudWebhookUrl } from "@/features/inbox/services/ycloud-connect";
 import { starterPrompt, STARTER_AGENT_NAMES } from "@/features/agents/lib/starter-prompts";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
@@ -20,8 +22,8 @@ export const OnboardingSchema = z.object({
 
 export type OnboardingInput = z.infer<typeof OnboardingSchema>;
 export type OnboardingResult =
-  | { workspaceId: string; error?: never }
-  | { workspaceId?: never; error: string };
+  | { workspaceId: string; whatsappConnected?: boolean; error?: never }
+  | { workspaceId?: never; whatsappConnected?: never; error: string };
 
 
 // ─── Slug generator ───────────────────────────────────────────────────────────
@@ -223,7 +225,25 @@ export async function completeOnboarding(
   }
 
   // 9. Save YCloud integration (if credentials provided)
+  let whatsappConnected = false;
   if (data.ycloudApiKey) {
+    // Con la clave sola: buscar el número y crear el webhook en YCloud. Si algo
+    // falla la clave queda guardada y se termina después desde Configuración.
+    let phone = data.ycloudPhone ?? "";
+    let signingSecret = data.ycloudSigningSecret ?? "";
+    if (!signingSecret) {
+      try {
+        const picked = pickNumber(await listNumbers(data.ycloudApiKey), data.ycloudPhone);
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || (await headers()).get("origin") || "";
+        if ("phone" in picked && appUrl) {
+          signingSecret = await ensureWebhook(data.ycloudApiKey, ycloudWebhookUrl(appUrl, workspaceId));
+          phone = picked.phone;
+          whatsappConnected = true;
+        }
+      } catch (err) {
+        console.error("[completeOnboarding] ycloud connect:", err instanceof Error ? err.message : "unknown");
+      }
+    }
     const { error: intError } = await serviceClient
       .from("integrations")
       .insert({
@@ -233,13 +253,13 @@ export async function completeOnboarding(
         credentials: await encryptCredentials(
           {
             ycloud_api_key: data.ycloudApiKey,
-            webhook_signing_secret: data.ycloudSigningSecret ?? "",
+            webhook_signing_secret: signingSecret,
           },
           workspaceId,
           "ycloud",
         ),
         config: {
-          phone_number: data.ycloudPhone ?? "",
+          phone_number: phone,
         },
         oauth_tokens: {},
       });
@@ -250,5 +270,5 @@ export async function completeOnboarding(
     }
   }
 
-  return { workspaceId };
+  return { workspaceId, whatsappConnected };
 }
