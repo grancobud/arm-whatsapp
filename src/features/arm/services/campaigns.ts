@@ -15,6 +15,7 @@ import {
   shouldStopCampaign,
   shouldStopForOptOuts,
   warmupLimit,
+  workspaceDailyLimit,
 } from "./campaign-rules";
 import { withinSendingHours } from "@/features/automations/engine";
 import { DEFAULT_TIMEZONE } from "@/features/inbox/services/business-info";
@@ -235,6 +236,12 @@ async function daysSinceFirstSend(workspaceId: string, now: Date): Promise<numbe
   return first ? (now.getTime() - new Date(first).getTime()) / 86_400_000 : null;
 }
 
+/** El tope diario de campañas de este negocio. */
+export async function dailyLimitOf(workspaceId: string): Promise<number> {
+  const { data } = await svc().from("workspaces").select("settings").eq("id", workspaceId).maybeSingle();
+  return workspaceDailyLimit((data as { settings: unknown } | null)?.settings);
+}
+
 async function timeZoneOf(workspaceId: string): Promise<string> {
   const supabase = svc();
   const { data } = await supabase
@@ -297,7 +304,10 @@ export async function drainCampaignQueue(): Promise<number> {
     if (!withinSendingHours(now, await timeZoneOf(campaign.workspace_id))) continue;
 
     // Past the daily limit the campaign stays in "sending" and resumes by itself.
-    const todayLimit = warmupLimit(await daysSinceFirstSend(campaign.workspace_id, now));
+    const todayLimit = warmupLimit(
+      await daysSinceFirstSend(campaign.workspace_id, now),
+      await dailyLimitOf(campaign.workspace_id),
+    );
     const room = dailyRoom(await sentLast24h(campaign.workspace_id), todayLimit);
     if (room === 0) continue;
 

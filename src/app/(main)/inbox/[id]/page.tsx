@@ -47,6 +47,16 @@ export default async function InboxDetailPage({ params }: PageProps) {
 
   const convWithContact = convData as ConversationRow & { contact: ContactRow };
 
+  // Abrir el chat lo marca como leído. Va con la sesión de quien mira: quien solo
+  // tiene permiso de lectura no cambia nada.
+  if (convWithContact.unread_count > 0) {
+    const { error: readError } = await supabase
+      .from("conversations")
+      .update({ unread_count: 0 })
+      .eq("id", id);
+    if (!readError) convWithContact.unread_count = 0;
+  }
+
   // 4. Fetch messages (ASC, limit 100)
   const { data: messagesData } = await supabase
     .from("messages")

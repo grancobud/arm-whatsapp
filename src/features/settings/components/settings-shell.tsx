@@ -83,7 +83,7 @@ export function SettingsShell({
         </div>
 
         <TabsContent value="agentes">
-          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="space-y-6">
             <AgentsTab
               workspaceId={workspaceId}
               initialAgents={initialAgents}

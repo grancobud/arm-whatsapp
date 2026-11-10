@@ -12,6 +12,7 @@ import {
   countOptOuts,
   shouldStopForOptOuts,
   warmupLimit,
+  workspaceDailyLimit,
 } from "../../src/features/arm/services/campaign-rules.ts";
 import { hasCardOrBankNumber } from "../../src/features/inbox/services/sensitive-data.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
@@ -44,6 +45,18 @@ test("una campaña se frena recién con muchas fallas", () => {
   assert.equal(shouldStopCampaign(0, 10), true);
   assert.equal(shouldStopCampaign(10, 10), true);
   assert.equal(shouldStopCampaign(100, 10), false);
+});
+
+test("el tope de un negocio solo acepta un nivel de Meta", () => {
+  assert.equal(workspaceDailyLimit({ campaign_daily_limit: 1000 }, 250), 1000);
+  assert.equal(workspaceDailyLimit({ campaign_daily_limit: 10000 }, 250), 10000);
+  // Cualquier otra cosa cae en el tope general.
+  assert.equal(workspaceDailyLimit({ campaign_daily_limit: 999999 }, 250), 250);
+  assert.equal(workspaceDailyLimit({ campaign_daily_limit: "1000" }, 250), 250);
+  assert.equal(workspaceDailyLimit({}, 250), 250);
+  assert.equal(workspaceDailyLimit(null, 250), 250);
+  // El arranque gradual sigue mandando aunque el negocio tenga un tope alto.
+  assert.equal(warmupLimit(null, workspaceDailyLimit({ campaign_daily_limit: 10000 }, 250)), 50);
 });
 
 test("un número que nunca mandó campañas arranca de a poco", () => {

@@ -2,7 +2,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contactNameUpdate, reopensOnInbound } from "@/features/inbox/services/normalizer";
+import { contactNameUpdate, nextUnread, reopensOnInbound } from "@/features/inbox/services/normalizer";
 import { canTransition } from "@/features/inbox/services/state-machine";
 import { teamChangeError, workspaceOfStoragePath } from "@/lib/auth/team-rules";
 import { isCronAuthorized } from "@/lib/auth/cron-auth";
@@ -15,6 +15,15 @@ test("el nombre de perfil de WhatsApp no pisa el que dio el cliente", () => {
   assert.deepEqual(contactNameUpdate(null, "Juan"), { name: "Juan" });
   assert.deepEqual(contactNameUpdate("  ", " Juan "), { name: "Juan" });
   assert.deepEqual(contactNameUpdate(null, null), {});
+});
+
+test("el contador de no leídos suma con cada mensaje y no se dispara", () => {
+  assert.equal(nextUnread(0), 1);
+  assert.equal(nextUnread(null), 1);
+  assert.equal(nextUnread(undefined), 1);
+  assert.equal(nextUnread(4), 5);
+  assert.equal(nextUnread(-3), 1);
+  assert.equal(nextUnread(999), 999);
 });
 
 test("una charla cerrada se reabre cuando el cliente vuelve, salvo que esté de baja", () => {

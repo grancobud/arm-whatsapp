@@ -14,6 +14,18 @@ export function dailyLimit(value: string | undefined = process.env.CAMPAIGN_DAIL
   return Number.isInteger(n) && n > 0 ? n : DEFAULT_DAILY_LIMIT;
 }
 
+/** Los niveles de Meta para un número: empieza en 250 y sube según su calidad. */
+export const DAILY_LIMIT_TIERS = [250, 1000, 10000] as const;
+
+/**
+ * El tope de un negocio: el que eligió en Campañas, si es uno de los niveles de
+ * Meta; si no, el general.
+ */
+export function workspaceDailyLimit(settings: unknown, fallback: number = dailyLimit()): number {
+  const value = (settings as { campaign_daily_limit?: unknown } | null)?.campaign_daily_limit;
+  return (DAILY_LIMIT_TIERS as readonly unknown[]).includes(value) ? (value as number) : fallback;
+}
+
 /** How many more can go out now, given how many went out in the last 24 h. */
 export function dailyRoom(sentLast24h: number, limit: number = dailyLimit()): number {
   return Math.max(0, limit - sentLast24h);
