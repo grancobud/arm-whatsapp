@@ -5,7 +5,8 @@ import {
   verifyYCloudSignature,
   parseInbound,
 } from "@/features/inbox/services/ycloud-webhook-handler";
-import { processInbound } from "@/features/inbox/services/normalizer";
+import { processInbound, reopensOnInbound } from "@/features/inbox/services/normalizer";
+import { applyTransition } from "@/features/inbox/services/decision-engine";
 import { handleConsentMessage } from "@/features/inbox/services/opt-out";
 import { checkRateLimits } from "@/features/inbox/services/cost-tracker";
 import {
@@ -39,6 +40,7 @@ async function handleDeliveryFailure(
   supabase: ReturnType<typeof svc>,
   conversationId: string,
   errorCode: string,
+  workspaceId: string,
 ): Promise<void> {
   await supabase
     .from("campaign_recipients")
@@ -51,14 +53,16 @@ async function handleDeliveryFailure(
     .from("conversations")
     .select("contact_id")
     .eq("id", conversationId)
+    .eq("workspace_id", workspaceId)
     .maybeSingle();
   if (conv?.contact_id) {
-    await supabase.from("contacts").update({ marketing_opt_in: false }).eq("id", conv.contact_id);
+    await supabase.from("contacts").update({ marketing_opt_in: false }).eq("id", conv.contact_id).eq("workspace_id", workspaceId);
   }
 }
 
 async function handleStatusUpdate(
   supabase: ReturnType<typeof svc>,
+  workspaceId: string,
   wamid: string,
   newStatus: string,
   errorCode: string | null = null,
@@ -67,7 +71,9 @@ async function handleStatusUpdate(
     .from("messages")
     .select("id, status, type, conversation_id")
     .eq("wamid", wamid)
-    .single();
+    // El aviso firmado de un negocio no puede tocar mensajes de otro.
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
 
   // Message not found — can happen for outbound we didn't track
   if (!msg) return;
@@ -82,7 +88,7 @@ async function handleStatusUpdate(
       .eq("id", msg.id);
     // Only templates: a failed free-text reply says nothing about a campaign.
     if (errorCode && msg.type === "template") {
-      await handleDeliveryFailure(supabase, msg.conversation_id, errorCode);
+      await handleDeliveryFailure(supabase, msg.conversation_id, errorCode, workspaceId);
     }
     return;
   }
@@ -214,6 +220,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (statusData?.wamid && statusData?.status) {
         await handleStatusUpdate(
           supabase,
+          ws.workspace_id,
           statusData.wamid,
           statusData.status,
           messageErrorCode(statusData),
@@ -236,6 +243,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Duplicate wamid — already processed
     if (!message) {
       return NextResponse.json({ received: true, dedup: true });
+    }
+
+    if (reopensOnInbound(conversation.state, contact.opt_in)) {
+      await applyTransition(conversation.id, "ai_active", { trigger: "customer_returned" });
+      conversation.state = "ai_active";
+      conversation.ai_enabled = true;
     }
 
     // Media handling (download + AI understanding) runs AFTER the response so
@@ -331,6 +344,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!allowed) {
       // SEC-09: log only non-sensitive fields (no credentials or contact PII)
       console.warn("[webhook] rate limited:", reason ?? "unknown reason");
+      await supabase.from("events").insert({
+        type: "rate_limited",
+        level: "warn",
+        workspace_id: workspaceId,
+        conversation_id: conversation.id,
+        payload: { reason: reason ?? null, where: "webhook" },
+      });
       if (mediaJob) after(mediaJob);
       return NextResponse.json({ received: true, rateLimited: true });
     }

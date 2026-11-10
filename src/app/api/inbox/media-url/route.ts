@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/features/inbox/services/media-handler";
+import { requireWorkspaceMember } from "@/lib/auth/workspace-access";
+import { workspaceOfStoragePath } from "@/lib/auth/team-rules";
 
 const requestSchema = z.object({
   storagePath: z.string().min(1),
@@ -39,6 +41,12 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
+
+    // La URL se firma con la clave de servicio, que no pasa por RLS: el control va acá.
+    const owner = workspaceOfStoragePath(parsed.data.storagePath);
+    if (!owner) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
+    const member = await requireWorkspaceMember(owner);
+    if (!member.ok) return member.response;
 
     // 3. Generate signed URL (service role, 1 hour TTL)
     const url = await getSignedUrl(parsed.data.storagePath);

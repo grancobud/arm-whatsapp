@@ -25,6 +25,23 @@ export function normalizePhone(
   return `+${digits}`;
 }
 
+/**
+ * Pure: el nombre de perfil de WhatsApp solo completa una ficha sin nombre. Antes pisaba en
+ * cada mensaje el que el cliente le había dado al agente (update_contact), o lo borraba.
+ */
+export function contactNameUpdate(
+  current: string | null | undefined,
+  profileName: string | null | undefined,
+): { name?: string } {
+  const incoming = profileName?.trim();
+  return !current?.trim() && incoming ? { name: incoming } : {};
+}
+
+/** Pure: una charla cerrada vuelve a la IA cuando el cliente escribe, salvo que haya pedido la baja. */
+export function reopensOnInbound(state: string, contactOptIn: boolean): boolean {
+  return state === "closed" && contactOptIn;
+}
+
 export interface ProcessInboundResult {
   contact: ContactRow;
   conversation: ConversationRow;
@@ -65,11 +82,12 @@ export async function processInbound(
   // undo a BAJA, only ALTA does (see opt-out.ts).
   const { data: existing } = await supabase
     .from("contacts")
-    .select("opt_out_at, opt_in_at, opt_in_source")
+    .select("name, opt_out_at, opt_in_at, opt_in_source")
     .eq("workspace_id", workspaceId)
     .eq("phone", phone)
     .maybeSingle();
   const known = existing as {
+    name: string | null;
     opt_out_at: string | null;
     opt_in_at: string | null;
     opt_in_source: string | null;
@@ -81,8 +99,7 @@ export async function processInbound(
       {
         workspace_id: workspaceId,
         phone,
-        // Only update name when the incoming value is non-null
-        name: normalized.customerName,
+        ...contactNameUpdate(known?.name, normalized.customerName),
         ...(optedOut
           ? {}
           : {

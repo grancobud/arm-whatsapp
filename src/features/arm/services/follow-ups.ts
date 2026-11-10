@@ -173,9 +173,52 @@ export async function failStaleProposals(now = new Date()): Promise<number> {
   return data?.length ?? 0;
 }
 
+const STALE_SENDING_MINUTES = 15;
+
+/**
+ * Pure: un seguimiento tomado para enviar que nunca se cerró (la función se cortó).
+ * La tabla no guarda cuándo se tomó: done_at lleva esa hora mientras está en "sending".
+ * Los que quedaron de antes no la tienen y se miden por el vencimiento.
+ */
+export function isStaleSending(row: { done_at: string | null; due_at: string }, now: Date): boolean {
+  const limit = now.getTime() - STALE_SENDING_MINUTES * 60_000;
+  if (row.done_at) return new Date(row.done_at).getTime() < limit;
+  return new Date(row.due_at).getTime() < now.getTime() - 86_400_000;
+}
+
+/** No se sabe si el mensaje salió: reenviarlo podría duplicarlo, así que lo decide una persona. */
+async function releaseStaleSending(supabase: ReturnType<typeof svc>, now: Date): Promise<void> {
+  const { data } = await supabase
+    .from("follow_ups")
+    .select("id, workspace_id, conversation_id, due_at, done_at")
+    .eq("status", "sending")
+    .limit(50);
+  const stale = ((data ?? []) as Array<{ id: string; workspace_id: string; conversation_id: string; due_at: string; done_at: string | null }>).filter(
+    (r) => isStaleSending(r, now),
+  );
+  for (const row of stale) {
+    const detail = "el envío se cortó y no se sabe si llegó";
+    const { data: released } = await supabase
+      .from("follow_ups")
+      .update({ status: "needs_human", detail, done_at: now.toISOString() })
+      .eq("id", row.id)
+      .eq("status", "sending")
+      .select("id");
+    if (!released?.length) continue;
+    await supabase.from("events").insert({
+      workspace_id: row.workspace_id,
+      conversation_id: row.conversation_id,
+      type: "follow_up_due",
+      level: "warn",
+      payload: { follow_up_id: row.id, reason: detail },
+    });
+  }
+}
+
 export async function runFollowUps(now = new Date()): Promise<number> {
   try {
     const supabase = svc();
+    await releaseStaleSending(supabase, now);
     const { data: due, error } = await supabase
       .from("follow_ups")
       .select("id, workspace_id, conversation_id, contact_id, due_at, message")
@@ -228,7 +271,7 @@ export async function runFollowUps(now = new Date()): Promise<number> {
       // Claim it: only one cron tick may handle each follow-up.
       const { data: claimed } = await supabase
         .from("follow_ups")
-        .update({ status: "sending" })
+        .update({ status: "sending", done_at: now.toISOString() })
         .eq("id", fu.id)
         .eq("status", "pending")
         .select("id");

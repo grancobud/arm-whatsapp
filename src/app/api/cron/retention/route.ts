@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/auth/cron-auth";
 import { createClient } from "@supabase/supabase-js";
 import { eraseExpiredContacts } from "@/features/privacy/services/contact-erasure";
 
@@ -10,7 +11,7 @@ const MAX_PER_RUN = 50;
 export const maxDuration = 60;
 
 export async function GET(request: Request): Promise<NextResponse> {
-  if (request.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronAuthorized(request.headers.get("Authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {

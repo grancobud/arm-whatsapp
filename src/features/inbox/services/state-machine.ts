@@ -22,7 +22,8 @@ const TRANSITIONS: Record<ConversationState, ConversationState[]> = {
   human_active: ["ai_active", "waiting_reply", "paused", "closed"],
   waiting_reply: ["ai_active", "human_active", "closed"],
   paused: ["ai_active", "human_active", "closed"],
-  closed: [], // terminal
+  // Solo se reabre porque el cliente volvió a escribir (webhook): si no, quedaba sin respuesta para siempre.
+  closed: ["ai_active"],
 };
 
 export class TransitionError extends Error {

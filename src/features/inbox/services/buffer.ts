@@ -327,6 +327,16 @@ async function processClaimedBatch(
 
     if (decision !== "respond") {
       console.info("[buffer] not responding:", decision, reason);
+      // El cliente queda sin respuesta: que alguien lo vea.
+      if (decision === "rate_limited") {
+        await supabase.from("events").insert({
+          type: "rate_limited",
+          level: "warn",
+          workspace_id: batch.workspace_id,
+          conversation_id: batch.conversation_id,
+          payload: { reason, where: "turn" },
+        });
+      }
       await markBatchProcessed(batch.id, mergedText, supabase);
       return { processed: true, conversationId: batch.conversation_id };
     }

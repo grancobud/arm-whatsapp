@@ -13,6 +13,25 @@ export function generatePassword(): string {
   return randomBytes(16).toString("base64url");
 }
 
+const USERS_PER_PAGE = 200;
+const MAX_USER_PAGES = 50;
+
+/** Pure: el correo de una cuenta se compara sin mayúsculas ni espacios. */
+export const sameEmail = (a: string | null | undefined, b: string) =>
+  (a ?? "").trim().toLowerCase() === b.trim().toLowerCase();
+
+/** Recorre todas las páginas: sin esto solo se miraban las primeras 50 cuentas. */
+async function findUserIdByEmail(service: SupabaseClient, email: string): Promise<string | null> {
+  for (let page = 1; page <= MAX_USER_PAGES; page++) {
+    const { data, error } = await service.auth.admin.listUsers({ page, perPage: USERS_PER_PAGE });
+    if (error) return null;
+    const found = data.users.find((u) => sameEmail(u.email, email));
+    if (found) return found.id;
+    if (data.users.length < USERS_PER_PAGE) return null;
+  }
+  return null;
+}
+
 export interface ProvisionResult {
   userId: string;
   /** Password to share with the user — only set when a NEW account was created. */
@@ -47,8 +66,7 @@ export async function provisionWorkspaceUser(
 
   if (!userId) {
     // Most likely the email is already registered — resolve the existing user.
-    const { data: list } = await service.auth.admin.listUsers();
-    userId = list?.users?.find((u) => u.email === email)?.id ?? null;
+    userId = await findUserIdByEmail(service, email);
     created = false;
     if (!userId) {
       throw new Error(error?.message ?? "No se pudo crear el usuario");
