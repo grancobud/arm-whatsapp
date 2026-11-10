@@ -3,7 +3,11 @@ import { registry } from "../registry";
 import type { Tool } from "../core/tool";
 import { getWorkspaceMcpTools } from "../mcp/mcp-servers";
 import { effectiveSensitivity, parseAutonomy } from "../lib/autonomy";
+import { OPT_OUT_TOOL } from "@/features/inbox/services/opt-out";
 
+
+// Respetar una baja no es una opción del negocio: no se apaga ni espera aprobación.
+const ALWAYS_ON = new Set([OPT_OUT_TOOL]);
 
 interface ToolConfigRow {
   tool: { key?: string } | null;
@@ -38,9 +42,9 @@ export async function getEnabledTools(workspaceId: string): Promise<Tool[]> {
   const modes = parseAutonomy(ws?.settings);
   const builtIn = registry
     .list()
-    .filter((t) => enabledKeys.has(t.name))
+    .filter((t) => enabledKeys.has(t.name) || ALWAYS_ON.has(t.name))
     .map((t) =>
-      modes[t.name] ? { ...t, sensitivity: effectiveSensitivity(t.sensitivity, modes[t.name]) } : t,
+      modes[t.name] && !ALWAYS_ON.has(t.name) ? { ...t, sensitivity: effectiveSensitivity(t.sensitivity, modes[t.name]) } : t,
     );
   // Plus the tools of the workspace's own MCP servers (never throws).
   const external = await getWorkspaceMcpTools(workspaceId);

@@ -8,6 +8,7 @@ import { requestHumanTool } from "./tools/request-human";
 import { updateContactTool } from "./tools/update-contact";
 import { rememberFactTool } from "./tools/remember-fact";
 import { scheduleFollowUpTool } from "./tools/schedule-followup";
+import { registerOptOutTool } from "./tools/register-opt-out";
 
 registry.register(echoTool);
 registry.register(scheduleLinkTool);
@@ -18,6 +19,7 @@ registry.register(rememberFactTool);
 registry.register(scheduleFollowUpTool);
 registry.register(requestHumanTool);
 registry.register(updateContactTool);
+registry.register(registerOptOutTool);
 
 export { registry };
 export type {
