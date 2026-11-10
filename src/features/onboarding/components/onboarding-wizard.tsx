@@ -324,7 +324,7 @@ function Step3({
               aria-label="Copiar texto"
             >
               {copied ? (
-                <CheckCircle2 className="h-4 w-4 text-green-500" aria-hidden />
+                <CheckCircle2 className="h-4 w-4 text-success" aria-hidden />
               ) : (
                 <Copy className="h-4 w-4" aria-hidden />
               )}

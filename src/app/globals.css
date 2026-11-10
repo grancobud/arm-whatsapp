@@ -47,6 +47,16 @@
     --warning: 0.78 0.16 80;
     --info: 0.62 0.15 250;
 
+    /*
+     * Tinta: el mismo color cuando va como TEXTO. Sobre blanco el lima de marca
+     * (L 0.9) no se lee, así que el tema claro usa una versión oscura. Los fondos
+     * y bordes (bg-primary, border-primary) siguen usando el color pleno.
+     */
+    --primary-ink: 0.5 0.15 132;
+    --success-ink: 0.5 0.14 150;
+    --warning-ink: 0.52 0.13 70;
+    --info-ink: 0.5 0.15 250;
+
     --border: 0.91 0.004 264;
     --input: 0.91 0.004 264;
     --ring: 0.9 0.21 126;
@@ -95,6 +105,12 @@
     --warning: 0.82 0.16 85;
     --info: 0.68 0.14 250;
 
+    /* Sobre fondo oscuro el color pleno ya se lee: la tinta es el mismo color. */
+    --primary-ink: var(--primary);
+    --success-ink: var(--success);
+    --warning-ink: var(--warning);
+    --info-ink: var(--info);
+
     --border: 0.28 0.006 264;
     --input: 0.3 0.006 264;
     --ring: 0.9 0.21 126;
@@ -113,8 +129,26 @@
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    /* Sin esto las barras de scroll y los controles nativos salen claros sobre fondo oscuro. */
+    color-scheme: dark;
+  }
+
   * {
     @apply border-border;
+    /* Barras de scroll finas y del color del tema, en vez de las anchas del sistema. */
+    scrollbar-width: thin;
+    scrollbar-color: oklch(var(--foreground) / 0.18) transparent;
+  }
+
+  html,
+  body {
+    /* Nada debería desbordar a lo ancho; si algo lo hace, que no mueva toda la página. */
+    overflow-x: clip;
   }
 
   body {
@@ -132,6 +166,17 @@
         transparent 55%
       );
     background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  /* Se desplaza igual (rueda, dedo, teclado) pero sin dibujar la barra. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 

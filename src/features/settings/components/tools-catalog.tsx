@@ -68,15 +68,15 @@ const sensitivityConfig: Record<
 > = {
   read: {
     label: "solo consulta",
-    className: "text-blue-400 border-blue-400/30",
+    className: "text-info border-blue-400/30",
   },
   write: {
     label: "guarda datos",
-    className: "text-amber-400 border-amber-400/30",
+    className: "text-warning border-amber-400/30",
   },
   sensitive: {
     label: "manda datos afuera",
-    className: "text-orange-400 border-orange-400/30",
+    className: "text-orange-600 dark:text-orange-400 border-orange-400/30",
     Icon: Lock,
   },
 };

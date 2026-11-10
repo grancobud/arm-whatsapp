@@ -226,7 +226,7 @@ export function ChatThread({
                   onClick={handleHandoffRequest}
                   disabled={handoffLoading}
                   aria-label="Pasar la conversación a una persona"
-                  className="h-8 gap-1.5 text-xs text-amber-400 border-amber-400/30 hover:bg-amber-400/10"
+                  className="h-8 gap-1.5 text-xs text-warning border-amber-400/30 hover:bg-amber-400/10"
                 >
                   <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
                   Pasar a una persona

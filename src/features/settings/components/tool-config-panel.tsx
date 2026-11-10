@@ -38,7 +38,7 @@ async function saveToolConfig(
 /** Small "unsaved changes" hint shown next to a save button. */
 function DirtyHint({ dirty }: { dirty: boolean }) {
   if (!dirty) return null;
-  return <span className="text-xs text-amber-400">• cambios sin guardar</span>;
+  return <span className="text-xs text-warning">• cambios sin guardar</span>;
 }
 
 // ── schedule_link ───────────────────────────────────────────────────────────────

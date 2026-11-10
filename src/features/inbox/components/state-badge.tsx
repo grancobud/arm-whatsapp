@@ -32,12 +32,12 @@ const STATE_CONFIG: Record<
   },
   human_active: {
     label: "Persona",
-    className: "text-blue-400",
+    className: "text-info",
     Icon: User,
   },
   handoff_pending: {
     label: "Espera persona",
-    className: "text-amber-400",
+    className: "text-warning",
     Icon: AlertCircle,
   },
   waiting_reply: {

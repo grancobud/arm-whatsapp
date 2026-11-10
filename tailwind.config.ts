@@ -55,6 +55,17 @@ const config: Config = {
           "5": "oklch(var(--chart-5) / <alpha-value>)",
         },
       },
+      // Como texto, estos colores usan su "tinta" (ver globals.css): en tema claro
+      // el color pleno no tiene contraste sobre blanco.
+      textColor: {
+        primary: {
+          DEFAULT: "oklch(var(--primary-ink) / <alpha-value>)",
+          foreground: "oklch(var(--primary-foreground) / <alpha-value>)",
+        },
+        success: "oklch(var(--success-ink) / <alpha-value>)",
+        warning: "oklch(var(--warning-ink) / <alpha-value>)",
+        info: "oklch(var(--info-ink) / <alpha-value>)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 4px)",

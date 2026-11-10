@@ -26,7 +26,7 @@ export default function PrivacyPage() {
         <h1 className="font-display text-2xl font-semibold text-foreground">Política de privacidad</h1>
 
         {!REVIEWED && (
-          <p className="rounded-md border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-400" role="note">
+          <p className="rounded-md border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-warning" role="note">
             Borrador pendiente de revisión legal.
           </p>
         )}

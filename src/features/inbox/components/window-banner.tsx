@@ -19,7 +19,7 @@ export function WindowBanner({ windowExpiresAt }: WindowBannerProps) {
       role="alert"
       className={cn(
         "flex items-center gap-2",
-        "bg-amber-500/10 border border-amber-500/30 text-amber-400",
+        "bg-amber-500/10 border border-amber-500/30 text-warning",
         "rounded-lg py-2 px-3 text-sm font-body",
       )}
     >
