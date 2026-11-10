@@ -3,7 +3,7 @@ import { needsClientChoice } from "@/features/workspace/services/agency-gate";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspace } from "@/features/workspace/services/active-workspace";
 import { extractTemplateVariables } from "@/features/inbox/services/templates";
-import { getCampaignMetrics } from "@/features/arm/services/campaigns";
+import { dailyLimitOf, getCampaignMetrics } from "@/features/arm/services/campaigns";
 import {
   CampaignsView,
   type TemplateOption,
@@ -77,6 +77,8 @@ export default async function CampanasPage() {
     <CampaignsView
       workspaceId={ws}
       canManage={membership.role === "admin" || membership.role === "manager"}
+      canSetLimit={membership.role === "admin"}
+      dailyLimit={await dailyLimitOf(ws)}
       templates={templates}
       campaigns={campaigns}
       metrics={metrics}

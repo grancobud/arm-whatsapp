@@ -22,7 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createCampaignAction, previewSegment } from "../services/arm-actions";
+import { createCampaignAction, previewSegment, setCampaignDailyLimit } from "../services/arm-actions";
+import { DAILY_LIMIT_TIERS } from "../services/campaign-rules";
 import type { CampaignMetrics, CampaignRow, CampaignSegment } from "../types";
 
 export interface TemplateOption {
@@ -52,6 +53,8 @@ const STATUS_LABELS: Record<CampaignRow["status"], string> = {
 interface Props {
   workspaceId: string;
   canManage: boolean;
+  canSetLimit: boolean;
+  dailyLimit: number;
   templates: TemplateOption[];
   campaigns: CampaignRow[];
   metrics: CampaignMetrics[];
@@ -64,11 +67,21 @@ function pct(part: number, total: number) {
 export function CampaignsView({
   workspaceId,
   canManage,
+  canSetLimit,
+  dailyLimit,
   templates,
   campaigns,
   metrics,
 }: Props) {
   const [isPending, startTransition] = useTransition();
+
+  function changeLimit(value: string) {
+    startTransition(async () => {
+      const res = await setCampaignDailyLimit(workspaceId, Number(value));
+      if (res.ok) toast.success("Tope diario actualizado");
+      else toast.error(res.error);
+    });
+  }
   const [name, setName] = useState("");
   const [stages, setStages] = useState<string[]>(["customer"]);
   const [tags, setTags] = useState("");
@@ -152,11 +165,35 @@ export function CampaignsView({
         <p className="text-sm text-muted-foreground mt-1">
           La plantilla tiene que decir cómo darse de baja. Para cuidar el número,
           los envíos arrancan de a poco: 50 personas el primer día, 100 el
-          segundo, y así hasta 250 por día; el resto sale en los días siguientes,
+          segundo, y así hasta {dailyLimit.toLocaleString("es-AR")} por día; el
+          resto sale en los días siguientes,
           siempre de día. Si fallan muchos envíos, si 1 de cada 20 personas pide
           no recibir más o si Meta pausa la plantilla, la campaña se frena sola.
         </p>
       </div>
+
+      {canSetLimit && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Label htmlFor="c-limit">Tope de envíos por día</Label>
+          <Select value={String(dailyLimit)} onValueChange={changeLimit} disabled={isPending}>
+            <SelectTrigger id="c-limit" className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DAILY_LIMIT_TIERS.map((tier) => (
+                <SelectItem key={tier} value={String(tier)}>
+                  {tier.toLocaleString("es-AR")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="basis-full text-xs text-muted-foreground">
+            Dejalo en 250 salvo que YCloud o Meta te muestren un nivel más alto
+            para tu número. Subirlo de más no hace que lleguen más mensajes:
+            WhatsApp rechaza el excedente y la campaña se frena.
+          </p>
+        </div>
+      )}
 
       {canManage && (
         <section className="rounded-lg border border-border/60 bg-card p-5 space-y-4">

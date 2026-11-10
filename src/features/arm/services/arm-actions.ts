@@ -22,6 +22,7 @@ import { registry } from "@/features/tools";
 import { isMcpToolName } from "@/features/tools/mcp/mcp-tools";
 import { resolveMcpTool } from "@/features/tools/mcp/mcp-servers";
 import { createCampaign, resolveSegment } from "./campaigns";
+import { DAILY_LIMIT_TIERS } from "./campaign-rules";
 import type { ClaimRow } from "../types";
 
 
@@ -321,6 +322,30 @@ const CampaignSchema = z.object({
   templateId: z.string().uuid("Elegí una plantilla"),
   variables: z.array(z.string().max(200)).max(10),
 });
+
+/** El tope diario de campañas del negocio. Solo un admin, y solo un nivel de Meta. */
+export async function setCampaignDailyLimit(workspaceId: string, limit: number): Promise<Result> {
+  const auth = await requireWorkspaceMember(workspaceId, { minRole: "admin" });
+  if (!auth.ok) return { ok: false, error: "No tenés permiso" };
+  if (!(DAILY_LIMIT_TIERS as readonly number[]).includes(limit)) {
+    return { ok: false, error: "Ese tope no es un nivel de Meta" };
+  }
+
+  const supabase = svc();
+  const { data } = await supabase.from("workspaces").select("settings").eq("id", workspaceId).maybeSingle();
+  const settings = ((data as { settings: Record<string, unknown> | null } | null)?.settings ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const { error } = await supabase
+    .from("workspaces")
+    .update({ settings: { ...settings, campaign_daily_limit: limit } })
+    .eq("id", workspaceId);
+  if (error) return { ok: false, error: safeError(error) };
+
+  revalidatePath("/campanas");
+  return { ok: true, data: null };
+}
 
 export async function previewSegment(
   workspaceId: string,

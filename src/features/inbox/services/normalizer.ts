@@ -57,6 +57,12 @@ export interface ProcessInboundResult {
  * - Inserts the message, deduplicating on workspace_id + wamid.
  *   Returns message: null when the wamid already exists.
  */
+/** Pure: el contador de no leídos después de un mensaje nuevo. */
+export function nextUnread(previous: number | null | undefined): number {
+  const n = Number.isInteger(previous) && (previous as number) > 0 ? (previous as number) : 0;
+  return Math.min(n + 1, 999);
+}
+
 export async function processInbound(
   workspaceId: string,
   normalized: NormalizedInbound,
@@ -129,6 +135,15 @@ export async function processInbound(
     Date.now() + 24 * 60 * 60 * 1000,
   ).toISOString();
 
+  // Cuántos había sin leer: el contador suma, y vuelve a cero al abrir el chat.
+  const { data: prevConv } = await supabase
+    .from("conversations")
+    .select("unread_count")
+    .eq("workspace_id", workspaceId)
+    .eq("contact_id", contact.id)
+    .eq("channel", "whatsapp")
+    .maybeSingle();
+
   const { data: convData, error: convError } = await supabase
     .from("conversations")
     .upsert(
@@ -138,7 +153,7 @@ export async function processInbound(
         channel: "whatsapp",
         last_message_at: new Date().toISOString(),
         window_expires_at: windowExpiresAt,
-        unread_count: 1,
+        unread_count: nextUnread((prevConv as { unread_count: number } | null)?.unread_count),
       },
       {
         onConflict: "workspace_id,contact_id,channel",
