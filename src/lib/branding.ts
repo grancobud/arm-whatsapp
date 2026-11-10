@@ -21,6 +21,12 @@ function triplet(value: string | undefined): string | null {
   return v && TRIPLET.test(v) ? v : null;
 }
 
+/** Pure: el mismo color con la luminosidad topeada para que se lea sobre blanco. */
+export function inkOf(tripletValue: string): string {
+  const [l, c, h] = tripletValue.trim().split(/\s+/);
+  return `${Math.min(Number(l), 0.5)} ${c} ${h}`;
+}
+
 /**
  * Returns a `:root` CSS override for the brand tokens, or null when this
  * deployment has no branding configured.
@@ -44,5 +50,7 @@ export function brandStyleOverride(): string | null {
   if (accent) vars.push(`--chart-2:${accent}`);
 
   // Applied to both themes: these tokens are identical in :root and .dark.
-  return `:root,.dark{${vars.join(";")}}`;
+  const base = `:root,.dark{${vars.join(";")}}`;
+  // En tema claro el color de marca también va como texto: se oscurece si es muy claro.
+  return primary ? `${base}:root:not(.dark){--primary-ink:${inkOf(primary)}}` : base;
 }

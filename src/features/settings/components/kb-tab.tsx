@@ -46,10 +46,10 @@ const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
 };
 
 const SOURCE_TYPE_COLORS: Record<SourceType, string> = {
-  doc: "text-blue-400 border-blue-400/30",
-  faq: "text-amber-400 border-amber-400/30",
-  url: "text-purple-400 border-purple-400/30",
-  snippet: "text-green-400 border-green-400/30",
+  doc: "text-info border-blue-400/30",
+  faq: "text-warning border-amber-400/30",
+  url: "text-purple-600 dark:text-purple-400 border-purple-400/30",
+  snippet: "text-success border-success/30",
 };
 
 function formatDate(iso: string): string {

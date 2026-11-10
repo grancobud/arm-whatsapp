@@ -48,7 +48,7 @@ const TRIGGER_META: Record<
   window_closing: {
     label: "Ventana cerrando",
     Icon: AlertTriangle,
-    className: "text-orange-400 bg-orange-400/10",
+    className: "text-orange-600 dark:text-orange-400 bg-orange-400/10",
   },
   handoff_requested: {
     label: "Pide una persona",

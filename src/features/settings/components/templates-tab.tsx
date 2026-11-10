@@ -39,12 +39,12 @@ const STATUS_CONFIG: Record<
 > = {
   approved: {
     label: "Aprobado",
-    className: "text-emerald-400 bg-emerald-400/10",
+    className: "text-success bg-success/10",
     Icon: CheckCircle2,
   },
   submitted: {
     label: "Pendiente",
-    className: "text-amber-400 bg-amber-400/10",
+    className: "text-warning bg-amber-400/10",
     Icon: Clock,
   },
   draft: {
@@ -59,7 +59,7 @@ const STATUS_CONFIG: Record<
   },
   paused: {
     label: "Pausado",
-    className: "text-orange-400 bg-orange-400/10",
+    className: "text-orange-600 dark:text-orange-400 bg-orange-400/10",
     Icon: PauseCircle,
   },
 };
@@ -303,8 +303,8 @@ function LibraryCard({
           className={cn(
             "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
             item.category === "utility"
-              ? "bg-emerald-400/10 text-emerald-400"
-              : "bg-amber-400/10 text-amber-400",
+              ? "bg-success/10 text-success"
+              : "bg-amber-400/10 text-warning",
           )}
         >
           {item.category === "utility" ? "Utilidad" : "Marketing"}

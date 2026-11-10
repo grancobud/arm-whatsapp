@@ -379,8 +379,8 @@ export function TemplateFormSheet({
                         className={cn(
                           "w-fit rounded-full px-2 py-0.5 text-xs font-medium",
                           cat === "utility"
-                            ? "bg-emerald-400/10 text-emerald-400"
-                            : "bg-amber-400/10 text-amber-400",
+                            ? "bg-success/10 text-success"
+                            : "bg-amber-400/10 text-warning",
                         )}
                       >
                         {CATEGORY_HINT[cat]}
@@ -391,10 +391,10 @@ export function TemplateFormSheet({
                 {category === "marketing" && (
                   <div className="flex items-start gap-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2.5">
                     <Info
-                      className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+                      className="mt-0.5 h-4 w-4 shrink-0 text-warning"
                       aria-hidden="true"
                     />
-                    <p className="text-xs leading-relaxed text-amber-300">
+                    <p className="text-xs leading-relaxed text-warning">
                       Las plantillas de marketing deben ofrecer una opción para
                       dejar de recibir mensajes (usa el pie estándar).
                     </p>

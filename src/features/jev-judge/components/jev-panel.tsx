@@ -278,7 +278,7 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
     <span
       className={`rounded-full border px-2 py-1 ${
         ok
-          ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+          ? "border-success/40 text-success"
           : "border-border text-muted-foreground"
       }`}
     >

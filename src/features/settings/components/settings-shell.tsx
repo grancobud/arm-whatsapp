@@ -67,7 +67,7 @@ export function SettingsShell({
       <Tabs defaultValue={initialTab}>
         {/* On a phone the tabs wrap, so none stays hidden past the edge; wider
             screens keep one row and scroll within its own track. */}
-        <div className="mb-6 -mx-1 overflow-x-auto px-1 pb-1">
+        <div className="no-scrollbar mb-6 -mx-1 overflow-x-auto px-1 pb-1">
           <TabsList className="h-auto w-full flex-wrap justify-start sm:w-max sm:flex-nowrap">
             <TabsTrigger value="agentes">Agentes</TabsTrigger>
             <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
@@ -83,7 +83,7 @@ export function SettingsShell({
         </div>
 
         <TabsContent value="agentes">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <AgentsTab
               workspaceId={workspaceId}
               initialAgents={initialAgents}
@@ -94,7 +94,7 @@ export function SettingsShell({
         </TabsContent>
 
         <TabsContent value="integraciones">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <IntegrationsTab
               workspaceId={workspaceId}
               initialIntegrations={initialIntegrations}
@@ -103,13 +103,13 @@ export function SettingsShell({
         </TabsContent>
 
         <TabsContent value="negocio">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <BusinessInfoForm workspaceId={workspaceId} initial={biForForm} />
           </div>
         </TabsContent>
 
         <TabsContent value="tools">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <ToolsCatalog
               workspaceId={workspaceId}
               initialTools={initialTools}
@@ -118,7 +118,7 @@ export function SettingsShell({
         </TabsContent>
 
         <TabsContent value="sistemas">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <McpTab
               workspaceId={workspaceId}
               canManage={role === "admin" || role === "manager"}
@@ -135,25 +135,25 @@ export function SettingsShell({
           </div>
         </TabsContent>
         <TabsContent value="knowledge-base">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <KbTab workspaceId={workspaceId} />
           </div>
         </TabsContent>
 
         <TabsContent value="equipo">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <TeamTab workspaceId={workspaceId} />
           </div>
         </TabsContent>
 
         <TabsContent value="automatizaciones">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <AutomationsTab workspaceId={workspaceId} />
           </div>
         </TabsContent>
 
         <TabsContent value="datos">
-          <div className="p-6 space-y-6 rounded-lg border border-border/60 bg-card">
+          <div className="p-4 sm:p-6 space-y-6 rounded-lg border border-border/60 bg-card">
             <DataExportTab
               workspaceId={workspaceId}
               canExport={role === "admin" || role === "manager"}

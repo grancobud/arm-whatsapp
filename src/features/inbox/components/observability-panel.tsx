@@ -27,32 +27,32 @@ const EVENT_TYPE_STYLES: Record<string, EventTypeStyle> = {
   llm_usage: {
     label: "LLM",
     variant: "default",
-    className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    className: "bg-blue-500/20 text-info border-blue-500/30",
   },
   tool_call: {
     label: "Tool",
     variant: "default",
-    className: "bg-green-500/20 text-green-300 border-green-500/30",
+    className: "bg-success/15 text-success border-success/30",
   },
   state_change: {
     label: "State",
     variant: "default",
-    className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    className: "bg-amber-500/20 text-warning border-amber-500/30",
   },
   error: {
     label: "Error",
     variant: "destructive",
-    className: "bg-red-500/20 text-red-300 border-red-500/30",
+    className: "bg-red-500/20 text-destructive border-red-500/30",
   },
   cost_alert: {
     label: "Cost",
     variant: "default",
-    className: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+    className: "bg-orange-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30",
   },
   jev_judgment: {
     label: "Jev",
     variant: "default",
-    className: "bg-amber-500/20 text-amber-200 border-amber-500/30",
+    className: "bg-amber-500/20 text-warning border-amber-500/30",
   },
 };
 
@@ -152,7 +152,7 @@ export function ObservabilityPanel({
 
       {/* Error state */}
       {error && (
-        <p className="rounded border border-red-500/30 bg-red-500/10 px-2 py-1 text-xs text-red-300">
+        <p className="rounded border border-red-500/30 bg-red-500/10 px-2 py-1 text-xs text-destructive">
           {error}
         </p>
       )}
