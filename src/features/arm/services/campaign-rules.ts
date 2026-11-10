@@ -19,6 +19,44 @@ export function dailyRoom(sentLast24h: number, limit: number = dailyLimit()): nu
   return Math.max(0, limit - sentLast24h);
 }
 
+/**
+ * Arranque gradual: un número que nunca mandó campañas empieza de a poco. Meta
+ * mide la calidad con los primeros envíos, y un salto de cero a cientos en un
+ * día es lo que más castiga.
+ */
+const WARMUP_STEPS = [50, 100, 150, 200];
+
+/** El tope de hoy según cuántos días pasaron desde el primer envío de campaña. */
+export function warmupLimit(daysSinceFirstSend: number | null, limit: number = dailyLimit()): number {
+  const day = daysSinceFirstSend === null ? 0 : Math.max(0, Math.floor(daysSinceFirstSend));
+  return Math.min(limit, WARMUP_STEPS[day] ?? limit);
+}
+
+const STOP_AFTER_OPT_OUTS = 5;
+const STOP_OPT_OUT_RATE = 0.05;
+
+/**
+ * Bajas y «dejar de recibir promociones» después del envío: es la señal que Meta
+ * usa para bajar la calidad del número. Con 1 de cada 20 la campaña se frena.
+ */
+export function shouldStopForOptOuts(delivered: number, optedOut: number): boolean {
+  return optedOut >= STOP_AFTER_OPT_OUTS && delivered > 0 && optedOut / delivered >= STOP_OPT_OUT_RATE;
+}
+
+/** El error que deja el webhook cuando la persona frenó las promociones. */
+export const MARKETING_OPT_OUT_ERROR = "Meta 131050";
+
+/** Pure: cuántas personas pidieron no recibir más, después de que les llegó. */
+export function countOptOuts(
+  rows: { status: string; sent_at: string | null; error: string | null; opt_out_at: string | null }[],
+): number {
+  return rows.filter(
+    (r) =>
+      (r.status === "failed" && r.error === MARKETING_OPT_OUT_ERROR) ||
+      (r.status === "sent" && !!r.sent_at && !!r.opt_out_at && r.opt_out_at > r.sent_at),
+  ).length;
+}
+
 /** Does the template tell people how to stop getting these messages? */
 export function hasOptOutInstruction(templateText: string): boolean {
   return /\b(baja|stop)\b|dejar de recibir|no recibir m[aá]s/i.test(templateText);

@@ -150,9 +150,11 @@ export function CampaignsView({
           charla.
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          La plantilla tiene que decir cómo darse de baja. Un número nuevo llega a
-          250 personas por día: el resto sale en los días siguientes. Si fallan
-          muchos envíos o Meta pausa la plantilla, la campaña se frena sola.
+          La plantilla tiene que decir cómo darse de baja. Para cuidar el número,
+          los envíos arrancan de a poco: 50 personas el primer día, 100 el
+          segundo, y así hasta 250 por día; el resto sale en los días siguientes,
+          siempre de día. Si fallan muchos envíos, si 1 de cada 20 personas pide
+          no recibir más o si Meta pausa la plantilla, la campaña se frena sola.
         </p>
       </div>
 

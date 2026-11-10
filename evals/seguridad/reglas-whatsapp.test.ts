@@ -9,6 +9,9 @@ import {
   messageErrorCode,
   OPT_OUT_LINE,
   shouldStopCampaign,
+  countOptOuts,
+  shouldStopForOptOuts,
+  warmupLimit,
 } from "../../src/features/arm/services/campaign-rules.ts";
 import { hasCardOrBankNumber } from "../../src/features/inbox/services/sensitive-data.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
@@ -41,6 +44,38 @@ test("una campaña se frena recién con muchas fallas", () => {
   assert.equal(shouldStopCampaign(0, 10), true);
   assert.equal(shouldStopCampaign(10, 10), true);
   assert.equal(shouldStopCampaign(100, 10), false);
+});
+
+test("un número que nunca mandó campañas arranca de a poco", () => {
+  assert.equal(warmupLimit(null, 250), 50);
+  assert.equal(warmupLimit(0.5, 250), 50);
+  assert.equal(warmupLimit(1, 250), 100);
+  assert.equal(warmupLimit(3.9, 250), 200);
+  assert.equal(warmupLimit(4, 250), 250);
+  assert.equal(warmupLimit(400, 2000), 2000);
+  // El arranque nunca supera el tope del negocio.
+  assert.equal(warmupLimit(2, 80), 80);
+});
+
+test("la campaña se frena si muchos piden no recibir más", () => {
+  assert.equal(shouldStopForOptOuts(100, 4), false);
+  assert.equal(shouldStopForOptOuts(100, 5), true);
+  assert.equal(shouldStopForOptOuts(200, 5), false);
+  assert.equal(shouldStopForOptOuts(0, 0), false);
+});
+
+test("cuenta como baja la del chat después del envío y el «frenar promociones» de WhatsApp", () => {
+  const sent = "2026-11-10T12:00:00Z";
+  assert.equal(
+    countOptOuts([
+      { status: "sent", sent_at: sent, error: null, opt_out_at: "2026-11-10T13:00:00Z" },
+      { status: "sent", sent_at: sent, error: null, opt_out_at: "2026-11-01T13:00:00Z" },
+      { status: "sent", sent_at: sent, error: null, opt_out_at: null },
+      { status: "failed", sent_at: null, error: "Meta 131050", opt_out_at: null },
+      { status: "failed", sent_at: null, error: "Meta 131026", opt_out_at: null },
+    ]),
+    2,
+  );
 });
 
 test("código de error de Meta, venga donde venga", () => {
