@@ -7,7 +7,17 @@
 // single request runs into the Vercel timeout.
 
 import { createServiceClient as svc } from "@/lib/supabase/service";
-import { dailyRoom, hasOptOutInstruction, OPT_OUT_LINE, shouldStopCampaign } from "./campaign-rules";
+import {
+  countOptOuts,
+  dailyRoom,
+  hasOptOutInstruction,
+  OPT_OUT_LINE,
+  shouldStopCampaign,
+  shouldStopForOptOuts,
+  warmupLimit,
+} from "./campaign-rules";
+import { withinSendingHours } from "@/features/automations/engine";
+import { DEFAULT_TIMEZONE } from "@/features/inbox/services/business-info";
 import { dispatchTemplate } from "@/features/inbox/services/dispatch";
 import { canReceiveMarketing } from "@/features/inbox/services/marketing-consent";
 import type {
@@ -190,15 +200,49 @@ async function campaignStopReason(campaign: CampaignRow): Promise<string | null>
 
   const { data: rows } = await supabase
     .from("campaign_recipients")
-    .select("status")
+    .select("status, sent_at, error, contact:contacts(opt_out_at)")
     .eq("campaign_id", campaign.id)
     .in("status", ["sent", "failed"])
     .limit(MAX_RECIPIENTS_PER_CAMPAIGN);
-  const statuses = ((rows ?? []) as { status: string }[]).map((r) => r.status);
-  const failed = statuses.filter((s) => s === "failed").length;
-  return shouldStopCampaign(statuses.length - failed, failed)
-    ? `Frenada por fallas: ${failed} de ${statuses.length} envíos`
+  const list = (rows ?? []) as unknown as {
+    status: string;
+    sent_at: string | null;
+    error: string | null;
+    contact: { opt_out_at: string | null } | null;
+  }[];
+  const failed = list.filter((r) => r.status === "failed").length;
+  if (shouldStopCampaign(list.length - failed, failed)) {
+    return `Frenada por fallas: ${failed} de ${list.length} envíos`;
+  }
+  const optedOut = countOptOuts(list.map((r) => ({ ...r, opt_out_at: r.contact?.opt_out_at ?? null })));
+  return shouldStopForOptOuts(list.length, optedOut)
+    ? `Frenada por bajas: ${optedOut} de ${list.length} personas pidieron no recibir más`
     : null;
+}
+
+/** Días desde el primer envío de campaña del negocio; null si nunca mandó. */
+async function daysSinceFirstSend(workspaceId: string, now: Date): Promise<number | null> {
+  const supabase = svc();
+  const { data } = await supabase
+    .from("campaign_recipients")
+    .select("sent_at")
+    .eq("workspace_id", workspaceId)
+    .not("sent_at", "is", null)
+    .order("sent_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const first = (data as { sent_at: string } | null)?.sent_at;
+  return first ? (now.getTime() - new Date(first).getTime()) / 86_400_000 : null;
+}
+
+async function timeZoneOf(workspaceId: string): Promise<string> {
+  const supabase = svc();
+  const { data } = await supabase
+    .from("business_info")
+    .select("structured")
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  return (data as { structured: { timezone?: string } | null } | null)?.structured?.timezone ?? DEFAULT_TIMEZONE;
 }
 
 async function stopCampaign(campaign: CampaignRow, reason: string): Promise<void> {
@@ -248,8 +292,13 @@ export async function drainCampaignQueue(): Promise<number> {
       continue;
     }
 
+    // De noche no sale nada: la campaña queda en "sending" y sigue a la mañana.
+    const now = new Date();
+    if (!withinSendingHours(now, await timeZoneOf(campaign.workspace_id))) continue;
+
     // Past the daily limit the campaign stays in "sending" and resumes by itself.
-    const room = dailyRoom(await sentLast24h(campaign.workspace_id));
+    const todayLimit = warmupLimit(await daysSinceFirstSend(campaign.workspace_id, now));
+    const room = dailyRoom(await sentLast24h(campaign.workspace_id), todayLimit);
     if (room === 0) continue;
 
     const { data: batch } = await supabase
