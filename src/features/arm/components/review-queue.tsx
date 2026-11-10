@@ -80,7 +80,7 @@ export function ReviewQueue({
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 space-y-8">
       <div>
-        <h1 className="font-display text-xl font-semibold text-foreground">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
           Revisión
         </h1>
         <p className="text-sm text-muted-foreground mt-1">

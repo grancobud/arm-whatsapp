@@ -8,6 +8,7 @@ import {
 import { WorkspaceSwitcher } from "@/features/workspace/components/workspace-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { NavLink } from "@/components/nav-link";
 import { cn } from "@/lib/utils";
 import {
   Building2,
@@ -19,7 +20,18 @@ import {
   MessageCircle,
   Settings,
 } from "lucide-react";
-import Link from "next/link";
+
+type Section = { href: string; label: string; shortLabel?: string; icon: typeof Settings };
+
+const SECTIONS: Section[] = [
+  { href: "/inbox", label: "Bandeja", icon: MessageCircle },
+  { href: "/revision", label: "Revisión", icon: ClipboardCheck },
+  { href: "/campanas", label: "Campañas", icon: Megaphone },
+  { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
+  { href: "/settings", label: "Configuración", shortLabel: "Config.", icon: Settings },
+  { href: "/ayuda", label: "Ayuda", icon: CircleHelp },
+];
+const AGENCY: Section = { href: "/workspaces", label: "Agencia", icon: Building2 };
 
 export default async function MainLayout({
   children,
@@ -49,6 +61,8 @@ export default async function MainLayout({
   const activeId = active?.workspace_id ?? null;
   const workspaceName =
     memberships.find((m) => m.workspace_id === activeId)?.name ?? null;
+  const barSections = isSuperAdmin ? [AGENCY, ...SECTIONS] : SECTIONS;
+  const tabSections = isSuperAdmin ? [...SECTIONS, AGENCY] : SECTIONS;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -98,84 +112,11 @@ export default async function MainLayout({
         <div className="flex items-center gap-1 shrink-0">
           <ThemeToggle />
 
-          {isSuperAdmin && (
-            <Link href="/workspaces" className="hidden md:inline-flex">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Building2 className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only sm:not-sr-only sm:ml-2">Agencia</span>
-              </Button>
-            </Link>
-          )}
-
-          <Link href="/inbox" className="hidden md:inline-flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <MessageCircle className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Bandeja</span>
-            </Button>
-          </Link>
-
-          <Link href="/revision" className="hidden md:inline-flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Revisión</span>
-            </Button>
-          </Link>
-
-          <Link href="/campanas" className="hidden md:inline-flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Megaphone className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Campañas</span>
-            </Button>
-          </Link>
-
-          <Link href="/dashboard" className="hidden md:inline-flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Panel</span>
-            </Button>
-          </Link>
-
-          <Link href="/settings" className="hidden md:inline-flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Settings className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Configuración</span>
-            </Button>
-          </Link>
-
-          <Link href="/ayuda" className="hidden md:inline-flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <CircleHelp className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-2">Ayuda</span>
-            </Button>
-          </Link>
+          {barSections.map(({ href, label, icon: Icon }) => (
+            <NavLink key={href} href={href} label={label} variant="bar">
+              <Icon className="h-4 w-4" aria-hidden="true" />
+            </NavLink>
+          ))}
 
           <form action={logout}>
             <Button
@@ -198,67 +139,15 @@ export default async function MainLayout({
         className={cn(
           "md:hidden fixed bottom-0 inset-x-0 z-50 h-14",
           "glass-strong border-t border-border/50",
-          "flex items-center justify-around px-4",
+          "flex items-center justify-around px-2",
         )}
         aria-label="Navegación móvil"
       >
-        <Link
-          href="/inbox"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <MessageCircle className="h-5 w-5" aria-hidden="true" />
-          <span>Bandeja</span>
-        </Link>
-
-        <Link
-          href="/revision"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ClipboardCheck className="h-5 w-5" aria-hidden="true" />
-          <span>Revisión</span>
-        </Link>
-
-        <Link
-          href="/campanas"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <Megaphone className="h-5 w-5" aria-hidden="true" />
-          <span>Campañas</span>
-        </Link>
-
-        <Link
-          href="/dashboard"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
-          <span>Panel</span>
-        </Link>
-
-        <Link
-          href="/settings"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <Settings className="h-5 w-5" aria-hidden="true" />
-          <span>Config.</span>
-        </Link>
-
-        <Link
-          href="/ayuda"
-          className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <CircleHelp className="h-5 w-5" aria-hidden="true" />
-          <span>Ayuda</span>
-        </Link>
-
-        {isSuperAdmin && (
-          <Link
-            href="/workspaces"
-            className="flex flex-col items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            <Building2 className="h-5 w-5" aria-hidden="true" />
-            <span>Agencia</span>
-          </Link>
-        )}
+        {tabSections.map(({ href, label, shortLabel, icon: Icon }) => (
+          <NavLink key={href} href={href} label={label} shortLabel={shortLabel} variant="tabs">
+            <Icon className="h-5 w-5" aria-hidden="true" />
+          </NavLink>
+        ))}
       </nav>
     </div>
   );

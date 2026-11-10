@@ -59,7 +59,7 @@ export function SettingsShell({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <h1 className="font-display text-xl font-semibold text-foreground mb-6">
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground mb-6">
         Configuración
       </h1>
 
@@ -67,8 +67,8 @@ export function SettingsShell({
       <Tabs defaultValue={initialTab}>
         {/* On a phone the tabs wrap, so none stays hidden past the edge; wider
             screens keep one row and scroll within its own track. */}
-        <div className="no-scrollbar mb-6 -mx-1 overflow-x-auto px-1 pb-1">
-          <TabsList className="h-auto w-full flex-wrap justify-start sm:w-max sm:flex-nowrap">
+        <div className="mb-6">
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
             <TabsTrigger value="agentes">Agentes</TabsTrigger>
             <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
             <TabsTrigger value="negocio">Negocio</TabsTrigger>

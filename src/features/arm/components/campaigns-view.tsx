@@ -135,7 +135,7 @@ export function CampaignsView({
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 space-y-8">
       <div>
-        <h1 className="font-display text-xl font-semibold text-foreground flex items-center gap-2">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2">
           <Megaphone className="h-5 w-5" aria-hidden="true" />
           Campañas de reactivación
         </h1>

@@ -127,7 +127,7 @@ export function DashboardMetrics({
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
       {/* Page heading */}
       <div>
-        <h1 className="font-display text-xl font-semibold text-foreground">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
           Panel
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">

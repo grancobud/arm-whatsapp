@@ -145,6 +145,12 @@
     scrollbar-color: oklch(var(--foreground) / 0.18) transparent;
   }
 
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
   html,
   body {
     /* Nada debería desbordar a lo ancho; si algo lo hace, que no mueva toda la página. */
