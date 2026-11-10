@@ -35,7 +35,7 @@ const PROMISES = [
 ];
 
 /** Las oraciones que afirman algo: una pregunta o un "si querés" es solo una oferta. */
-function affirmedSentences(text: string): string[] {
+export function affirmedSentences(text: string): string[] {
   return text.split(/(?<=[.!?\n])\s*/).filter((sentence) => {
     const t = sentence.trim();
     if (!t || t.endsWith("?")) return false;

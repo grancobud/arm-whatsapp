@@ -5,6 +5,7 @@ import { resolveCitations } from "./kb-citations";
 import { createReviewCompleter, generateWithTools, getWorkspaceModel } from "./openrouter";
 import { DEFAULT_REVIEW_BUDGET_MS, reviewEnabled, reviewReply } from "./reply-review";
 import { applyTurnGuards } from "./turn-guards";
+import { applyOptOut, optOutRequested } from "./opt-out";
 import { DEFAULT_HISTORY_WINDOW } from "./conversation-history";
 import { starterPrompt } from "@/features/agents/lib/starter-prompts";
 import { finishReply } from "./reply-finish";
@@ -515,6 +516,44 @@ async function processClaimedBatch(
     reply.text = guardedText;
     if ((forcedHandoff || savedContactData.length > 0) && !meta.side_effects) {
       await saveProgress({ side_effects: true });
+    }
+
+    // ── 8a'. Baja pedida: sale la confirmación fija, sin revisor ni envío normal ──
+    // Con la baja marcada dispatch rechazaría la respuesta y la charla pasaría a una persona.
+    // Si algo se corta acá, send_started evita un segundo envío y la toma una persona.
+    if (optOutRequested(reply.toolResults)) {
+      await saveProgress({ send_started: true });
+      const saved = await applyOptOut({
+        workspaceId: batch.workspace_id,
+        contactId: conversation.contact_id as string,
+        conversationId: batch.conversation_id,
+        source: "agent",
+      });
+      if (!saved) throw new Error("No se pudo guardar la baja");
+      await saveProgress({ reply_sent: true });
+      await recordLlmUsage({
+        workspaceId: batch.workspace_id,
+        conversationId: batch.conversation_id,
+        contactId: conversation.contact_id as string,
+        model,
+        promptTokens: reply.inputTokens,
+        completionTokens: reply.outputTokens,
+      });
+      await supabase.from("events").insert({
+        type: "turn_completed",
+        level: "info",
+        workspace_id: batch.workspace_id,
+        conversation_id: batch.conversation_id,
+        payload: {
+          model: reply.modelUsed ?? model,
+          total_ms: Date.now() - turnStartedAt,
+          attempts: meta.attempts,
+          tools: reply.toolResults.map((t) => `${t.name}:${t.status}`),
+          opted_out: true,
+        },
+      });
+      await markBatchProcessed(batch.id, mergedText, supabase);
+      return { processed: true, conversationId: batch.conversation_id };
     }
 
     // ── 8b. Reply review (evaluador-optimizador, reply-review.ts) ───────────

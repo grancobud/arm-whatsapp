@@ -34,9 +34,12 @@ export function turnRecovery(progress: TurnProgress): TurnRecovery {
   return "retry";
 }
 
-/** Saving a memory twice is harmless: it doesn't block a retry. */
+/**
+ * Saving a memory twice is harmless: it doesn't block a retry. Tampoco register_opt_out: solo
+ * registra el pedido, y sin reintento la baja se perdería si el turno se corta antes de aplicarla.
+ */
 export function blocksRetry(tool: { name: string; sensitivity?: string | null }): boolean {
-  return tool.sensitivity !== "read" && tool.name !== "remember_fact";
+  return tool.sensitivity !== "read" && tool.name !== "remember_fact" && tool.name !== "register_opt_out";
 }
 
 export function capInbound(text: string): string {

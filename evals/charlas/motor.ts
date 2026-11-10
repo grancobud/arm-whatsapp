@@ -10,12 +10,15 @@ import { registry } from "../../src/features/tools/index.ts";
 import type { Tool, ToolResult } from "../../src/features/tools/core/tool.ts";
 import { invalidContactValue } from "../../src/features/arm/services/contact-update-rules.ts";
 import { formatClaimsContext } from "../../src/features/arm/services/claims.ts";
+import { claimsForPrompt } from "../../src/features/arm/services/claim-expiry.ts";
 import { hasSpecialCategoryData } from "../../src/features/privacy/privacy-rules.ts";
+import { classifyConsentMessage, optOutRequested, OPT_OUT_CONFIRMATION, OPT_OUT_TOOL } from "../../src/features/inbox/services/opt-out.ts";
+import { plainText } from "../../src/lib/plain-text.ts";
 import { buildSystemPrompt } from "../../src/features/inbox/services/prompt-builder.ts";
 import { buildBusinessInfoContext, buildNowContext } from "../../src/features/inbox/services/business-info.ts";
 import { starterPrompt } from "../../src/features/agents/lib/starter-prompts.ts";
 import { NEGOCIO } from "../agente/negocio.ts";
-import type { Charla, Turno } from "./charlas.ts";
+import type { Charla, MemoriaInicial, Turno } from "./charlas.ts";
 
 const GEN = "auto";
 const VENTANA = DEFAULT_HISTORY_WINDOW;
@@ -26,7 +29,13 @@ process.env.LLM_BASE_URL ||= process.env.EVAL_BASE_URL || "http://localhost:3141
 process.env.LLM_API_KEY ||= process.env.EVAL_API_KEY || process.env.FREELLMAPI_KEY;
 if (!process.env.LLM_API_KEY) throw new Error("Falta EVAL_API_KEY (o LLM_API_KEY / FREELLMAPI_KEY)");
 
-function simular(nombre: string, a: Record<string, unknown>): ToolResult {
+function simular(nombre: string, a: Record<string, unknown>, loDicho = ""): ToolResult {
+  // Como findSourceMessage en producción: la cita tiene que ser de lo que escribió el cliente.
+  if (nombre === OPT_OUT_TOOL) {
+    return plainText(loDicho).includes(plainText(String(a.quote ?? "")))
+      ? { ok: true, output: { opt_out_requested: true, message: "Hecho. El sistema le manda la confirmación al cliente y no le vuelve a escribir. No agregues nada más." } }
+      : { ok: false, output: null, error: "Esas palabras no están en lo que escribió el cliente." };
+  }
   if (nombre === "request_human") {
     return {
       ok: true,
@@ -56,25 +65,32 @@ const runOriginal = registry.runTool.bind(registry);
 const biz = buildBusinessInfoContext(NEGOCIO);
 
 export async function correrCharla(
-  c: Pick<Charla, "mensajes" | "herramientas" | "chequear"> & { id: string },
+  c: Pick<Charla, "mensajes" | "memoria" | "herramientas" | "chequear"> & { id: string },
   rep: number,
-  opciones: { modelo?: string; promptBase?: string; hora?: number } = {},
+  opciones: { modelo?: string; promptBase?: string; hora?: number; tiempoRevisionMs?: number; tokensRevision?: number } = {},
 ) {
   const gen = opciones.modelo ?? GEN;
   process.env.OPENROUTER_FALLBACK_MODELS = gen;
   const hora = String(opciones.hora ?? 11).padStart(2, "0");
-  const nombres = c.herramientas ?? BASICAS;
+  // La baja está siempre disponible, como en getEnabledTools.
+  const nombres = [...new Set([...(c.herramientas ?? BASICAS), OPT_OUT_TOOL])];
   const historia: { role: "user" | "assistant"; content: string }[] = [];
-  const memoria: { kind: string; text: string; source_message_id: string | null }[] = [];
+  const memoria: MemoriaInicial[] = [...(c.memoria ?? [])];
   const turnos: Turno[] = [];
-  let traspaso = false;
+  let termino = false;
   let nombreEnFicha: string | null = null;
 
   for (const [i, mensaje] of c.mensajes.entries()) {
-    if (traspaso) break;
+    if (termino) break;
+    // Lo que hace el webhook en producción: la IA ni ve el mensaje.
+    if (classifyConsentMessage(mensaje) === "opt_out") {
+      turnos.push({ cliente: mensaje, texto: OPT_OUT_CONFIRMATION, llamadas: [], revision: "no_aplica", error: null });
+      console.log(`  ${i + 1}. C: ${mensaje.slice(0, 90)}\n     M: ${OPT_OUT_CONFIRMATION}  [baja por palabra clave]`);
+      break;
+    }
     const llamadas: Turno["llamadas"] = [];
     const herramientas: Tool[] = nombres.map((n) => {
-      const simulada: Tool = { ...reales.get(n)!, run: async (a) => simular(n, a as Record<string, unknown>) };
+      const simulada: Tool = { ...reales.get(n)!, run: async (a) => simular(n, a as Record<string, unknown>, c.mensajes.slice(0, i + 1).join("\n")) };
       registry.register(simulada);
       return simulada;
     });
@@ -83,12 +99,15 @@ export async function correrCharla(
       return runOriginal(tool, a, ctx, o);
     };
 
+    // Un minuto distinto por turno: el proveedor cachea pedidos idénticos.
+    const ahora = new Date(`2026-11-03T${hora}:${String(i + rep * 10).padStart(2, "0")}:00-03:00`);
+    // Lo mismo que getActiveClaims en producción: lo vencido no llega al agente.
+    const memoriaDelTurno = formatClaimsContext(claimsForPrompt(memoria, ahora.getTime()) as never);
     const system = buildSystemPrompt({
-      // Un minuto distinto por turno: el proveedor cachea pedidos idénticos.
-      nowContext: buildNowContext("America/Argentina/Buenos_Aires", new Date(`2026-11-03T${hora}:${String(i + rep * 10).padStart(2, "0")}:00-03:00`)),
+      nowContext: buildNowContext("America/Argentina/Buenos_Aires", ahora),
       bizContext: biz,
       promptBase: opciones.promptBase ?? starterPrompt("general", "Barbería El Faro", "Martín"),
-      memoryContext: formatClaimsContext(memoria as never),
+      memoryContext: memoriaDelTurno,
       contactName: nombreEnFicha,
       toolNames: nombres,
       vars: { agentName: "Martín", businessName: "Barbería El Faro", contactName: null },
@@ -97,7 +116,9 @@ export async function correrCharla(
 
     let texto = "";
     let revision = "apagado";
+    let errorRevision: string | undefined;
     let error: string | null = null;
+    let baja = false;
     try {
       const reply = await generateWithTools({
         systemPrompt: system,
@@ -114,18 +135,31 @@ export async function correrCharla(
       if (guardias.forcedHandoff) llamadas.push({ nombre: "request_human", args: {}, forzada: true });
       for (const d of guardias.savedContactData) llamadas.push({ nombre: "update_contact", args: d.args ?? {}, forzada: true });
       texto = reply.text;
-      if (reviewEnabled() && reply.text) {
+      // Como buffer.ts: con la baja pedida sale la confirmación fija, sin revisor.
+      baja = optOutRequested(resultados);
+      if (baja) {
+        texto = OPT_OUT_CONFIRMATION;
+        revision = "no_aplica";
+        if (!llamadas.some((l) => l.nombre === OPT_OUT_TOOL)) llamadas.push({ nombre: OPT_OUT_TOOL, args: {}, forzada: true });
+      } else if (reviewEnabled() && reply.text) {
+        const completar = await createReviewCompleter("eval", gen);
+        const tiempo = opciones.tiempoRevisionMs;
         const r = await reviewReply({
           draft: reply.text,
           customerMessage: mensaje,
           agentSystemPrompt: system,
-          sources: { business: biz, memory: formatClaimsContext(memoria as never), contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
-          complete: await createReviewCompleter("eval", gen),
+          sources: { business: biz, memory: memoriaDelTurno, contactName: nombreEnFicha, toolResults: resultados, toolNames: nombres },
+          // reviewReply limita cada llamada en tiempo y en tokens: acá se reemplazan esos topes solo para esta corrida.
+          complete: tiempo
+            ? (req) => completar({ ...req, timeoutMs: tiempo, maxOutputTokens: opciones.tokensRevision ?? req.maxOutputTokens })
+            : completar,
+          budgetMs: tiempo ? tiempo * 3 : undefined,
         });
         texto = r.text;
         revision = r.outcome;
+        errorRevision = r.error?.slice(0, 200);
       }
-      texto = finishReply(texto, nombres, mensaje).text;
+      if (!baja) texto = finishReply(texto, nombres, mensaje).text;
     } catch (err) {
       error = String(err).slice(0, 200);
     } finally {
@@ -135,13 +169,13 @@ export async function correrCharla(
     for (const l of llamadas) {
       if (l.nombre === "update_contact" && l.args.field === "name") nombreEnFicha = String(l.args.value ?? "");
       if (l.nombre === "remember_fact" && !hasSpecialCategoryData(String(l.args.text ?? ""))) {
-        memoria.push({ kind: String(l.args.kind ?? "fact"), text: String(l.args.text ?? ""), source_message_id: "eval" });
+        memoria.push({ kind: (l.args.kind ?? "fact") as MemoriaInicial["kind"], text: String(l.args.text ?? ""), source_message_id: "eval", created_at: ahora.toISOString() });
       }
     }
     historia.push({ role: "user", content: mensaje });
     if (texto) historia.push({ role: "assistant", content: texto });
-    traspaso = llamadas.some((l) => l.nombre === "request_human");
-    turnos.push({ cliente: mensaje, texto, llamadas, revision, error });
+    termino = baja || llamadas.some((l) => l.nombre === "request_human");
+    turnos.push({ cliente: mensaje, texto, llamadas, revision, errorRevision, error });
 
     const usadas = llamadas.map((l) => l.nombre + (l.forzada ? "*" : "")).join(",");
     console.log(`  ${i + 1}. C: ${mensaje.slice(0, 90)}`);

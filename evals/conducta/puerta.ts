@@ -53,6 +53,22 @@ export interface Evaluacion {
 
 const NO_REVISADO = new Set(["review_failed", "rewrite_failed", "apagado"]);
 
+/** Un turno con error del modelo nunca llegó al revisor: eso no es falta de revisión. */
+export const quedoSinRevisar = (r: Pick<ResultadoCaso, "turnos">) => r.turnos.some((t) => !t.error && NO_REVISADO.has(t.revision));
+
+/**
+ * Une una charla con su reintento por falta de revisión. El reintento puede completar lo que
+ * no se midió, pero nunca borra una falla: lo que salió mal en el primer intento sigue contando,
+ * aunque el segundo salga bien. Si el primero no llegó a medir nada, solo vale el segundo.
+ */
+export function unirConReintento<T extends ResultadoCaso>(primero: ResultadoCaso, segundo: T): T {
+  if (primero.turnos.some((t) => t.error)) return segundo;
+  const fallas = primero.chequeos.filter((c) => !c.ok);
+  const chequeos = segundo.chequeos.map((c) => (c.ok && fallas.find((f) => f.nombre === c.nombre)) || c);
+  const sinPar = fallas.filter((f) => !segundo.chequeos.some((c) => c.nombre === f.nombre));
+  return { ...segundo, chequeos: [...chequeos, ...sinPar] };
+}
+
 export function evaluar(resultados: ResultadoCaso[], piso = PISO_TOLERABLES): Evaluacion {
   const bloqueantes: Conteo = { ok: 0, total: 0 };
   const tolerables: Conteo = { ok: 0, total: 0 };
@@ -67,7 +83,7 @@ export function evaluar(resultados: ResultadoCaso[], piso = PISO_TOLERABLES): Ev
       sinMedir.push(`${etiqueta}: el modelo dio error`);
       continue;
     }
-    if (r.turnos.some((t) => NO_REVISADO.has(t.revision))) {
+    if (quedoSinRevisar(r)) {
       sinMedir.push(`${etiqueta}: una respuesta quedó sin revisar`);
     }
     for (const c of r.chequeos) {

@@ -5,6 +5,7 @@
 import type { Tool, ToolContext } from "@/features/tools/core/tool";
 import { backHandoffPromise, withHandoffNotice } from "./handoff-promise";
 import { backContactData } from "./contact-capture";
+import { backOptOutPromise, optOutRequested, OPT_OUT_TOOL } from "./opt-out";
 import type { ToolOutcome } from "./reply-review";
 
 export interface TurnGuards {
@@ -24,6 +25,11 @@ export async function applyTurnGuards(params: {
 }): Promise<TurnGuards> {
   const { customerText, tools, results, ctx } = params;
   let { text } = params;
+
+  // Antes que el resto: con la baja pedida, el turno termina en la confirmación fija.
+  const forcedOptOut = tools?.some((t) => t.name === OPT_OUT_TOOL) ? backOptOutPromise({ text, results }) : null;
+  if (forcedOptOut) results.push(forcedOptOut);
+  if (optOutRequested(results)) return { text, forcedHandoff: null, savedContactData: [] };
 
   const forcedHandoff = await backHandoffPromise({ text, tools, results, ctx, customerText });
   if (forcedHandoff) {
