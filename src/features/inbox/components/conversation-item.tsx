@@ -53,6 +53,7 @@ export function ConversationItem({
   const initials = getInitials(contact.name, contact.phone);
   const preview = truncate(last_message?.body ?? null, 60);
   const time = timeAgo(last_message_at);
+  const unread = unread_count > 0;
 
   return (
     <button
@@ -79,13 +80,18 @@ export function ConversationItem({
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-0.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-foreground truncate">
+          <span
+            className={cn(
+              "text-sm text-foreground truncate",
+              unread ? "font-semibold" : "font-medium",
+            )}
+          >
             {displayName}
           </span>
           <div className="flex items-center gap-1.5 shrink-0">
             <StateBadge state={conversation.state as ConversationState} />
             <span
-              className="text-xs text-muted-foreground"
+              className="text-xs tabular-nums text-muted-foreground"
               suppressHydrationWarning
             >
               {time}
@@ -94,11 +100,18 @@ export function ConversationItem({
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground truncate">{preview}</p>
+          <p
+            className={cn(
+              "text-xs truncate",
+              unread ? "text-foreground/90" : "text-muted-foreground",
+            )}
+          >
+            {preview}
+          </p>
           {unread_count > 0 && (
             <span
               className={cn(
-                "shrink-0 h-4 min-w-4 px-1 rounded-full text-[10px] font-semibold",
+                "shrink-0 h-4 min-w-4 px-1 rounded-full text-[10px] font-semibold tabular-nums",
                 "bg-primary text-primary-foreground flex items-center justify-center",
               )}
               aria-label={`${unread_count} mensajes sin leer`}
@@ -108,9 +121,11 @@ export function ConversationItem({
           )}
         </div>
 
-        <p className="font-mono text-[10px] text-muted-foreground/60">
-          {contact.phone}
-        </p>
+        {contact.name && (
+          <p className="font-mono text-[10px] text-muted-foreground/60">
+            {contact.phone}
+          </p>
+        )}
       </div>
     </button>
   );

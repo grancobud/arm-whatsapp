@@ -22,7 +22,7 @@ export function HelpManual({ status }: { status: SetupStatus | null }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 space-y-10">
       <header className="space-y-3">
-        <h1 className="font-display text-xl font-semibold text-foreground">Ayuda</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">Ayuda</h1>
         <p className="text-sm text-muted-foreground">
           Cómo poner en marcha tu agente de WhatsApp y cómo usarlo todos los días.
         </p>

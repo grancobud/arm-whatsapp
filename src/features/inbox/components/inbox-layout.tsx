@@ -78,7 +78,7 @@ export function InboxLayout({
             <h1 className="font-display text-sm font-semibold text-foreground">
               Bandeja
             </h1>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs tabular-nums text-muted-foreground">
               {filtered.length} de {conversations.length}
             </p>
           </div>
