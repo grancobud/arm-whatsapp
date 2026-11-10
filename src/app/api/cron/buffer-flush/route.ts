@@ -1,5 +1,6 @@
 import { safeError } from "@/lib/safe-error";
 import { NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/auth/cron-auth";
 import { processNextBatch } from "@/features/inbox/services/buffer";
 import { drainCampaignQueue } from "@/features/arm/services/campaigns";
 import { checkAlerts } from "@/features/alerts/alerts";
@@ -31,8 +32,7 @@ const REPLY_BUDGET_MS = 180_000;
 
 export async function GET(request: Request): Promise<NextResponse> {
   // Verify Vercel cron auth header
-  const authHeader = request.headers.get("Authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronAuthorized(request.headers.get("Authorization"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

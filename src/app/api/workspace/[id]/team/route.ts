@@ -6,6 +6,27 @@ import {
   readJsonBody,
 } from "@/lib/auth/workspace-access";
 import { provisionWorkspaceUser } from "@/lib/auth/provision-user";
+import { teamChangeError, type TeamRole } from "@/lib/auth/team-rules";
+
+/** Lo que hace falta saber de la persona a cambiar y del negocio para aplicar team-rules. */
+async function teamState(db: ReturnType<typeof svc>, workspaceId: string, userId: string) {
+  const [{ data: target }, { count }] = await Promise.all([
+    db.from("memberships").select("role, is_active").eq("workspace_id", workspaceId).eq("user_id", userId).maybeSingle(),
+    db
+      .from("memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .eq("role", "admin")
+      .eq("is_active", true),
+  ]);
+  return {
+    targetRole: (target?.role as TeamRole | undefined) ?? null,
+    targetIsActive: (target?.is_active as boolean | undefined) ?? undefined,
+    activeAdmins: count ?? 0,
+  };
+}
+
+const forbidden = (error: string) => NextResponse.json({ error }, { status: 403 });
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Schemas
@@ -122,6 +143,10 @@ export async function POST(
   const { email, role, password } = parsed.data;
   const db = svc();
 
+  // Antes de crear la cuenta: nadie da un rol igual o mayor al suyo, salvo un admin.
+  const roleDenied = teamChangeError({ actorRole: auth.role, targetRole: null, newRole: role, activeAdmins: 1 });
+  if (roleDenied) return forbidden(roleDenied);
+
   // Provision the account directly — no invite email / SMTP. The agency shares
   // the returned credentials and the user logs in directly.
   let provisioned;
@@ -138,6 +163,14 @@ export async function POST(
       { status: 400 },
     );
   }
+
+  // Si ya era del equipo, volver a invitarla es cambiarle el rol.
+  const existingDenied = teamChangeError({
+    actorRole: auth.role,
+    newRole: role,
+    ...(await teamState(db, workspaceId, provisioned.userId)),
+  });
+  if (existingDenied) return forbidden(existingDenied);
 
   // Create membership (upsert — re-invite idempotent)
   const { error: memberError } = await db.from("memberships").upsert(
@@ -193,6 +226,14 @@ export async function PATCH(
   const { userId, role, is_active } = parsed.data;
   const db = svc();
 
+  const denied = teamChangeError({
+    actorRole: auth.role,
+    newRole: role,
+    deactivates: is_active === false,
+    ...(await teamState(db, workspaceId, userId)),
+  });
+  if (denied) return forbidden(denied);
+
   const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
@@ -240,6 +281,13 @@ export async function DELETE(
 
   const { userId } = parsed.data;
   const db = svc();
+
+  const denied = teamChangeError({
+    actorRole: auth.role,
+    deactivates: true,
+    ...(await teamState(db, workspaceId, userId)),
+  });
+  if (denied) return forbidden(denied);
 
   const { error } = await db
     .from("memberships")

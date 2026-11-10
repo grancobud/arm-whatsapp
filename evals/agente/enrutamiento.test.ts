@@ -45,14 +45,14 @@ test("canTransition valida el grafo de estados legal", () => {
   assert.equal(canTransition("human_active", "closed"), true);
   assert.equal(canTransition("human_active", "handoff_pending"), false);
 
-  // Desde closed (estado terminal)
-  assert.equal(canTransition("closed", "ai_active"), false);
+  // Desde closed: solo vuelve a la IA, cuando el cliente escribe de nuevo
+  assert.equal(canTransition("closed", "ai_active"), true);
   assert.equal(canTransition("closed", "human_active"), false);
 });
 
 test("transition lanza TransitionError en transiciones ilegales", () => {
   assert.throws(
-    () => transition("closed", "ai_active"),
+    () => transition("closed", "human_active"),
     (err: unknown) => err instanceof TransitionError,
   );
   assert.throws(
