@@ -1,9 +1,9 @@
 {
-  "total": "daa6e8441dcda697f911ea5926d7da4eab097735251bf713d8818e292585a433",
+  "total": "a9bc5c6ca7be9c54b5aa99edfeaaf71b13d1cd809014cb1b51fdae03e2ff42bb",
   "componentes": {
     "evals/agente/negocio.ts": "44e9292f1489a90a31feaf14a43e6dac0579751f220d30536e3b0a7d9ef83a53",
     "evals/exigir-huella.ts": "ec3f2b3df53cb15ca797d8ef5f456c21c936fa902924808022e1697313180795",
-    "evals/herramientas/correr.ts": "0c5471c2ae499fc7be9f70ca8faaa919468015ef855f547fec708fe76cad80ec",
+    "evals/herramientas/correr.ts": "1785ff826bd116fb1bc03eb14ccfb9b085e008692e85b5cf4cc70c4a3e5fa2e0",
     "evals/huella.ts": "bf60f10482f879a1ca1a993b3530799f1b510b5a67b10ade5e00ccbfa134c145",
     "src/features/agents/lib/starter-prompts.ts": "b0266367d0c1038baeb16b76ec2204bdd973e371146c09cef281c35a8297ebb0",
     "src/features/agents/services/active-agent.ts": "609ab6ac625ab39a56d7228c5a574ad0148010b2ada87bad7f61dab9c8b362b4",
@@ -44,7 +44,7 @@
     "config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "config": {},
-  "fecha": "2026-11-10T18:59:08.776Z",
+  "fecha": "2026-11-10T19:39:16.283Z",
   "aprobadaPor": "Gaston (via Claude Code, a su pedido)",
-  "motivo": "cambios de la revision de noviembre y frenos de campanas"
+  "motivo": "el examen acepta la clave local de FreeLLMAPI; no cambian los casos"
 }

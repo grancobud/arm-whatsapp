@@ -225,6 +225,14 @@ const casos = args.casos ? ESCENARIOS.filter((e) => args.casos.split(",").includ
 // La cadena de respaldo usa solo el modelo bajo prueba: si falla, se ve.
 process.env.OPENROUTER_FALLBACK_MODELS = GEN;
 
+// La misma clave que los otros exámenes: la de producción o la local de FreeLLMAPI.
+// generateWithTools lee LLM_BASE_URL y LLM_API_KEY, así que se dejan cargadas acá.
+const baseURL = process.env.EVAL_BASE_URL || process.env.LLM_BASE_URL || "http://localhost:31415/v1";
+const apiKey = process.env.EVAL_API_KEY || process.env.LLM_API_KEY || process.env.FREELLMAPI_KEY;
+if (!apiKey) throw new Error("Falta EVAL_API_KEY (o LLM_API_KEY / FREELLMAPI_KEY)");
+process.env.LLM_BASE_URL = baseURL;
+process.env.LLM_API_KEY = apiKey;
+
 const reales = new Map(registry.list().map((t) => [t.name, t]));
 const runOriginal = registry.runTool.bind(registry);
 
